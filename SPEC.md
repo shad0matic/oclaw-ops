@@ -225,6 +225,46 @@ VPS health at a glance.
 
 ---
 
+---
+
+## File Drop (static share site)
+
+Private static file server on a subdomain (e.g. `drop.yourdomain.com`) for sharing files from Kevin → Boss on mobile.
+
+**Behavior:**
+- Default response: **403 Forbidden** (no directory listing, no index)
+- Files only accessible via **exact URL** with random hash path (e.g. `drop.yourdomain.com/a3f8c1e9/report.html`)
+- Files auto-expire after configurable TTL (default 7 days, cron cleanup)
+- Nginx serves static files, no app server needed
+
+**How it works:**
+1. Kevin writes file to `/var/www/drop/<random-hash>/filename.ext`
+2. Kevin sends Boss the direct link via Telegram
+3. Anyone without the exact path gets 403
+4. Daily cron deletes files older than TTL
+
+**Nginx config:**
+```nginx
+server {
+    listen 443 ssl;
+    server_name drop.yourdomain.com;
+    root /var/www/drop;
+    autoindex off;
+    default_type application/octet-stream;
+    location = / { return 403; }
+    location / { try_files $uri =403; }
+}
+```
+
+**CLI tool:** `tools/file-drop.mjs`
+- `drop <filepath> [--ttl 7d]` → copies file, returns URL
+- `list` → show active drops
+- `clean` → remove expired files
+
+**Priority:** After Phase 6 (quick win, ~1h setup)
+
+---
+
 ## Out of scope (for now)
 - Auth (Tailscale is the auth perimeter)
 - Real-time WebSocket
