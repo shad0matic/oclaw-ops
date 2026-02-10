@@ -1,0 +1,55 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+
+interface Event {
+    id: number // BigInt serialized
+    agent_id: string
+    event_type: string
+    detail: any
+    created_at: string
+}
+
+interface ActivityFeedProps {
+    events: Event[]
+}
+
+export function ActivityFeed({ events }: ActivityFeedProps) {
+    return (
+        <Card className="col-span-3 bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+            <CardHeader>
+                <CardTitle className="text-zinc-400">Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <ScrollArea className="h-[400px] pr-4">
+                    <div className="space-y-4">
+                        {events.map((event) => (
+                            <div key={event.id} className="flex items-start gap-4 text-sm border-b border-zinc-800/50 pb-4 last:border-0">
+                                <Avatar className="h-8 w-8 border border-zinc-700 mt-1">
+                                    <AvatarFallback className="bg-zinc-800 text-zinc-400 text-xs">
+                                        {event.agent_id.substring(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="grid gap-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-semibold text-white">{event.agent_id}</span>
+                                        <Badge variant="secondary" className="text-[10px] bg-zinc-800 text-zinc-400 hover:bg-zinc-700">
+                                            {event.event_type}
+                                        </Badge>
+                                        <span className="text-xs text-zinc-500">
+                                            {new Date(event.created_at).toLocaleTimeString()}
+                                        </span>
+                                    </div>
+                                    <div className="text-zinc-400 max-w-xl break-words">
+                                        {typeof event.detail === 'string' ? event.detail : JSON.stringify(event.detail)}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </CardContent>
+        </Card>
+    )
+}
