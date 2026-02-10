@@ -233,7 +233,7 @@ Private static file server on a subdomain (e.g. `drop.yourdomain.com`) for shari
 
 **Behavior:**
 - Default response: **403 Forbidden** (no directory listing, no index)
-- Files only accessible via **exact URL** with random hash path (e.g. `drop.yourdomain.com/a3f8c1e9/report.html`)
+- Files only accessible via **exact URL** with random hash path (e.g. `drop.glubi.com/a3f8c1e9/report.html`)
 - Files auto-expire after configurable TTL (default 7 days, cron cleanup)
 - Nginx serves static files, no app server needed
 
@@ -247,7 +247,7 @@ Private static file server on a subdomain (e.g. `drop.yourdomain.com`) for shari
 ```nginx
 server {
     listen 443 ssl;
-    server_name drop.yourdomain.com;
+    server_name drop.glubi.com;
     root /var/www/drop;
     autoindex off;
     default_type application/octet-stream;
