@@ -265,9 +265,252 @@ server {
 
 ---
 
+---
+
+## Phase 7 — Cross-Agent Intelligence Pages
+
+### `/priorities` — Shared Priority Stack
+What matters right now across all agents.
+
+**Priority list (sorted by priority × signal count):**
+- Entity name, type badge (topic/person/project/keyword/url)
+- Priority level (P1-P10, color-coded: P7+ = red, P4-6 = amber, P1-3 = gray)
+- Signal count badge (🔗 ×3 = seen by 3 agents)
+- Reported by (agent emoji), confirmed by (agent emoji list)
+- Context text (truncated, expand on tap)
+- Last seen timestamp
+- Resolved toggle (strikes through, moves to bottom)
+
+**Filters:** Active only / all, entity type, min priority
+
+**Actions:**
+- "Add Signal" button → modal: entity, type, priority, context
+- Resolve / Unresolve toggle
+- Tap → detail drawer with cross-signal history
+
+**API:**
+- `GET /api/priorities` — list priorities (query: `active`, `type`, `min_priority`)
+- `POST /api/priorities` — create/bump signal (body: `{ entity, entity_type, priority, context, agent }`)
+- `PATCH /api/priorities/[id]` — resolve/unresolve
+- `GET /api/priorities/[id]/signals` — cross-signal history for a priority
+
+---
+
+### `/knowledge` — Knowledge Graph
+Visual entity browser — people, companies, projects and how they connect.
+
+**Graph view (desktop):**
+- Force-directed graph (use `react-force-graph-2d` or `d3-force`)
+- Nodes: colored by entity type, sized by relation count
+- Edges: labeled with relation type, thickness = strength
+- Click node → detail panel (sidebar)
+- Zoom/pan, drag nodes
+
+**List view (mobile default):**
+- Grouped by entity type (accordion)
+- Per entity: name, type badge, alias list, property pills
+- Relation count badge
+- Tap → detail drawer: all relations, properties, first seen by
+
+**Search bar:** Filter entities by name/alias (instant)
+
+**Actions:**
+- "Add Entity" button → modal: name, type, aliases (comma-sep), properties (key-value pairs)
+- "Add Relation" button → modal: source entity, target entity, relation type, strength slider, context
+
+**API:**
+- `GET /api/knowledge/entities` — list entities (query: `type`, `search`)
+- `GET /api/knowledge/entities/[id]` — entity detail + relations
+- `POST /api/knowledge/entities` — create/update entity
+- `POST /api/knowledge/relations` — create relation
+- `GET /api/knowledge/graph` — full graph data (nodes + edges) for visualization
+
+---
+
+### `/mistakes` — Mistake Tracker
+Learn from errors. Track recurrence. Don't repeat.
+
+**Mistake list:**
+- Description, agent badge, severity (S1-S5 color-coded)
+- Recurrence count (×1, ×2, ×3... — highlight ×3+ in red)
+- Lesson learned (if set, shown as quote block)
+- Last occurred timestamp
+- Resolved/unresolved toggle
+
+**Filters:** Agent, unresolved only, severity range
+
+**Summary bar:**
+- Total mistakes, unresolved count, most recurring, worst severity
+
+**Actions:**
+- "Log Mistake" button → modal: description, agent, context, lesson, severity (1-5)
+- Resolve toggle
+- Edit lesson learned inline
+
+**API:**
+- `GET /api/mistakes` — list mistakes (query: `agent`, `unresolved`, `severity`)
+- `POST /api/mistakes` — log mistake
+- `PATCH /api/mistakes/[id]` — resolve, update lesson
+
+---
+
+### `/reactions` — Reaction Matrix
+Agent-to-agent trigger rules. When X happens in agent A, agent B does Y.
+
+**Matrix view (desktop):**
+- Table: rows = trigger agent, columns = responder agent
+- Cell = event types that link them (click to expand)
+- Color intensity = number of rules
+
+**List view (mobile default):**
+- Per rule card: `Nefario:research_complete → Kevin:notify (p=1.0)`
+- Trigger agent emoji → event type → responder agent emoji → action
+- Probability shown as percentage pill
+- Enabled/disabled toggle
+
+**Actions:**
+- "Add Rule" button → modal: trigger agent, event type, responder, action, probability slider, filter JSON (advanced)
+- Enable/disable toggle
+- Delete rule (confirm)
+
+**API:**
+- `GET /api/reactions` — list rules (query: `agent`, `enabled`)
+- `POST /api/reactions` — create rule
+- `PATCH /api/reactions/[id]` — update (enable/disable, probability)
+- `DELETE /api/reactions/[id]` — remove rule
+
+---
+
+### `/costs` — Cost Tracker
+Monthly spend overview. All costs in EUR.
+
+**KPI cards (top):**
+- 💰 Total monthly cost (€201.11)
+- 🤖 OpenClaw-related cost (€164.29)
+- 📈 Trend vs last month (% change)
+- 💱 Current USD/EUR rate (from ECB)
+
+**Subscription table:**
+- Service name, monthly cost (original currency + EUR), billing cycle, category
+- Sortable by cost
+- Total row at bottom
+
+**Cost snapshots chart:**
+- Line/area chart (Recharts): daily/hourly cost over time
+- Toggle: 24h / 7d / 30d view
+
+**FX rate chart:**
+- USD/EUR rate over time (from `ops.fx_rates`)
+
+**API:**
+- `GET /api/costs/subscriptions` — list subscriptions
+- `GET /api/costs/snapshots` — cost snapshots (query: `period=24h|7d|30d`)
+- `GET /api/costs/fx` — FX rate history
+- `POST /api/costs/subscriptions` — add/update subscription
+
+---
+
+### `/compounds` — Memory Compounds
+Weekly memory synthesis — distilled learnings from daily notes.
+
+**Compound list (reverse chronological):**
+- Period: "03/02 → 09/02/2026"
+- Summary (truncated, expand on tap)
+- Key learnings (bullet list)
+- Mistakes (bullet list, linked to `/mistakes`)
+- Agent badge
+
+**Actions:**
+- "Generate Compound" button → triggers synthesis for a date range (calls agent)
+
+**API:**
+- `GET /api/compounds` — list compounds
+- `POST /api/compounds/generate` — trigger synthesis (body: `{ from, to, agent }`)
+
+---
+
+## Updated API routes (complete list)
+
+### Data endpoints (Prisma)
+- `GET /api/agents` — list agents with stats ✅
+- `GET /api/agents/[id]` — agent detail + recent events
+- `POST /api/agents/[id]/review` — submit review
+- `POST /api/agents/[id]/promote` — level up (with reason)
+- `POST /api/agents/[id]/demote` — level down (with reason)
+- `GET /api/workflows` — list workflows
+- `POST /api/workflows/[id]/run` — trigger run
+- `GET /api/runs` — list runs (with filters) ✅
+- `GET /api/runs/[id]` — run detail + steps
+- `GET /api/events` — event feed (paginated, filterable) ✅
+- `GET /api/priorities` — shared priority stack
+- `POST /api/priorities` — signal entity
+- `PATCH /api/priorities/[id]` — resolve/unresolve
+- `GET /api/knowledge/entities` — list entities
+- `GET /api/knowledge/entities/[id]` — entity detail + relations
+- `POST /api/knowledge/entities` — add/update entity
+- `POST /api/knowledge/relations` — add relation
+- `GET /api/knowledge/graph` — graph visualization data
+- `GET /api/mistakes` — list mistakes
+- `POST /api/mistakes` — log mistake
+- `PATCH /api/mistakes/[id]` — update/resolve
+- `GET /api/reactions` — list reaction rules
+- `POST /api/reactions` — add rule
+- `PATCH /api/reactions/[id]` — update rule
+- `DELETE /api/reactions/[id]` — remove rule
+- `GET /api/costs/subscriptions` — list subscriptions
+- `GET /api/costs/snapshots` — cost history
+- `GET /api/costs/fx` — FX rate history
+- `GET /api/compounds` — memory compounds
+
+### Special endpoints (raw SQL for vector/system)
+- `POST /api/memory/search` — vector similarity search (body: `{ query, limit }`)
+- `GET /api/memory/stats` — DB size, memory count, embedding stats
+- `GET /api/system/health` — CPU, RAM, disk, PG stats, OpenClaw status ✅
+
+---
+
+## Updated nav structure
+
+**Sidebar / bottom nav items:**
+1. 🏠 Overview (`/`)
+2. 🤖 Agents (`/agents`)
+3. 📡 Priorities (`/priorities`)
+4. 🔵 Knowledge (`/knowledge`)
+5. 📋 Workflows (`/workflows`)
+6. 🏃 Runs (`/runs`)
+7. 🧠 Memory (`/memory`)
+8. 📊 Events (`/events`)
+9. 💰 Costs (`/costs`)
+10. ⚠️ Mistakes (`/mistakes`)
+11. ⚡ Reactions (`/reactions`)
+12. 🖥️ System (`/system`)
+
+**Mobile:** Bottom nav shows top 5 (Overview, Agents, Priorities, Memory, System) + hamburger for rest
+
+---
+
+## Updated priority order (build sequence)
+1. ✅ Layout shell (sidebar/bottom nav, dark theme, shadcn setup)
+2. ✅ `/` Overview with KPI cards + agent strip
+3. ✅ `/agents` list + `/agents/[id]` detail
+4. ✅ `/system` server health
+5. ✅ `/events` feed
+6. ✅ `/runs` + `/runs/[id]`
+7. ✅ `/workflows`
+8. ✅ `/memory` browser
+9. `/costs` — cost tracker (uses existing `ops.subscriptions` + `ops.cost_snapshots`)
+10. `/priorities` — shared priority stack
+11. `/knowledge` — entity graph
+12. `/mistakes` — error tracker
+13. `/reactions` — reaction matrix
+14. `/compounds` — memory synthesis
+15. Missing API routes (see checklist above)
+
+---
+
 ## Out of scope (for now)
-- Auth (Tailscale is the auth perimeter)
 - Real-time WebSocket
 - Multi-user / roles
 - Notifications from dashboard
 - Editing workflows from UI (use YAML files + CLI)
+- Graph visualization library (list view first, graph later)
