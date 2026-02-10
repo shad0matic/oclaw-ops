@@ -1,54 +1,16 @@
-# oclaw-ops
+# oclaw-ops — Mission Control Dashboard
 
-Operational infrastructure for Kevin 🍌 — an OpenClaw-based AI agent system.
-
-## What's in here
-
-- **dashboard/** — Next.js + Prisma + Tailwind Mission Control UI (Phase 6)
-- **schema/** — Postgres schema (init.sql, idempotent)
-- **tools/** — Node.js CLI tools for memory, workflows, and agent leveling
-- **workflows/** — YAML workflow definitions
-- **scripts/** — Backup and maintenance scripts
-- **docs/** — Setup guides and operational docs
+Mobile-first dark dashboard for monitoring Kevin 🍌 — an OpenClaw AI agent system.
 
 ## Stack
 
-- **Runtime:** Node.js 24 + OpenClaw
-- **Database:** Postgres 18 + pgvector 0.8.1
-- **Dashboard:** Next.js (App Router) + Prisma + Tailwind
-- **Hosting:** Self-hosted VPS, dashboard accessible via Tailscale only
-- **Security:** Postgres localhost-only, Nginx reverse proxy on Tailscale interface
+- **Next.js 16** (App Router) + TypeScript + Tailwind
+- **Prisma 7** (multi-schema: `memory` + `ops`)
+- **shadcn/ui** + Framer Motion
+- **Postgres 18** + pgvector 0.8.1
+- **Hosting:** Nginx reverse proxy on Tailscale interface only
 
-## Database
-
-Single Postgres instance, two schemas:
-- `memory` — agent memories, embeddings, profiles, performance reviews
-- `ops` — workflows, runs, steps, task queue, event log
-
-```bash
-# Init DB (requires superuser for pgvector extension)
-sudo -u postgres psql -d openclaw_db -c "CREATE EXTENSION vector;"
-psql -d openclaw_db -f schema/init.sql
-```
-
-## Tools
-
-```bash
-# Memory search (hybrid vector + keyword)
-node tools/pg-memory.mjs search "query"
-
-# Import markdown memories into Postgres
-node tools/pg-import-memories.mjs
-
-# Workflow management
-node tools/workflow-runner.mjs list
-node tools/workflow-runner.mjs run research-summarize --task "topic"
-
-# Agent leveling
-node tools/agent-levels.mjs status
-```
-
-## Dashboard
+## Getting started
 
 ```bash
 cd dashboard
@@ -58,15 +20,14 @@ npx prisma generate
 npm run dev
 ```
 
-## Backup
+## Spec
 
-Daily at 03h00 UTC via system cron. Includes Postgres dump + OpenClaw workspace.
+See `SPEC.md` for full dashboard specification (pages, API routes, design system).
 
-```bash
-# Manual backup
-./scripts/backup-openclaw.sh
-```
+## Database
 
-## Roadmap
+Connects to `openclaw_db` (Postgres 18) with two schemas:
+- `memory` — agent memories, embeddings, profiles, performance reviews
+- `ops` — workflows, runs, steps, task queue, event log, subscriptions, cost snapshots
 
-See `docs/postgres-setup.md` for phase progress.
+Prisma schema is introspected from the live DB. Vector columns use raw SQL.
