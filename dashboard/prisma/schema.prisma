@@ -1,0 +1,167 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["memory", "ops"]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model agent_profiles {
+  id               Int       @id @default(autoincrement())
+  agent_id         String    @unique
+  name             String
+  level            Int?      @default(1) @db.SmallInt
+  trust_score      Decimal?  @default(0.50) @db.Decimal(3, 2)
+  total_tasks      Int?      @default(0)
+  successful_tasks Int?      @default(0)
+  created_at       DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@schema("memory")
+}
+
+model daily_notes {
+  id         BigInt                 @id @default(autoincrement())
+  note_date  DateTime               @unique @db.Date
+  content    String
+  embedding  Unsupported("vector")?
+  created_at DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?              @default(now()) @db.Timestamptz(6)
+
+  @@index([embedding])
+  @@schema("memory")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model memories {
+  id          BigInt                 @id @default(autoincrement())
+  content     String
+  embedding   Unsupported("vector")?
+  tags        String[]               @default([])
+  importance  Int?                   @default(5) @db.SmallInt
+  source_file String?
+  agent_id    String?                @default("main")
+  created_at  DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?              @default(now()) @db.Timestamptz(6)
+
+  @@index([agent_id], map: "idx_memories_agent")
+  @@index([created_at(sort: Desc)], map: "idx_memories_created")
+  @@index([tags], map: "idx_memories_tags", type: Gin)
+  @@index([embedding])
+  @@schema("memory")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model performance_reviews {
+  id             Int       @id @default(autoincrement())
+  agent_id       String
+  reviewer       String?   @default("kevin")
+  output_summary String?
+  rating         Int?      @db.SmallInt
+  level_before   Int?      @db.SmallInt
+  level_after    Int?      @db.SmallInt
+  feedback       String?
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@schema("memory")
+}
+
+model agent_events {
+  id          BigInt    @id @default(autoincrement())
+  agent_id    String
+  event_type  String
+  detail      Json?     @default("{}")
+  session_key String?
+  tokens_used Int?
+  cost_usd    Decimal?  @db.Decimal(10, 6)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([agent_id, created_at(sort: Desc)], map: "idx_events_agent")
+  @@index([event_type], map: "idx_events_type")
+  @@schema("ops")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model runs {
+  id            BigInt     @id @default(autoincrement())
+  workflow_id   Int?
+  workflow_name String
+  task          String?
+  status        String?    @default("pending")
+  triggered_by  String?    @default("manual")
+  context       Json?      @default("{}")
+  result        Json?      @default("{}")
+  started_at    DateTime?  @db.Timestamptz(6)
+  completed_at  DateTime?  @db.Timestamptz(6)
+  created_at    DateTime?  @default(now()) @db.Timestamptz(6)
+  workflows     workflows? @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  steps         steps[]
+  tasks         tasks[]
+
+  @@index([status, created_at(sort: Desc)], map: "idx_runs_status")
+  @@index([workflow_id], map: "idx_runs_workflow")
+  @@schema("ops")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model steps {
+  id           BigInt    @id @default(autoincrement())
+  run_id       BigInt
+  step_name    String
+  step_order   Int
+  agent_id     String    @default("main")
+  status       String?   @default("pending")
+  input        Json?     @default("{}")
+  output       Json?     @default("{}")
+  error        String?
+  retries      Int?      @default(0)
+  max_retries  Int?      @default(2)
+  started_at   DateTime? @db.Timestamptz(6)
+  completed_at DateTime? @db.Timestamptz(6)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  runs         runs      @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tasks        tasks[]
+
+  @@index([run_id, step_order], map: "idx_steps_run")
+  @@index([status], map: "idx_steps_status")
+  @@schema("ops")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tasks {
+  id           BigInt    @id @default(autoincrement())
+  task_type    String
+  payload      Json      @default("{}")
+  status       String?   @default("pending")
+  priority     Int?      @default(5) @db.SmallInt
+  claimed_by   String?
+  group_key    String?
+  visible_at   DateTime? @default(now()) @db.Timestamptz(6)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  completed_at DateTime? @db.Timestamptz(6)
+  run_id       BigInt?
+  step_id      BigInt?
+  runs         runs?     @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  steps        steps?    @relation(fields: [step_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([status, priority(sort: Desc), visible_at], map: "idx_tasks_status")
+  @@schema("ops")
+}
+
+model workflows {
+  id              Int       @id @default(autoincrement())
+  name            String    @unique
+  description     String?
+  yaml_definition String
+  version         Int?      @default(1)
+  enabled         Boolean?  @default(true)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+  runs            runs[]
+
+  @@schema("ops")
+}

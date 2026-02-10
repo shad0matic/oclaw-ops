@@ -1,0 +1,17 @@
+# Simple 2-step workflow: research a topic, then summarize findings
+name: research-summarize
+description: Research a topic via web search, then produce a concise summary
+
+steps:
+  - name: research
+    agent: nefario
+    prompt: "Research the given topic thoroughly using web search. Collect key facts, sources, and relevant details. Output a structured research document."
+    tools: [web_search, web_fetch]
+    retries: 2
+
+  - name: summarize
+    agent: main
+    prompt: "Take the research output from the previous step and produce a concise, actionable summary. Highlight key findings, recommendations, and next steps."
+    tools: []
+    verify: "Summary must be under 500 words and include at least 3 key findings"
+    retries: 1
