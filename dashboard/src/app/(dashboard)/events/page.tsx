@@ -3,15 +3,39 @@ import { redirect } from "next/navigation"
 import prisma from "@/lib/db"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { DataRefresh } from "@/components/data-refresh"
+import { EventFilters } from "@/components/events/event-filters"
+import { Prisma } from "@/generated/prisma/client"
 
-export default async function EventsPage() {
+export default async function EventsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const events = await prisma.agent_events.findMany({
-        orderBy: { created_at: 'desc' },
-        take: 100
-    })
+    const params = await searchParams
+    const agentId = params.agent_id
+    const eventType = params.event_type
+    const dateFrom = params.date_from
+
+    // Build where clause
+    const where: Prisma.agent_eventsWhereInput = {}
+    if (agentId) where.agent_id = agentId
+    if (eventType) where.event_type = { contains: eventType, mode: 'insensitive' }
+    if (dateFrom) {
+        where.created_at = {
+            gte: new Date(dateFrom)
+        }
+    }
+
+    const [events, agents] = await Promise.all([
+        prisma.agent_events.findMany({
+            where,
+            orderBy: { created_at: 'desc' },
+            take: 100
+        }),
+        prisma.agent_profiles.findMany({
+            select: { agent_id: true, name: true },
+            orderBy: { name: 'asc' }
+        })
+    ])
 
     const serializedEvents = events.map((e: any) => ({
         ...e,
@@ -26,6 +50,8 @@ export default async function EventsPage() {
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold tracking-tight text-white">Event Log</h2>
             </div>
+
+            <EventFilters agents={agents} />
 
             <ActivityFeed events={serializedEvents} />
         </div>

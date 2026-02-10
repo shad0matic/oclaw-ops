@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
 import { ArrowLeft, Clock, CheckCircle2, XCircle, AlertCircle, Play, ChevronRight, RefreshCw, Terminal } from "lucide-react"
+import { RunActions } from "@/components/runs/run-actions"
 
 export default async function RunDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth()
@@ -52,15 +53,13 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
                         <span>{run.created_at?.toLocaleString()}</span>
                     </div>
                 </div>
-                <div className="ml-auto flex gap-2">
-                    {run.status === 'running' && (
-                        <Button variant="destructive" size="sm">Cancel Run</Button>
-                    )}
-                    {run.status === 'failed' && (
-                        <Button variant="outline" size="sm" className="border-zinc-700 hover:bg-zinc-800 text-zinc-300">
-                            <RefreshCw className="mr-2 h-3 w-3" /> Retry
-                        </Button>
-                    )}
+                <div className="ml-auto">
+                    <RunActions 
+                        runId={String(run.id)} 
+                        workflowId={run.workflow_id}
+                        status={run.status || 'unknown'}
+                        task={run.task}
+                    />
                 </div>
             </div>
 

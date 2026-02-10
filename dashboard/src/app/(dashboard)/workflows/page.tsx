@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { GitGraph, Play, Clock, Activity } from "lucide-react"
+import { RunTrigger } from "@/components/workflows/run-trigger"
 
 export default async function WorkflowsPage() {
     const session = await auth()
@@ -63,9 +64,11 @@ export default async function WorkflowsPage() {
                         </CardContent>
                         <CardFooter className="border-t border-zinc-800 pt-4 bg-zinc-950/30">
                             <div className="flex w-full gap-2">
-                                <Button variant="outline" className="flex-1 border-zinc-700 hover:bg-zinc-800 text-zinc-300">
-                                    Edit
-                                </Button>
+                                <RunTrigger 
+                                    workflowId={workflow.id} 
+                                    workflowName={workflow.name}
+                                    enabled={workflow.enabled}
+                                />
                                 <Button variant="ghost" className="flex-1 text-zinc-400 hover:text-white" asChild>
                                     <Link href={`/runs?workflow_id=${workflow.id}`}>History</Link>
                                 </Button>

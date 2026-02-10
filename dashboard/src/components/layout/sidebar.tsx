@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut } from "@/auth"
 import { NavLinks } from "./nav-links"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const navItems = [
     { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -20,8 +21,9 @@ const navItems = [
 export function Sidebar({ className }: { className?: string }) {
     return (
         <div className={cn("flex h-full w-64 flex-col border-r bg-sidebar text-sidebar-foreground", className)}>
-            <div className="flex h-16 items-center border-b px-6">
+            <div className="flex h-16 items-center justify-between border-b px-6">
                 <span className="text-xl font-bold tracking-tight text-primary">Mission Control</span>
+                <ThemeToggle />
             </div>
             <div className="flex-1 overflow-auto py-4">
                 <nav className="grid gap-1 px-2">

@@ -54,3 +54,63 @@ Mobile-first dark dashboard for monitoring Kevin (OpenClaw AI agent system). Sho
 - `dashboard/.env` — database URL (not committed)
 - `dashboard/.env.example` — template
 - `SPEC.md` — full dashboard specification
+- `docs/README.md` — feature documentation
+- `docs/API.md` — API reference
+
+## Implementation Status
+
+### ✅ Completed Features
+
+**Core Pages**:
+- Overview (/) — KPI cards, agent strip, activity feed
+- Agents (/agents, /agents/[id]) — List, detail with promote/demote/review
+- Workflows (/workflows) — List with run trigger modal
+- Runs (/runs, /runs/[id]) — History with filters, detail with retry
+- Memory (/memory) — Search, browse (memories/notes), stats tab
+- Events (/events) — Feed with filters (agent, type, date)
+- System (/system) — CPU, RAM, disk, DB, OpenClaw status
+
+**Phase 7 Intelligence**:
+- Priorities (/priorities) — Priority stack with severity
+- Knowledge (/knowledge) — Entity list with types/aliases
+- Mistakes (/mistakes) — Mistake log with resolution tracking
+- Reactions (/reactions) — Trigger-responder reaction matrix
+- Costs (/costs) — Subscription tracking + cost snapshots
+- Compounds (/compounds) — Periodic memory summaries
+
+**Design & UX**:
+- Theme: Dark/light toggle (dark default)
+- Mobile: Bottom nav with top 5 + hamburger
+- Accessibility: WCAG 2.1 AA compliant (contrast, focus, aria, keyboard)
+- Motion: Framer Motion utilities with prefers-reduced-motion support
+- Components: 19 shadcn/ui components + custom dashboard components
+
+**APIs**: All 30+ endpoints implemented
+- Agents: list, detail, review, promote, demote
+- Workflows: list, trigger run
+- Runs: list with filters, detail
+- Memory: search, stats
+- Events: list with filters
+- System: health metrics
+- Priorities, Mistakes, Reactions, Knowledge, Costs, Compounds: full CRUD
+
+### 📝 Known Limitations
+- Memory search: Text-based only (no vector embeddings in UI)
+- Workflow cancel: Backend stub (needs engine integration)
+- CSV export: Not implemented (events page)
+- File Drop: Not implemented (future enhancement)
+- Knowledge graph: List view only (no graph visualization)
+
+### 🏗️ Architecture Notes
+- Next.js 16 App Router with React Server Components
+- Prisma 7 with multi-schema (memory + ops)
+- NextAuth 5 for authentication (session-based)
+- All API params must be awaited (Next.js 16 requirement)
+- Framer Motion for animations (respects reduced motion)
+- Tailwind 4 + shadcn/ui for styling
+
+### 🚀 Build Status
+✅ Production build passes (verified Feb 2026)
+- TypeScript: No errors
+- Build: Successful (31 routes)
+- All dynamic routes properly configured

@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { ArrowLeft, Star, ThumbsUp, ThumbsDown, User, Activity, Settings, FileText } from "lucide-react"
 import Link from "next/link"
+import { AgentActions } from "@/components/agents/agent-actions"
 
 export default async function AgentDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth()
@@ -71,13 +72,12 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                         </div>
                     </div>
                 </div>
-                <div className="ml-auto flex gap-2">
-                    <Button variant="outline" className="border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800">
-                        Promote
-                    </Button>
-                    <Button variant="outline" className="border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800">
-                        Review
-                    </Button>
+                <div className="ml-auto">
+                    <AgentActions 
+                        agentId={id} 
+                        agentName={agent.name} 
+                        currentLevel={agent.level || 1} 
+                    />
                 </div>
             </div>
 

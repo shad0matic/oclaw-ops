@@ -20,16 +20,24 @@ interface KPICardsProps {
 
 export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, completedTasks }: KPICardsProps) {
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5" role="region" aria-label="Key Performance Indicators">
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">Kevin Status</CardTitle>
-                    <Activity className={`h-4 w-4 ${kevinStatus.status === 'online' ? 'text-green-500' : 'text-red-500'}`} />
+                    <Activity 
+                        className={`h-4 w-4 ${kevinStatus.status === 'online' ? 'text-green-500' : 'text-red-500'}`} 
+                        aria-hidden="true"
+                    />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-white">{kevinStatus.status === 'online' ? 'Online' : 'Offline'}</div>
+                    <div 
+                        className="text-2xl font-bold text-white"
+                        aria-label={`System status: ${kevinStatus.status}`}
+                    >
+                        {kevinStatus.status === 'online' ? 'Online' : 'Offline'}
+                    </div>
                     <p className="text-xs text-zinc-500">
-                        {kevinStatus.status === 'online' ? `UptimeHours: ${(kevinStatus.uptime / 3600).toFixed(1)}h` : 'System down'}
+                        {kevinStatus.status === 'online' ? `Uptime: ${(kevinStatus.uptime / 3600).toFixed(1)}h` : 'System down'}
                     </p>
                 </CardContent>
             </Card>
@@ -37,10 +45,12 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">Token Usage</CardTitle>
-                    <Zap className="h-4 w-4 text-amber-500" />
+                    <Zap className="h-4 w-4 text-amber-500" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-white">{tokenUsage.today.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-white" aria-label={`${tokenUsage.today.toLocaleString()} tokens used today`}>
+                        {tokenUsage.today.toLocaleString()}
+                    </div>
                     <p className="text-xs text-zinc-500">
                         Est. cost: ${tokenUsage.cost.toFixed(2)}
                     </p>
@@ -50,10 +60,12 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">Server Load</CardTitle>
-                    <Cpu className="h-4 w-4 text-blue-500" />
+                    <Cpu className="h-4 w-4 text-blue-500" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-white">{serverLoad.cpu.toFixed(1)}%</div>
+                    <div className="text-2xl font-bold text-white" aria-label={`CPU usage at ${serverLoad.cpu.toFixed(1)} percent`}>
+                        {serverLoad.cpu.toFixed(1)}%
+                    </div>
                     <p className="text-xs text-zinc-500">
                         Mem: {(serverLoad.memory / 1024 / 1024 / 1024).toFixed(1)}GB used
                     </p>
@@ -63,10 +75,12 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">Active Runs</CardTitle>
-                    <Database className="h-4 w-4 text-purple-500" />
+                    <Database className="h-4 w-4 text-purple-500" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-white">{activeRuns}</div>
+                    <div className="text-2xl font-bold text-white" aria-label={`${activeRuns} active workflow runs`}>
+                        {activeRuns}
+                    </div>
                     <p className="text-xs text-zinc-500">
                         Workflows running
                     </p>
@@ -76,10 +90,12 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">Tasks Completed</CardTitle>
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-white">{completedTasks}</div>
+                    <div className="text-2xl font-bold text-white" aria-label={`${completedTasks} tasks completed today`}>
+                        {completedTasks}
+                    </div>
                     <p className="text-xs text-zinc-500">
                         Today
                     </p>

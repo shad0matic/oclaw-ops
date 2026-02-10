@@ -6,24 +6,50 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowRight, Play, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
+import { RunFilters } from "@/components/runs/run-filters"
+import { Prisma } from "@/generated/prisma/client"
 
-export default async function RunsPage() {
+export default async function RunsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const runs = await prisma.runs.findMany({
-        orderBy: { created_at: 'desc' },
-        take: 50,
-        include: {
-            workflows: { select: { name: true } }
+    const params = await searchParams
+    const status = params.status
+    const workflowId = params.workflow_id
+    const agentId = params.agent_id
+
+    // Build where clause
+    const where: Prisma.runsWhereInput = {}
+    if (status) where.status = status
+    if (workflowId) where.workflow_id = parseInt(workflowId)
+    if (agentId) {
+        where.steps = {
+            some: { agent_id: agentId }
         }
-    })
+    }
+
+    const [runs, workflows] = await Promise.all([
+        prisma.runs.findMany({
+            where,
+            orderBy: { created_at: 'desc' },
+            take: 50,
+            include: {
+                workflows: { select: { name: true } }
+            }
+        }),
+        prisma.workflows.findMany({
+            select: { id: true, name: true },
+            orderBy: { name: 'asc' }
+        })
+    ])
 
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold tracking-tight text-white">Run History</h2>
             </div>
+
+            <RunFilters workflows={workflows} />
 
             <div className="rounded-md border border-zinc-800 bg-zinc-900/50">
                 <Table>

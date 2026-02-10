@@ -8,6 +8,10 @@ import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "rec
 interface SystemData {
     cpu: { usage: number }
     memory: { total: number; used: number; free: number }
+    disk?: { total: number; used: number; free: number }
+    db?: { size: number; connections: number }
+    openclaw?: { version: string; status: string }
+    backup?: { next_in_hours: number }
     uptime: number
 }
 
@@ -43,8 +47,10 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
     if (!data) return <div className="text-zinc-500">Loading system stats...</div>
 
     const memPercent = (data.memory.used / data.memory.total) * 100
+    const diskPercent = data.disk ? (data.disk.used / data.disk.total) * 100 : 0
 
     return (
+        <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
             <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader>
@@ -103,29 +109,84 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
                 </CardContent>
             </Card>
 
-            <Card className="col-span-2 bg-zinc-900/50 border-zinc-800">
+            {data.disk && (
+                <Card className="bg-zinc-900/50 border-zinc-800">
+                    <CardHeader>
+                        <CardTitle className="text-zinc-400">Disk Usage</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-bold text-white mb-2">
+                            {(data.disk.used / 1024 / 1024 / 1024).toFixed(1)} GB
+                            <span className="text-sm font-normal text-zinc-500 ml-2">
+                                / {(data.disk.total / 1024 / 1024 / 1024).toFixed(1)} GB
+                            </span>
+                        </div>
+                        <Progress value={diskPercent} className="h-2 mb-2" />
+                        <div className="text-xs text-zinc-500">
+                            {diskPercent.toFixed(1)}% used • {(data.disk.free / 1024 / 1024 / 1024).toFixed(1)} GB free
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {data.db && (
+                <Card className="bg-zinc-900/50 border-zinc-800">
+                    <CardHeader>
+                        <CardTitle className="text-zinc-400">Database</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <div>
+                            <div className="text-zinc-500 text-sm">Size</div>
+                            <div className="text-2xl font-bold text-white">
+                                {(data.db.size / 1024 / 1024).toFixed(1)} MB
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-zinc-500 text-sm">Active Connections</div>
+                            <div className="text-2xl font-bold text-white">{data.db.connections}</div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+            </div>
+
+            <Card className="bg-zinc-900/50 border-zinc-800">
                 <CardHeader>
                     <CardTitle>System Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                         <div className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800">
                             <div className="text-zinc-500 text-sm">Uptime</div>
                             <div className="text-xl font-mono text-white">
                                 {(data.uptime / 3600).toFixed(1)}h
                             </div>
                         </div>
+                        {data.openclaw && (
+                            <>
+                                <div className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800">
+                                    <div className="text-zinc-500 text-sm">OpenClaw</div>
+                                    <div className="text-xl font-mono text-white">{data.openclaw.version}</div>
+                                </div>
+                                <div className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800">
+                                    <div className="text-zinc-500 text-sm">Status</div>
+                                    <div className="text-xl font-mono text-green-500">{data.openclaw.status}</div>
+                                </div>
+                            </>
+                        )}
+                        {data.backup && (
+                            <div className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800">
+                                <div className="text-zinc-500 text-sm">Next Backup</div>
+                                <div className="text-xl font-mono text-white">{data.backup.next_in_hours}h</div>
+                            </div>
+                        )}
                         <div className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800">
-                            <div className="text-zinc-500 text-sm">OS</div>
-                            <div className="text-xl font-mono text-white">Linux (VPS)</div>
-                        </div>
-                        <div className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800">
-                            <div className="text-zinc-500 text-sm">Node Version</div>
-                            <div className="text-xl font-mono text-white">{process.version}</div>
+                            <div className="text-zinc-500 text-sm">Node</div>
+                            <div className="text-sm font-mono text-white">{process.version}</div>
                         </div>
                         <div className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800">
                             <div className="text-zinc-500 text-sm">Next.js</div>
-                            <div className="text-xl font-mono text-white">16.1.6</div>
+                            <div className="text-sm font-mono text-white">16.1.6</div>
                         </div>
                     </div>
                 </CardContent>
