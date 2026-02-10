@@ -165,3 +165,164 @@ model workflows {
 
   @@schema("ops")
 }
+
+model compounds {
+  id            BigInt                 @id @default(autoincrement())
+  period_start  DateTime               @db.Date
+  period_end    DateTime               @db.Date
+  summary       String
+  key_learnings String[]
+  mistakes      String[]
+  embedding     Unsupported("vector")?
+  agent_id      String?                @default("main")
+  created_at    DateTime?              @default(now()) @db.Timestamptz(6)
+
+  @@index([period_start, period_end], map: "idx_compounds_period")
+  @@schema("memory")
+}
+
+model entities {
+  id                                                    BigInt                 @id @default(autoincrement())
+  name                                                  String
+  entity_type                                           String                 @default("unknown")
+  aliases                                               String[]               @default([])
+  properties                                            Json?                  @default("{}")
+  embedding                                             Unsupported("vector")?
+  first_seen_by                                         String?
+  created_at                                            DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at                                            DateTime?              @default(now()) @db.Timestamptz(6)
+  entity_relations_entity_relations_source_idToentities entity_relations[]     @relation("entity_relations_source_idToentities")
+  entity_relations_entity_relations_target_idToentities entity_relations[]     @relation("entity_relations_target_idToentities")
+
+  @@unique([name, entity_type])
+  @@index([aliases], map: "idx_entities_aliases", type: Gin)
+  @@index([embedding], map: "idx_entities_embedding")
+  @@index([entity_type], map: "idx_entities_type")
+  @@schema("memory")
+}
+
+model entity_relations {
+  id                                            BigInt    @id @default(autoincrement())
+  source_id                                     BigInt?
+  target_id                                     BigInt?
+  relation_type                                 String
+  strength                                      Decimal?  @default(0.50) @db.Decimal(3, 2)
+  context                                       String?
+  agent_id                                      String?
+  created_at                                    DateTime? @default(now()) @db.Timestamptz(6)
+  entities_entity_relations_source_idToentities entities? @relation("entity_relations_source_idToentities", fields: [source_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  entities_entity_relations_target_idToentities entities? @relation("entity_relations_target_idToentities", fields: [target_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([source_id, target_id, relation_type])
+  @@index([source_id], map: "idx_entity_relations_source")
+  @@index([target_id], map: "idx_entity_relations_target")
+  @@schema("memory")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model mistakes {
+  id               BigInt    @id @default(autoincrement())
+  agent_id         String
+  description      String
+  context          String?
+  lesson_learned   String?
+  severity         Int?      @default(3) @db.SmallInt
+  recurrence_count Int?      @default(1)
+  last_occurred_at DateTime? @default(now()) @db.Timestamptz(6)
+  resolved         Boolean?  @default(false)
+  created_at       DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([agent_id], map: "idx_mistakes_agent")
+  @@schema("memory")
+}
+
+model cost_snapshots {
+  id            BigInt    @id @default(autoincrement())
+  snapshot_hour DateTime  @db.Timestamptz(6)
+  fixed_eur     Decimal?  @default(0) @db.Decimal(10, 4)
+  variable_eur  Decimal?  @default(0) @db.Decimal(10, 4)
+  total_eur     Decimal?  @default(0) @db.Decimal(10, 4)
+  breakdown     Json?     @default("{}")
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([snapshot_hour(sort: Desc)], map: "idx_cost_snapshots_hour")
+  @@schema("ops")
+}
+
+model cross_signals {
+  id          BigInt      @id @default(autoincrement())
+  priority_id BigInt?
+  agent_id    String
+  source      String?
+  snippet     String?
+  confidence  Decimal?    @default(0.50) @db.Decimal(3, 2)
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  priorities  priorities? @relation(fields: [priority_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([agent_id], map: "idx_cross_signals_agent")
+  @@index([priority_id], map: "idx_cross_signals_priority")
+  @@schema("ops")
+}
+
+model fx_rates {
+  id         Int       @id @default(autoincrement())
+  rate_date  DateTime  @unique @db.Date
+  usd_to_eur Decimal   @db.Decimal(10, 6)
+  source     String?   @default("ecb")
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([rate_date(sort: Desc)], map: "idx_fx_rates_date")
+  @@schema("ops")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model priorities {
+  id            BigInt          @id @default(autoincrement())
+  entity        String
+  entity_type   String          @default("topic")
+  priority      Int?            @default(5) @db.SmallInt
+  context       String?
+  reported_by   String
+  confirmed_by  String[]
+  signal_count  Int?            @default(1)
+  last_seen_at  DateTime?       @default(now()) @db.Timestamptz(6)
+  created_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  resolved_at   DateTime?       @db.Timestamptz(6)
+  cross_signals cross_signals[]
+
+  @@unique([entity, entity_type])
+  @@index([entity_type], map: "idx_priorities_entity_type")
+  @@schema("ops")
+}
+
+model reactions {
+  id              Int       @id @default(autoincrement())
+  trigger_agent   String
+  trigger_event   String
+  trigger_filter  Json?     @default("{}")
+  responder_agent String
+  action          String
+  action_params   Json?     @default("{}")
+  probability     Decimal?  @default(1.00) @db.Decimal(3, 2)
+  enabled         Boolean?  @default(true)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@schema("ops")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model subscriptions {
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  provider         String?
+  monthly_price    Decimal   @db.Decimal(10, 2)
+  currency         String?   @default("EUR")
+  used_in_openclaw Boolean?  @default(true)
+  active           Boolean?  @default(true)
+  renewal_day      Int?      @default(1) @db.SmallInt
+  notes            String?
+  created_at       DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@schema("ops")
+}
