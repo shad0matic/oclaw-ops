@@ -81,8 +81,8 @@ export async function POST() {
     try {
         // Run memory sync
         const syncOutput = execSync(
-            `cd ${WORKSPACE} && OPENAI_API_KEY=${process.env.OPENAI_API_KEY} node scripts/memory-sync.mjs 2>&1`,
-            { encoding: "utf8", timeout: 30000 }
+            `node scripts/memory-sync.mjs 2>&1`,
+            { encoding: "utf8", timeout: 30000, cwd: WORKSPACE, env: { ...process.env, PATH: process.env.PATH || "/usr/local/bin:/usr/bin:/bin" } }
         )
         
         // Get updated stats
