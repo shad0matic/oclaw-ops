@@ -11,7 +11,7 @@ interface AvatarFile {
     size: number
 }
 
-export function AvatarLibrary() {
+export function AvatarLibrary({ refreshKey = 0, onDelete }: { refreshKey?: number; onDelete?: () => void }) {
     const [avatars, setAvatars] = useState<AvatarFile[]>([])
     const [deleting, setDeleting] = useState<string | null>(null)
     const [message, setMessage] = useState<string | null>(null)
@@ -25,7 +25,7 @@ export function AvatarLibrary() {
         }
     }
 
-    useEffect(() => { fetchAvatars() }, [])
+    useEffect(() => { fetchAvatars() }, [refreshKey])
 
     const handleDelete = async (name: string) => {
         if (!confirm(`Delete ${name}? This can't be undone.`)) return
@@ -40,6 +40,7 @@ export function AvatarLibrary() {
             if (res.ok) {
                 setMessage(`🗑️ Deleted ${name}`)
                 setAvatars((prev) => prev.filter((a) => a.name !== name))
+                onDelete?.()
             } else {
                 const data = await res.json()
                 setMessage(`❌ ${data.error || "Delete failed"}`)

@@ -17,7 +17,7 @@ interface AvatarFile {
     size: number
 }
 
-export function AgentAvatarManager() {
+export function AgentAvatarManager({ refreshKey = 0 }: { refreshKey?: number }) {
     const [agents, setAgents] = useState<Agent[]>([])
     const [avatars, setAvatars] = useState<AvatarFile[]>([])
     const [assigning, setAssigning] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export function AgentAvatarManager() {
             }
         }
         fetchData()
-    }, [])
+    }, [refreshKey])
 
     const handleAvatarChange = async (agentId: string, avatarFile: string) => {
         setAssigning(agentId)

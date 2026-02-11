@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage } from "@/components/ui/avatar"
 
-export function UploadAvatar() {
+export function UploadAvatar({ onUpload }: { onUpload?: () => void }) {
     const [preview, setPreview] = useState<string | null>(null)
     const [file, setFile] = useState<File | null>(null)
     const [filename, setFilename] = useState("")
@@ -46,6 +46,7 @@ export function UploadAvatar() {
                 setFile(null)
                 setFilename("")
                 if (inputRef.current) inputRef.current.value = ""
+                onUpload?.()
             } else {
                 const data = await res.json()
                 setMessage(`❌ ${data.error || "Upload failed"}`)
