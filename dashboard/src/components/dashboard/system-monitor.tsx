@@ -117,7 +117,7 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
                         </span>
                     </div>
                     <div className="h-[180px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                             <AreaChart data={history}>
                                 <defs>
                                     <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
@@ -165,7 +165,7 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
                     <Progress value={memPercent} className="h-2 mb-3" />
 
                     <div className="h-[140px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                             <AreaChart data={history}>
                                 <defs>
                                     <linearGradient id="colorMem" x1="0" y1="0" x2="0" y2="1">

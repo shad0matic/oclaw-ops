@@ -8,6 +8,7 @@ import Link from "next/link"
 import { ArrowRight, Play, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
 import { RunFilters } from "@/components/runs/run-filters"
 import { Prisma } from "@/generated/prisma/client"
+import { Suspense } from "react"
 
 export default async function RunsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
     const session = await auth()
@@ -40,7 +41,7 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
         prisma.workflows.findMany({
             select: { id: true, name: true },
             orderBy: { name: 'asc' }
-        })
+        }).then(wfs => wfs.map(wf => ({ ...wf, id: Number(wf.id) })))
     ])
 
     return (
@@ -49,7 +50,9 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
                 <h2 className="text-3xl font-bold tracking-tight text-white">Run History</h2>
             </div>
 
-            <RunFilters workflows={workflows} />
+            <Suspense fallback={<div className="text-zinc-500">Loading filters...</div>}>
+                <RunFilters workflows={workflows} />
+            </Suspense>
 
             <div className="rounded-md border border-zinc-800 bg-zinc-900/50">
                 <Table>
@@ -75,7 +78,7 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
                                     <TableCell className="font-medium text-white">
                                         <div className="flex items-center gap-2">
                                             <Play className="h-4 w-4 text-zinc-500" />
-                                            {run.workflow_name}
+                                            {run.workflows?.name || 'Unknown'}
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -91,7 +94,7 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <Button variant="ghost" size="icon" asChild>
-                                            <Link href={`/runs/${run.id}`}>
+                                            <Link href={`/runs/${Number(run.id)}`}>
                                                 <ArrowRight className="h-4 w-4" />
                                             </Link>
                                         </Button>

@@ -41,7 +41,7 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
                 </Button>
                 <div className="flex flex-col">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-bold tracking-tight text-white">{run.workflow_name}</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-white">{run.workflows?.name || 'Unknown'}</h2>
                         <RunStatusBadge status={run.status || 'unknown'} />
                         <span className="text-zinc-500 text-sm font-mono">#{String(run.id)}</span>
                     </div>
