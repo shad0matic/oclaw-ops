@@ -141,3 +141,12 @@
 .animate-pulse-slow {
   animation: pulse-slow 3s ease-in-out infinite;
 }
+
+@keyframes cost-pulse {
+  0%, 100% { box-shadow: 0 0 8px 2px var(--glow-color); }
+  50% { box-shadow: 0 0 20px 6px var(--glow-color); }
+}
+
+.animate-cost-pulse {
+  animation: cost-pulse 2s ease-in-out infinite;
+}

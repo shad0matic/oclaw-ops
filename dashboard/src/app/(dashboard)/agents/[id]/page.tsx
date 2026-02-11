@@ -11,6 +11,7 @@ import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { ArrowLeft, Star, ThumbsUp, ThumbsDown, User, Activity, Settings, FileText } from "lucide-react"
 import Link from "next/link"
 import { AgentActions } from "@/components/agents/agent-actions"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export default async function AgentDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth()
@@ -58,7 +59,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                 </Button>
                 <div className="flex items-center gap-4">
                     <Avatar className="h-16 w-16 border-2 border-zinc-700">
-                        <AvatarImage src={`/agents/${id}.png`} />
+                        <AvatarImage src={`/assets/minion-avatars/${id}.webp`} />
                         <AvatarFallback className="text-xl">{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
@@ -92,12 +93,25 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                 <TabsContent value="overview" className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <Card className="bg-zinc-900/50 border-zinc-800">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-zinc-400">Trust Score</CardTitle>
-                                <Star className="h-4 w-4 text-amber-500" />
-                            </CardHeader>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 cursor-help">
+                                            <CardTitle className="text-sm font-medium text-zinc-400">Trust Score</CardTitle>
+                                            <Star className="h-4 w-4 text-amber-500" />
+                                        </CardHeader>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="text-sm">L1 👁️ (0-25%): Observer</p>
+                                        <p className="text-sm">L2 💡 (26-50%): Contributor</p>
+                                        <p className="text-sm">L3 ⚙️ (51-75%): Operator</p>
+                                        <p className="text-sm">L4 🚀 (76-100%): Autonomous</p>
+                                        <p className="text-xs text-muted-foreground mt-2">Based on task success, error frequency, and manual overrides.</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                             <CardContent>
-                                <div className="text-2xl font-bold text-white">{Number(agent.trust_score) * 100}%</div>
+                                <div className="text-2xl font-bold text-white">{Math.round(Number(agent.trust_score) * 100)}%</div>
                                 <Progress value={Number(agent.trust_score) * 100} className="mt-2 h-1" />
                             </CardContent>
                         </Card>

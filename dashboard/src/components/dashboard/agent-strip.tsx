@@ -24,7 +24,7 @@ export function AgentStrip({ agents }: AgentStripProps) {
                         <CardContent className="flex items-center gap-4 p-4">
                             <div className="relative">
                                 <Avatar className="h-10 w-10 border border-zinc-700">
-                                    <AvatarImage src={`/agents/${agent.agent_id}.png`} />
+                                    <AvatarImage src={`/assets/minion-avatars/${agent.agent_id}.webp`} />
                                     <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <div className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-zinc-900 ${agent.status === 'running' ? 'bg-blue-500 animate-pulse' :

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Activity, Cpu, Database, Zap, CheckCircle2 } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Area, AreaChart, ResponsiveContainer } from "recharts"
 
 interface KPICardsProps {
@@ -141,7 +142,16 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
 
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Active Runs</CardTitle>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <CardTitle className="text-sm font-medium text-zinc-400">Active Workflows</CardTitle>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Background tasks or workflows currently executing.</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                     <Database className="h-4 w-4 text-purple-500" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>

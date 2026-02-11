@@ -5,14 +5,18 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
-import { DollarSign } from 'lucide-react';
 
-interface CostData {
-  total: number;
-  daily: { date: string; cost: number; cumulative: number }[];
-  projected: number;
-  tier: 'green' | 'orange' | 'red';
-}
+// Mock data for cost snapshots
+const mockCostData = {
+  total: 125.50,
+  daily: Array.from({ length: 30 }, (_, i) => ({
+    date: `2026-01-${i + 1}`,
+    cost: Math.random() * 10,
+    cumulative: (i + 1) * 4 + Math.random() * 10,
+  })),
+  projected: 150.75,
+  tier: 'red',
+};
 
 const tierStyles = {
   green: {
@@ -29,30 +33,17 @@ const tierStyles = {
   },
 };
 
-export function CostCard() {
-  const [data, setData] = useState<CostData | null>(null);
+export function VariableCostCard() {
+  const [data, setData] = useState(mockCostData);
+  // In a real app, you'd fetch this data
+  // useEffect(() => {
+  //   fetch('/api/costs/variable?days=30')
+  //     .then(res => res.json())
+  //     .then(setData);
+  // }, []);
 
-  useEffect(() => {
-    const fetchCosts = async () => {
-        try {
-            const res = await fetch("/api/costs/variable?days=30")
-            if (res.ok) {
-              const fetchedData = await res.json();
-              if(fetchedData.total > 0) {
-                setData(fetchedData);
-              } else {
-                setData(null);
-              }
-            }
-        } catch {}
-    }
-    fetchCosts()
-    const interval = setInterval(fetchCosts, 300_000) // Refresh every 5min
-    return () => clearInterval(interval)
-  }, [])
-
-  if (!data) {
-    return null;
+  if (!data || data.total <= 0) {
+    return null; // Don't render if no variable costs
   }
 
   const { total, daily, projected, tier } = data;
@@ -69,16 +60,13 @@ export function CostCard() {
     >
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium text-zinc-400">Variable Costs</CardTitle>
-          <div className="text-2xl font-bold text-white flex items-center">
-             €{total.toFixed(2)}
-             <DollarSign className="h-4 w-4 ml-1" style={{ color: styles.glowColor }}/>
-          </div>
+          <CardTitle className="text-zinc-400">API Burn</CardTitle>
+          <div className="text-2xl font-bold text-white">€{total.toFixed(2)}</div>
         </div>
         <p className="text-xs text-zinc-500">Last 30 days</p>
       </CardHeader>
       <CardContent>
-        <div className="h-32">
+        <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={daily} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <defs>
@@ -87,7 +75,7 @@ export function CostCard() {
                   <stop offset="95%" stopColor={styles.glowColor} stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(str) => new Date(str).getDate().toString()} />
+              <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `€${value}`} />
               <Tooltip
                 contentStyle={{
@@ -95,13 +83,12 @@ export function CostCard() {
                   borderColor: '#3f3f46', // zinc-700
                 }}
                 labelStyle={{ color: '#ffffff' }}
-                formatter={(value, name) => [`€${Number(value).toFixed(2)}`, name.charAt(0).toUpperCase() + name.slice(1)]}
               />
               <Area type="monotone" dataKey="cumulative" stroke={styles.glowColor} fillOpacity={1} fill="url(#costGradient)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-xs text-center mt-2" style={{ color: styles.glowColor }}>
+        <p className="text-xs text-center text-zinc-500 mt-2">
           Projected: ~€{projected.toFixed(2)} by month end
         </p>
       </CardContent>

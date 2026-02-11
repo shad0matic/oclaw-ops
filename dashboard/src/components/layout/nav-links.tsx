@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, AlertTriangle, Network, AlertCircle, Zap, DollarSign, Layers } from "lucide-react"
+import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, AlertTriangle, Network, AlertCircle, Zap, DollarSign, Layers, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -19,6 +19,7 @@ const navItems = [
     { href: "/reactions", label: "Reactions", icon: Zap },
     { href: "/costs", label: "Costs", icon: DollarSign },
     { href: "/compounds", label: "Compounds", icon: Layers },
+    { href: "/settings", label: "Settings", icon: Settings },
 ]
 
 export function NavLinks() {

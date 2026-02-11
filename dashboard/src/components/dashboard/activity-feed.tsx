@@ -15,6 +15,24 @@ interface ActivityFeedProps {
     events: Event[]
 }
 
+function formatEventDetail(event: Event): string {
+    const { event_type, detail, agent_id } = event;
+    const duration = detail?.duration ? `${(detail.duration / 1000).toFixed(1)}s` : '';
+
+    switch (event_type) {
+        case 'session_spawn':
+            return `${agent_id} started working on ${detail?.task || 'a new task'}.`;
+        case 'file_write':
+            return `${agent_id} wrote to ${detail?.path}.`;
+        case 'spec_written':
+            return `${agent_id} finished writing spec to ${detail?.path} in ${duration}.`;
+        case 'task_complete':
+            return `${agent_id} completed work on ${detail?.task || 'a task'} in ${duration}. Result: ${detail?.result?.substring(0, 50) || 'complete'}`;
+        default:
+            return typeof detail === 'string' ? detail : JSON.stringify(detail);
+    }
+}
+
 export function ActivityFeed({ events }: ActivityFeedProps) {
     return (
         <Card className="col-span-3 bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
@@ -42,7 +60,7 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
                                         </span>
                                     </div>
                                     <div className="text-zinc-400 max-w-xl break-words">
-                                        {typeof event.detail === 'string' ? event.detail : JSON.stringify(event.detail)}
+                                        {formatEventDetail(event)}
                                     </div>
                                 </div>
                             </div>
