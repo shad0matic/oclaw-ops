@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
-import { ArrowLeft, Star, ThumbsUp, ThumbsDown, User, Activity, Settings, FileText } from "lucide-react"
+import { ArrowLeft, Star, ThumbsUp, Calendar, Activity } from "lucide-react"
 import Link from "next/link"
 import { AgentActions } from "@/components/agents/agent-actions"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { getAgentName } from "@/lib/agent-names"
 
 export default async function AgentDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth()
@@ -27,7 +28,10 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
         return <div className="p-8 text-white">Agent not found</div>
     }
 
-    const [events, reviews, stats] = await Promise.all([
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const [events, reviews, todayEvents] = await Promise.all([
         prisma.agent_events.findMany({
             where: { agent_id: id },
             orderBy: { created_at: 'desc' },
@@ -37,11 +41,9 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
             where: { agent_id: id },
             orderBy: { created_at: 'desc' },
         }),
-        prisma.steps.aggregate({
-            where: { agent_id: id },
-            _count: { _all: true },
-            _avg: { retries: true } // Mocking some stats
-        })
+        prisma.agent_events.count({
+            where: { agent_id: id, created_at: { gte: todayStart } }
+        }),
     ])
 
     const serializedEvents = events.map((e: any) => ({
@@ -50,6 +52,10 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
         created_at: e.created_at?.toISOString() || new Date().toISOString(),
         cost_usd: Number(e.cost_usd),
     }))
+
+    const totalTasks = agent.total_tasks || 0
+    const successfulTasks = agent.successful_tasks || 0
+    const successRate = totalTasks > 0 ? Math.round((successfulTasks / totalTasks) * 100) : 0
 
     return (
         <div className="space-y-8">
@@ -76,10 +82,10 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                     </div>
                 </div>
                 <div className="ml-auto">
-                    <AgentActions 
-                        agentId={id} 
-                        agentName={agent.name} 
-                        currentLevel={agent.level || 1} 
+                    <AgentActions
+                        agentId={id}
+                        agentName={agent.name}
+                        currentLevel={agent.level || 1}
                     />
                 </div>
             </div>
@@ -94,6 +100,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
 
                 <TabsContent value="overview" className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        {/* Trust Score */}
                         <Card className="bg-zinc-900/50 border-zinc-800">
                             <TooltipProvider>
                                 <Tooltip>
@@ -125,42 +132,46 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                                 <Progress value={Number(agent.trust_score) * 100} className="mt-2 h-1" />
                             </CardContent>
                         </Card>
+
+                        {/* Task Success */}
                         <Card className="bg-zinc-900/50 border-zinc-800">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium text-zinc-400">Task Success</CardTitle>
                                 <ThumbsUp className="h-4 w-4 text-green-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-white">
-                                    {agent.total_tasks && agent.total_tasks > 0
-                                        ? ((agent.successful_tasks! / agent.total_tasks) * 100).toFixed(0)
-                                        : 0}%
-                                </div>
-                                <p className="text-xs text-zinc-500">{agent.successful_tasks} / {agent.total_tasks} tasks</p>
+                                <div className="text-2xl font-bold text-white">{successRate}%</div>
+                                <p className="text-xs text-zinc-500">{successfulTasks} / {totalTasks} tasks</p>
                             </CardContent>
                         </Card>
+
+                        {/* Today's Activity */}
                         <Card className="bg-zinc-900/50 border-zinc-800">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-zinc-400">Avg Retries</CardTitle>
-                                <Activity className="h-4 w-4 text-blue-500" />
+                                <CardTitle className="text-sm font-medium text-zinc-400">Today</CardTitle>
+                                <Calendar className="h-4 w-4 text-blue-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-white">{stats._avg.retries?.toFixed(2) || 0}</div>
-                                <p className="text-xs text-zinc-500">Per step</p>
+                                <div className="text-2xl font-bold text-white">{todayEvents}</div>
+                                <p className="text-xs text-zinc-500">events today</p>
+                            </CardContent>
+                        </Card>
+
+                        {/* Total Events */}
+                        <Card className="bg-zinc-900/50 border-zinc-800">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium text-zinc-400">Total Events</CardTitle>
+                                <Activity className="h-4 w-4 text-purple-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-white">{events.length}</div>
+                                <p className="text-xs text-zinc-500">all time</p>
                             </CardContent>
                         </Card>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                        <Card className="col-span-4 bg-zinc-900/50 border-zinc-800">
-                            <CardHeader>
-                                <CardTitle>Recent Activity</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <ActivityFeed events={serializedEvents.slice(0, 5)} />
-                            </CardContent>
-                        </Card>
-                    </div>
+                    {/* Recent Activity — directly, no nested card */}
+                    <ActivityFeed events={serializedEvents.slice(0, 10)} />
                 </TabsContent>
 
                 <TabsContent value="activity">
@@ -168,47 +179,74 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                 </TabsContent>
 
                 <TabsContent value="reviews">
-                    <div className="grid gap-4">
-                        {reviews.map((review: any) => (
-                            <Card key={review.id} className="bg-zinc-900/50 border-zinc-800">
-                                <CardHeader>
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="text-lg text-white">Review by {review.reviewer}</CardTitle>
-                                        <span className="text-zinc-500 text-sm">{review.created_at?.toLocaleDateString()}</span>
-                                    </div>
-                                    <CardDescription>
-                                        Level {review.level_before} → Level {review.level_after}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-2">
-                                    <div className="flex items-center gap-1">
-                                        {Array.from({ length: 5 }).map((_, i) => (
-                                            <Star key={i} className={`h-4 w-4 ${i < (review.rating || 0) ? 'text-amber-500 fill-amber-500' : 'text-zinc-700'}`} />
-                                        ))}
-                                    </div>
-                                    <p className="text-zinc-300">{review.output_summary}</p>
-                                    <p className="text-zinc-400 italic">"{review.feedback}"</p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
+                    {reviews.length === 0 ? (
+                        <Card className="bg-zinc-900/50 border-zinc-800">
+                            <CardContent className="flex items-center justify-center h-32 text-zinc-500 text-sm">
+                                No reviews yet
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="grid gap-4">
+                            {reviews.map((review: any) => (
+                                <Card key={review.id} className="bg-zinc-900/50 border-zinc-800">
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="text-lg text-white">Review by {review.reviewer}</CardTitle>
+                                            <span className="text-zinc-500 text-sm">{review.created_at?.toLocaleDateString()}</span>
+                                        </div>
+                                        <CardDescription>
+                                            Level {review.level_before} → Level {review.level_after}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-2">
+                                        <div className="flex items-center gap-1">
+                                            {Array.from({ length: 5 }).map((_, i) => (
+                                                <Star key={i} className={`h-4 w-4 ${i < (review.rating || 0) ? 'text-amber-500 fill-amber-500' : 'text-zinc-700'}`} />
+                                            ))}
+                                        </div>
+                                        <p className="text-zinc-300">{review.output_summary}</p>
+                                        <p className="text-zinc-400 italic">&quot;{review.feedback}&quot;</p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
                 </TabsContent>
 
                 <TabsContent value="config">
                     <Card className="bg-zinc-900/50 border-zinc-800">
                         <CardHeader>
                             <CardTitle>Agent Configuration</CardTitle>
-                            <CardDescription>Read-only view of the agent's settings</CardDescription>
+                            <CardDescription>Read-only view of the agent&apos;s settings</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-sm font-medium text-zinc-400">Agent ID</label>
-                                    <div className="text-white p-2 bg-zinc-950 rounded border border-zinc-800">{agent.agent_id}</div>
+                                    <div className="text-white p-2 bg-zinc-950 rounded border border-zinc-800 font-mono text-sm">{agent.agent_id}</div>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-zinc-400">Model</label>
-                                    <div className="text-white p-2 bg-zinc-950 rounded border border-zinc-800">claude-3-5-sonnet</div>
+                                    <label className="text-sm font-medium text-zinc-400">Display Name</label>
+                                    <div className="text-white p-2 bg-zinc-950 rounded border border-zinc-800">{agent.name}</div>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-zinc-400">Level</label>
+                                    <div className="text-white p-2 bg-zinc-950 rounded border border-zinc-800 flex items-center gap-2">
+                                        <img src={`/assets/rank-icons/rank-${Math.min(agent.level ?? 1, 10)}.webp`} className="h-6 w-6" alt="" />
+                                        Level {agent.level}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-zinc-400">Trust Score</label>
+                                    <div className="text-white p-2 bg-zinc-950 rounded border border-zinc-800">{Math.round(Number(agent.trust_score) * 100)}%</div>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-zinc-400">Created</label>
+                                    <div className="text-white p-2 bg-zinc-950 rounded border border-zinc-800">{agent.created_at?.toLocaleDateString()}</div>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-zinc-400">Last Updated</label>
+                                    <div className="text-white p-2 bg-zinc-950 rounded border border-zinc-800">{agent.updated_at?.toLocaleDateString()}</div>
                                 </div>
                             </div>
                         </CardContent>
