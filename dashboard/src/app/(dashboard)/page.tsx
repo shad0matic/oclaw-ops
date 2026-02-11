@@ -9,6 +9,7 @@ import { DataRefresh } from "@/components/data-refresh"
 import { CostCard } from "@/components/dashboard/cost-card"
 import { ActiveTasks } from "@/components/dashboard/active-tasks"
 import { MemoryIntegrity } from "@/components/dashboard/memory-integrity"
+import { AgentLiveStatus } from "@/components/dashboard/agent-live-status"
 import { WorktreeStatus } from "@/components/dashboard/worktree-status"
 
 export default async function DashboardPage() {
@@ -121,11 +122,13 @@ export default async function DashboardPage() {
         <AgentStrip agents={enrichedAgents} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <div className="col-span-2">
-          <ActivityFeed events={serializedEvents} />
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-8">
+            <ActivityFeed events={serializedEvents} />
         </div>
-        {/* Future: Workflow list or other widgets */}
+        <div className="col-span-4">
+            <AgentLiveStatus />
+        </div>
       </div>
     </div>
   )
