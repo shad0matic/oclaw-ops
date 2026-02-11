@@ -145,7 +145,7 @@ function formatSingleEvent(event: Event): { text: string; status?: string } {
         case "task_stalled":
             return { text: `stalled: "${detail?.task || "a task"}" (no heartbeat)`, status: "stalled" }
         case "spawn_stalled":
-            return { text: `sub-agent died: "${detail?.task || "a task"}" (${Math.floor((detail?.elapsed || 0) / 60)}m, no response)`, status: "stalled" }
+            return { text: `🪦 sub-agent died: "${detail?.task || "a task"}" (${Math.floor((detail?.elapsed || 0) / 60)}m, no response)`, status: "stalled" }
         case "session_spawn":
             return { text: `spawned sub-agent for "${detail?.task || "a task"}"`, status: "running" }
         case "file_write":
