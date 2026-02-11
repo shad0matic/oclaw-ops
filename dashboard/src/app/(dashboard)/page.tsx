@@ -9,6 +9,7 @@ import { DataRefresh } from "@/components/data-refresh"
 import { CostCard } from "@/components/dashboard/cost-card"
 import { ActiveTasks } from "@/components/dashboard/active-tasks"
 import { MemoryIntegrity } from "@/components/dashboard/memory-integrity"
+import { WorktreeStatus } from "@/components/dashboard/worktree-status"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -109,8 +110,9 @@ export default async function DashboardPage() {
 
       <CostCard />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <ActiveTasks />
+        <WorktreeStatus />
         <MemoryIntegrity />
       </div>
 
