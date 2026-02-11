@@ -22,6 +22,7 @@ export function AgentAvatarManager({ refreshKey = 0 }: { refreshKey?: number }) 
     const [avatars, setAvatars] = useState<AvatarFile[]>([])
     const [assigning, setAssigning] = useState<string | null>(null)
     const [message, setMessage] = useState<string | null>(null)
+    const [overrides, setOverrides] = useState<Record<string, string>>({})
 
     useEffect(() => {
         async function fetchData() {
@@ -50,8 +51,7 @@ export function AgentAvatarManager({ refreshKey = 0 }: { refreshKey?: number }) 
             })
             if (res.ok) {
                 setMessage(`✅ Avatar assigned to ${agentId}`)
-                // Force avatar refresh by updating agents list
-                setAgents((prev) => [...prev])
+                setOverrides((prev) => ({ ...prev, [agentId]: avatarFile }))
             } else {
                 const data = await res.json()
                 setMessage(`❌ ${data.error || "Failed to assign"}`)
@@ -63,8 +63,8 @@ export function AgentAvatarManager({ refreshKey = 0 }: { refreshKey?: number }) 
         }
     }
 
-    // Current avatar for an agent (agent_id.webp if exists, otherwise default)
     const currentAvatar = (agentId: string) => {
+        if (overrides[agentId]) return overrides[agentId]
         const match = avatars.find(
             (a) => a.name.replace(/\.[^.]+$/, "") === agentId
         )
@@ -88,8 +88,7 @@ export function AgentAvatarManager({ refreshKey = 0 }: { refreshKey?: number }) 
                             <div className="flex items-center gap-4">
                                 <Avatar className="h-10 w-10 border border-zinc-700">
                                     <AvatarImage
-                                        key={Date.now()}
-                                        src={`/assets/minion-avatars/${currentAvatar(agent.agent_id)}?t=${Date.now()}`}
+                                        src={`/assets/minion-avatars/${currentAvatar(agent.agent_id)}`}
                                     />
                                     <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
