@@ -1,33 +1,28 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 
-interface Avatar {
+interface AvatarFile {
     name: string
     size: number
 }
 
 export function AvatarLibrary() {
-    const [avatars, setAvatars] = useState<Avatar[]>([])
+    const [avatars, setAvatars] = useState<AvatarFile[]>([])
 
     useEffect(() => {
-        // Fetch avatars from API
         async function fetchData() {
-            const avatarsRes = await fetch("/api/avatars/library")
-            const avatarsData = await avatarsRes.json()
-            setAvatars(avatarsData)
+            try {
+                const res = await fetch("/api/avatars/library")
+                if (res.ok) setAvatars(await res.json())
+            } catch (e) {
+                console.error("Failed to fetch avatar library", e)
+            }
         }
         fetchData()
     }, [])
-
-    const handleDelete = (avatarName: string) => {
-        // Call API to delete avatar
-        console.log(`Deleting avatar: ${avatarName}`)
-    }
 
     return (
         <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
@@ -35,21 +30,22 @@ export function AvatarLibrary() {
                 <CardTitle className="text-zinc-400">Avatar Library</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {avatars.map((avatar) => (
-                        <div key={avatar.name} className="flex flex-col items-center gap-2">
-                            <Avatar className="h-20 w-20 border border-zinc-700">
-                                <AvatarImage src={`/assets/minion-avatars/${avatar.name}`} />
-                                <AvatarFallback>{avatar.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                            <div className="text-sm text-zinc-400">{avatar.name}</div>
-                            <div className="text-xs text-zinc-500">{(avatar.size / 1024).toFixed(1)} KB</div>
-                            <Button variant="destructive" size="sm" onClick={() => handleDelete(avatar.name)}>
-                                Delete
-                            </Button>
-                        </div>
-                    ))}
-                </div>
+                {avatars.length === 0 ? (
+                    <div className="text-zinc-500 text-sm">No avatars found. Upload some!</div>
+                ) : (
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        {avatars.map((avatar) => (
+                            <div key={avatar.name} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors">
+                                <Avatar className="h-16 w-16 border border-zinc-700">
+                                    <AvatarImage src={`/assets/minion-avatars/${avatar.name}`} />
+                                    <AvatarFallback className="text-xs">{avatar.name.substring(0, 3)}</AvatarFallback>
+                                </Avatar>
+                                <div className="text-xs text-zinc-400 text-center truncate w-full">{avatar.name}</div>
+                                <div className="text-[10px] text-zinc-600">{(avatar.size / 1024).toFixed(1)} KB</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </CardContent>
         </Card>
     )

@@ -1,33 +1,30 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
+
+interface AvatarFile {
+    name: string
+    size: number
+}
 
 export function DefaultAvatarSettings() {
-    const [avatars, setAvatars] = useState<string[]>([])
-    const [defaultAvatar, setDefaultAvatar] = useState<string>("")
+    const [avatars, setAvatars] = useState<AvatarFile[]>([])
+    const [current, setCurrent] = useState("default.webp")
 
     useEffect(() => {
-        // Fetch avatars from API
         async function fetchData() {
-            const avatarsRes = await fetch("/api/avatars/library")
-            const avatarsData = await avatarsRes.json()
-            setAvatars(avatarsData)
+            try {
+                const res = await fetch("/api/avatars/library")
+                if (res.ok) setAvatars(await res.json())
+            } catch (e) {
+                console.error("Failed to fetch avatars", e)
+            }
         }
         fetchData()
     }, [])
-
-    const handleDefaultAvatarChange = (avatar: string) => {
-        setDefaultAvatar(avatar)
-    }
-
-    const handleSave = () => {
-        // Call API to save default avatar
-        console.log(`Saving default avatar: ${defaultAvatar}`)
-    }
 
     return (
         <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
@@ -36,19 +33,14 @@ export function DefaultAvatarSettings() {
             </CardHeader>
             <CardContent>
                 <div className="flex items-center gap-4">
-                    <Select onValueChange={handleDefaultAvatarChange} value={defaultAvatar}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Select avatar" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {avatars.map((avatar) => (
-                                <SelectItem key={avatar} value={avatar}>
-                                    {avatar}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Button onClick={handleSave}>Save</Button>
+                    <Avatar className="h-12 w-12 border border-zinc-700">
+                        <AvatarImage src={`/assets/minion-avatars/${current}`} />
+                    </Avatar>
+                    <div className="text-sm text-zinc-400">
+                        This avatar is used for agents without a custom one.
+                        <br />
+                        <span className="text-zinc-500">Current: {current}</span>
+                    </div>
                 </div>
             </CardContent>
         </Card>
