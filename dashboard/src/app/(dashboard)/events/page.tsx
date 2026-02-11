@@ -5,6 +5,7 @@ import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { DataRefresh } from "@/components/data-refresh"
 import { EventFilters } from "@/components/events/event-filters"
 import { Prisma } from "@/generated/prisma/client"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function EventsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
     const session = await auth()
@@ -48,7 +49,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
         <div className="space-y-8 max-w-4xl mx-auto">
             <DataRefresh />
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Event Log</h2>
+                <PageHeader title="Event Log" subtitle="Full activity timeline — every task, error, commit, and heartbeat across all agents." />
             </div>
 
             <EventFilters agents={agents} />

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { GitGraph, Play, Clock, Activity } from "lucide-react"
 import { RunTrigger } from "@/components/workflows/run-trigger"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function WorkflowsPage() {
     const session = await auth()
@@ -27,7 +28,7 @@ export default async function WorkflowsPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Workflows</h2>
+                <PageHeader title="Workflows" subtitle="Multi-step workflow definitions — templates for complex agent operations." />
                 <Button className="bg-amber-500 text-zinc-950 hover:bg-amber-400">
                     <Play className="mr-2 h-4 w-4" /> New Run
                 </Button>

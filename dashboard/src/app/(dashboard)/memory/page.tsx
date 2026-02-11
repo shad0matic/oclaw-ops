@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Brain, Calendar, Database, TrendingUp, Tag } from "lucide-react"
 import { MemorySearch } from "@/components/memory/memory-search"
 import { MemoryCheck } from "@/components/memory/memory-check"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function MemoryPage() {
     const session = await auth()
@@ -41,7 +42,7 @@ export default async function MemoryPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Memory Bank</h2>
+                <PageHeader title="Memory Bank" subtitle="Long-term memories stored by agents — searchable, tagged, and importance-ranked." />
             </div>
 
             <MemoryCheck />

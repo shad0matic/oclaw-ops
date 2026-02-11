@@ -4,6 +4,7 @@ import prisma from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle } from "lucide-react"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function PrioritiesPage() {
     const session = await auth()
@@ -31,7 +32,7 @@ export default async function PrioritiesPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Priorities</h2>
+                <PageHeader title="Priorities" subtitle="Ranked priorities and focus areas guiding agent decision-making." />
             </div>
 
             <div className="grid gap-4">

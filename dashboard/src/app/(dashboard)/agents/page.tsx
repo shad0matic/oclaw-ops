@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowRight, Trophy, Zap, Activity } from "lucide-react"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function AgentsPage() {
     const session = await auth()
@@ -45,7 +46,7 @@ export default async function AgentsPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Agents</h2>
+                <PageHeader title="Agents" subtitle="Monitor and manage your minion workforce — trust levels, task stats, and performance." />
             </div>
 
             {/* Summary Bar */}

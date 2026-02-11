@@ -4,6 +4,7 @@ import prisma from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Network } from "lucide-react"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function KnowledgePage() {
     const session = await auth()
@@ -19,7 +20,7 @@ export default async function KnowledgePage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Knowledge Graph</h2>
+                <PageHeader title="Knowledge Graph" subtitle="Entities and relationships extracted from agent interactions and memory." />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

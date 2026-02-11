@@ -9,6 +9,7 @@ import { ArrowRight, Play, Clock, CheckCircle2, XCircle, AlertCircle } from "luc
 import { RunFilters } from "@/components/runs/run-filters"
 import { Prisma } from "@/generated/prisma/client"
 import { Suspense } from "react"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function RunsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
     const session = await auth()
@@ -47,7 +48,7 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Run History</h2>
+                <PageHeader title="Run History" subtitle="Workflow execution log — status, duration, and outcomes for every run." />
             </div>
 
             <Suspense fallback={<div className="text-zinc-500">Loading filters...</div>}>

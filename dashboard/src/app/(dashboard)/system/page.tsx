@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { SystemMonitor } from "@/components/dashboard/system-monitor"
 import si from "systeminformation"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function SystemPage() {
     const session = await auth()
@@ -26,7 +27,7 @@ export default async function SystemPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">System Status</h2>
+                <PageHeader title="System Status" subtitle="VPS health — CPU, memory, disk, uptime, and service status." />
             </div>
 
             <SystemMonitor initialData={initialData} />

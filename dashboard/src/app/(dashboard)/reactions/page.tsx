@@ -4,6 +4,7 @@ import prisma from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Zap, ArrowRight } from "lucide-react"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function ReactionsPage() {
     const session = await auth()
@@ -16,7 +17,7 @@ export default async function ReactionsPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Reaction Matrix</h2>
+                <PageHeader title="Reaction Matrix" subtitle="Learned response patterns — how agents should react to recurring situations." />
             </div>
 
             <div className="grid gap-4">

@@ -2,6 +2,7 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { TaskQueueClient } from "@/components/tasks/task-queue-client"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function TasksPage() {
     const session = await auth()
@@ -10,7 +11,7 @@ export default async function TasksPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Task Queue</h2>
+                <PageHeader title="Task Queue" subtitle="Active and pending tasks assigned to agents — track progress in real time." />
             </div>
             <TaskQueueClient />
         </div>

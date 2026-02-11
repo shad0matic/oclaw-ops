@@ -4,6 +4,7 @@ import prisma from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle } from "lucide-react"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function MistakesPage() {
     const session = await auth()
@@ -27,7 +28,7 @@ export default async function MistakesPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Mistakes Log</h2>
+                <PageHeader title="Mistakes Log" subtitle="Documented errors and lessons learned — helping agents avoid repeating failures." />
             </div>
 
             <div className="grid gap-4">

@@ -4,6 +4,7 @@ import prisma from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Layers } from "lucide-react"
+import { PageHeader } from "@/components/layout/page-header"
 
 export default async function CompoundsPage() {
     const session = await auth()
@@ -17,7 +18,7 @@ export default async function CompoundsPage() {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight text-white">Memory Compounds</h2>
+                <PageHeader title="Memory Compounds" subtitle="Cross-referenced memory clusters linking related concepts and decisions." />
             </div>
 
             <div className="grid gap-4">
