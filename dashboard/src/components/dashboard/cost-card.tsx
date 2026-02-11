@@ -3,6 +3,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
@@ -129,7 +130,7 @@ export function CostCard() {
     >
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-zinc-400 text-sm font-medium">💸 API Costs (30d)</CardTitle>
+          <CardTitle className="text-zinc-400 text-sm font-medium"><Link href="/costs" className="hover:text-zinc-200 transition-colors">💸 API Costs (30d)</Link></CardTitle>
           <div className="flex items-center gap-2">
             <DollarSign className="h-3.5 w-3.5 text-zinc-500" />
             <Button

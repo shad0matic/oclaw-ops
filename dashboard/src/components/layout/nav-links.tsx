@@ -12,7 +12,8 @@ const navItems = [
     { href: "/agents", label: "Agents", icon: Users },
     { href: "/tasks", label: "Kanban", icon: ListTodo },
     { href: "/events", label: "Events", icon: Activity },
-    { href: "/runs", label: "Runs", icon: Play },
+    { href: "/costs", label: "Costs", icon: DollarSign },
+    // { href: "/runs", label: "Runs", icon: Play },
     { href: "/settings", label: "Settings", icon: Settings },
 ]
 

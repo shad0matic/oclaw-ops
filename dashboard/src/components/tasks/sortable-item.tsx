@@ -1,8 +1,15 @@
-import React from 'react';
+'use client';
+
+import React, { ReactNode } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-export const SortableItem = ({ id, children }) => {
+interface SortableItemProps {
+  id: string;
+  children: ReactNode;
+}
+
+export const SortableItem = ({ id, children }: SortableItemProps) => {
   const {
     attributes,
     listeners,

@@ -1,9 +1,11 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { DndContext, closestCenter } from '@dnd-kit/core';
-import { arrayMove, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableItem } from './sortable-item';
-import fs from 'fs';
-import path from 'path';
+import { Button } from '../ui/button';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const stages = [
   { id: 'backlog', title: 'Backlog' },
@@ -14,7 +16,7 @@ const stages = [
   { id: 'done', title: 'Done' },
 ];
 
-const priorityColors = {
+const priorityColors: Record<string, string> = {
   P1: 'text-red-500',
   P2: 'text-red-400',
   P3: 'text-orange-500',
@@ -26,7 +28,19 @@ const priorityColors = {
   P9: 'text-gray-400',
 };
 
-const projectIcons = {
+const priorityDotColors: Record<string, string> = {
+  P1: 'bg-red-500',
+  P2: 'bg-red-400',
+  P3: 'bg-orange-500',
+  P4: 'bg-orange-400',
+  P5: 'bg-yellow-500',
+  P6: 'bg-yellow-400',
+  P7: 'bg-green-400',
+  P8: 'bg-green-500',
+  P9: 'bg-gray-400',
+};
+
+const projectIcons: Record<string, string> = {
   'Minions Control': '👾',
   'OpenClaw/Kevin': '🔧',
   'Teen Founder': '🌟',
@@ -34,8 +48,19 @@ const projectIcons = {
   'Other': '📦',
 };
 
+interface Task {
+  id: string;
+  title: string;
+  priority: string;
+  project: string;
+  description: string;
+  stage: string;
+}
+
+type TasksByStage = Record<string, Task[]>;
+
 export const KanbanFlow = () => {
-  const [tasks, setTasks] = useState({
+  const [tasks, setTasks] = useState<TasksByStage>({
     backlog: [],
     planned: [],
     running: [],
@@ -43,22 +68,18 @@ export const KanbanFlow = () => {
     todos: [],
     done: [],
   });
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
+  const [filterProject, setFilterProject] = useState('all');
 
   useEffect(() => {
-    // Load tasks from planning/feature-requests/*.md
+    // Load backlog tasks from API
     const loadBacklogTasks = async () => {
-      const dirPath = '/home/shad/projects/oclaw-ops/dashboard/planning/feature-requests';
       try {
-        const files = fs.readdirSync(dirPath);
-        const backlogTasks = files.map((file) => {
-          const content = fs.readFileSync(path.join(dirPath, file), 'utf-8');
-          const title = file.replace('.md', '');
-          const priority = content.match(/Priority: (P[1-9])/i)?.[1] || 'P9';
-          const project = content.match(/Project: (.+)/i)?.[1] || 'Other';
-          const description = content;
-          return { id: `backlog-${title}`, title, priority, project, description, stage: 'backlog' };
-        });
-        setTasks((prev) => ({ ...prev, backlog: backlogTasks }));
+        const res = await fetch('/api/tasks/backlog');
+        if (res.ok) {
+          const data = await res.json();
+          setTasks((prev) => ({ ...prev, backlog: data.tasks || [] }));
+        }
       } catch (error) {
         console.error('Error loading backlog tasks:', error);
       }
@@ -66,97 +87,101 @@ export const KanbanFlow = () => {
     loadBacklogTasks();
   }, []);
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    const activeId = active.id;
-    const overId = over.id;
-
-    if (activeId !== overId) {
-      const activeStage = active.data.current?.stage;
-      const overStage = over.data.current?.stage;
-
-      if (activeStage !== overStage) {
-        // Moving between stages
-        setTasks((prevTasks) => {
-          const activeTask = prevTasks[activeStage].find((t) => t.id === activeId);
-          if (!activeTask) return prevTasks;
-
-          // Conflict detection
-          if (overStage === 'running' && prevTasks.running.some((t) => t.project === activeTask.project)) {
-            alert(`Conflict: A task for ${activeTask.project} is already running.`);
-            return prevTasks;
-          }
-
-          const updatedActiveStage = prevTasks[activeStage].filter((t) => t.id !== activeId);
-          activeTask.stage = overStage;
-          const updatedOverStage = [...prevTasks[overStage], activeTask];
-
-          return {
-            ...prevTasks,
-            [activeStage]: updatedActiveStage,
-            [overStage]: updatedOverStage,
-          };
-        });
-      } else {
-        // Moving within the same stage
-        setTasks((prevTasks) => {
-          const stageTasks = prevTasks[activeStage];
-          const oldIndex = stageTasks.findIndex((item) => item.id === activeId);
-          const newIndex = stageTasks.findIndex((item) => item.id === overId);
-          const updatedTasks = arrayMove(stageTasks, oldIndex, newIndex);
-          return {
-            ...prevTasks,
-            [activeStage]: updatedTasks,
-          };
-        });
-      }
-    }
+  const toggleDescription = (taskId: string) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [taskId]: !prev[taskId],
+    }));
   };
 
-  // Auto-progression logic (simulated for now)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTasks((prevTasks) => {
-        const updatedTasks = { ...prevTasks };
-        // Example: Auto move tasks from 'running' to 'review' after some condition
-        updatedTasks.running.forEach((task) => {
-          if (/* some condition, e.g., time elapsed or task completed */ false) {
-            updatedTasks.running = updatedTasks.running.filter((t) => t.id !== task.id);
-            task.stage = 'review';
-            updatedTasks.review.push(task);
-          }
-        });
-        return updatedTasks;
-      });
-    }, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, []);
+  const handleDragEnd = (event: DragEndEvent) => {
+    // Simple reorder within stage for now
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+  };
+
+  const filteredTasks = (stageTasks: Task[]) => {
+    if (filterProject === 'all') return stageTasks;
+    return stageTasks.filter((t) => t.project === filterProject);
+  };
 
   return (
-    <div className="flex overflow-x-auto space-x-4 pb-4">
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        {stages.map((stage) => (
-          <div key={stage.id} className="flex-1 min-w-[300px] border rounded-md p-4 bg-card/30">
-            <h2 className="font-medium mb-4">{stage.title}</h2>
-            <SortableContext items={tasks[stage.id].map((t) => t.id)} strategy={horizontalListSortingStrategy}>
-              {tasks[stage.id].map((task) => (
-                <SortableItem key={task.id} id={task.id} data={{ stage: stage.id }}>
-                  <div className="border rounded-md p-3 mb-2 bg-card/50">
-                    <h3 className="font-medium">{task.title}</h3>
-                    <div className="flex items-center justify-between mt-2 text-sm text-muted-foreground">
-                      <span className={priorityColors[task.priority || 'P9']}>
-                        <span className="inline-block w-2 h-2 rounded-full mr-1 bg-current"></span>
-                        {task.priority || 'P9'}
-                      </span>
-                      <span>{projectIcons[task.project || 'Other']}</span>
-                    </div>
-                  </div>
-                </SortableItem>
-              ))}
-            </SortableContext>
-          </div>
+    <div className="space-y-4">
+      {/* Project filter */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <Button
+          variant={filterProject === 'all' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilterProject('all')}
+        >
+          All
+        </Button>
+        {Object.entries(projectIcons).map(([proj, icon]) => (
+          <Button
+            key={proj}
+            variant={filterProject === proj ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilterProject(proj)}
+          >
+            {icon} {proj}
+          </Button>
         ))}
-      </DndContext>
+      </div>
+
+      {/* Kanban columns */}
+      <div className="flex overflow-x-auto gap-4 pb-4">
+        {stages.map((stage) => {
+          const stageTasks = filteredTasks(tasks[stage.id] || []);
+          return (
+            <div key={stage.id} className="flex-shrink-0 w-[280px] border rounded-lg p-3 bg-card/30">
+              <h2 className="font-medium mb-3 text-sm uppercase tracking-wider text-muted-foreground">
+                {stage.title}
+                <span className="ml-2 text-xs bg-muted px-1.5 py-0.5 rounded-full">{stageTasks.length}</span>
+              </h2>
+              <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={stageTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+                  {stageTasks.map((task) => (
+                    <SortableItem key={task.id} id={task.id}>
+                      <div className="border rounded-md p-3 mb-2 bg-card/50 cursor-grab active:cursor-grabbing">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-medium text-sm flex-1">{task.title}</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => toggleDescription(task.id)}
+                          >
+                            {expandedDescriptions[task.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                          </Button>
+                        </div>
+                        <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                          <span className={`flex items-center gap-1 ${priorityColors[task.priority || 'P9']}`}>
+                            <span className={`inline-block w-2 h-2 rounded-full ${priorityDotColors[task.priority || 'P9']}`}></span>
+                            {task.priority || 'P9'}
+                          </span>
+                          <span>{projectIcons[task.project || 'Other']} {task.project || 'Other'}</span>
+                        </div>
+                        {expandedDescriptions[task.id] && (
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            <textarea
+                              className="w-full border rounded-md p-2 bg-input/50 text-xs"
+                              defaultValue={task.description || 'No description.'}
+                              rows={4}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </SortableItem>
+                  ))}
+                  {stageTasks.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-4">No tasks</p>
+                  )}
+                </SortableContext>
+              </DndContext>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
