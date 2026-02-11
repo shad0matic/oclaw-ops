@@ -29,11 +29,13 @@ export async function GET(request: NextRequest) {
         WHERE snapshot_hour >= date_trunc('month', now())
     `)
 
-    // Latest FX rate
+    // Latest FX rate (ECB daily table)
+    // ops.fx_rates columns: rate_date, usd_to_eur, created_at
     const { rows: [fx] } = await pool.query(`
-        SELECT rate, fetched_at FROM ops.fx_rates 
-        WHERE pair = 'USD/EUR' 
-        ORDER BY fetched_at DESC LIMIT 1
+        SELECT usd_to_eur, rate_date, created_at
+        FROM ops.fx_rates
+        ORDER BY rate_date DESC
+        LIMIT 1
     `)
 
     const data = daily.map((r: any) => ({
@@ -50,6 +52,6 @@ export async function GET(request: NextRequest) {
             variable: Number(month?.variable ?? 0),
             total: Number(month?.total ?? 0),
         },
-        fxRate: fx ? { usdEur: Number(fx.rate), asOf: fx.fetched_at } : null,
+        fxRate: fx ? { usdEur: Number(fx.usd_to_eur), asOf: fx.rate_date } : null,
     })
 }

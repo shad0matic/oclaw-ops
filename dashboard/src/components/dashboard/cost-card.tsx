@@ -82,7 +82,7 @@ export function CostCard() {
                 </p>
 
                 {chartData.length > 1 && (
-                    <div className="h-[60px] w-full">
+                    <div className="h-[120px] w-full min-w-[200px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData}>
                                 <defs>
