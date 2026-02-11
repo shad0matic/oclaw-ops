@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Play, Activity, Menu, Brain } from "lucide-react"
+import { LayoutDashboard, Users, Play, Activity, Menu, Brain, LogOut, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
     Sheet,
@@ -24,6 +24,7 @@ const topItems = [
 const overflowItems = [
     { href: "/workflows", label: "Workflows" },
     { href: "/system", label: "System" },
+    { href: "/settings", label: "Settings" },
 ]
 
 export function MobileNav() {
@@ -84,6 +85,26 @@ export function MobileNav() {
                                 </Link>
                             )
                         })}
+                        <div className="border-t border-zinc-800 pt-4 mt-4">
+                            <div className="flex items-center justify-between px-3 py-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center text-sm font-medium text-zinc-400">BO</div>
+                                    <div>
+                                        <div className="text-sm font-medium text-white">Boss</div>
+                                        <div className="text-xs text-zinc-500">Admin</div>
+                                    </div>
+                                </div>
+                                <form action="/api/auth/signout" method="POST">
+                                    <button
+                                        type="submit"
+                                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                                    >
+                                        <LogOut className="h-4 w-4" />
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </SheetContent>
             </Sheet>

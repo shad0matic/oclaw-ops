@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Brain, Calendar, Database, TrendingUp, Tag } from "lucide-react"
 import { MemorySearch } from "@/components/memory/memory-search"
+import { MemoryCheck } from "@/components/memory/memory-check"
 
 export default async function MemoryPage() {
     const session = await auth()
@@ -42,6 +43,8 @@ export default async function MemoryPage() {
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold tracking-tight text-white">Memory Bank</h2>
             </div>
+
+            <MemoryCheck />
 
             <Tabs defaultValue="search" className="space-y-4">
                 <TabsList className="bg-zinc-900 border border-zinc-800">
