@@ -1,6 +1,12 @@
 import { PrismaClient } from '@/generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
+// Fix BigInt serialization (Prisma 7 pg adapter returns bigint for bigserial)
+// @ts-ignore
+BigInt.prototype.toJSON = function () {
+    return Number(this);
+};
+
 const prismaClientSingleton = () => {
     const adapter = new PrismaPg({
         connectionString: process.env.DATABASE_URL!,
