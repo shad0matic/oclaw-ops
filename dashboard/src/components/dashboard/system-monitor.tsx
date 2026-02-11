@@ -63,18 +63,26 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
         }
     }, [])
 
+    // Load historical data from buffer on mount
     useEffect(() => {
-        if (!initialData) fetchData()
-        else {
-            // Seed initial point
-            const now = new Date()
-            setHistory([{
-                time: formatTimeShort(now),
-                ts: now.getTime(),
-                cpu: initialData.cpu.usage,
-                mem: (initialData.memory.used / initialData.memory.total) * 100
-            }])
+        const loadHistory = async () => {
+            try {
+                const res = await fetch("/api/system/metrics?hours=1")
+                if (res.ok) {
+                    const points = await res.json()
+                    if (points.length > 0) {
+                        setHistory(points.map((p: any) => ({
+                            time: p.time,
+                            ts: p.ts,
+                            cpu: p.cpu,
+                            mem: p.mem,
+                        })))
+                    }
+                }
+            } catch {}
         }
+        loadHistory()
+        if (!initialData) fetchData()
 
         const interval = setInterval(fetchData, POLL_INTERVAL)
         return () => clearInterval(interval)

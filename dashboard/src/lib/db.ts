@@ -1,5 +1,6 @@
 import { PrismaClient } from '@/generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
 
 // Fix BigInt serialization (Prisma 7 pg adapter returns bigint for bigserial)
 // @ts-ignore
@@ -23,3 +24,8 @@ const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
 export default prisma
 
 if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma
+
+// Raw pg pool for direct SQL (vector queries, metrics, etc.)
+export const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL!,
+})

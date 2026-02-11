@@ -43,7 +43,23 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
         } catch {}
     }, [])
 
+    // Load historical data from buffer on mount
     useEffect(() => {
+        const loadHistory = async () => {
+            try {
+                const res = await fetch("/api/system/metrics?hours=1")
+                if (res.ok) {
+                    const points = await res.json()
+                    if (points.length > 0) {
+                        setCpuHistory(points.map((p: any) => ({ v: p.cpu })))
+                        const last = points[points.length - 1]
+                        setCurrentCpu(last.cpu)
+                    }
+                }
+            } catch {}
+        }
+        loadHistory()
+
         const interval = setInterval(fetchLoad, POLL_MS)
         return () => clearInterval(interval)
     }, [fetchLoad])
