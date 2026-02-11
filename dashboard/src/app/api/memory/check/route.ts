@@ -81,7 +81,7 @@ export async function POST() {
     try {
         // Run memory sync
         const syncOutput = execSync(
-            `cd ${WORKSPACE} && node scripts/memory-sync.mjs 2>&1`,
+            `cd ${WORKSPACE} && OPENAI_API_KEY=${process.env.OPENAI_API_KEY} node scripts/memory-sync.mjs 2>&1`,
             { encoding: "utf8", timeout: 30000 }
         )
         
