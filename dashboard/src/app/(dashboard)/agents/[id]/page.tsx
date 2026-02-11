@@ -60,6 +60,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                 <div className="flex items-center gap-4">
                     <Avatar className="h-16 w-16 border-2 border-zinc-700">
                         <AvatarImage src={`/assets/minion-avatars/${id}.webp`} />
+                        <AvatarImage src="/assets/minion-avatars/default.webp" />
                         <AvatarFallback className="text-xl">{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
