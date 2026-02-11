@@ -105,7 +105,7 @@ export default async function AgentsPage() {
                                         <div className="flex flex-col">
                                             <span>{agent.name}</span>
                                             <span className="flex items-center gap-1">
-                                                <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`Rank ${agent.level}`} className="h-4 w-4" />
+                                                <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`Rank ${agent.level}`} className="h-6 w-6" />
                                                 <span className="text-amber-500 text-[10px]">L{agent.level}</span>
                                             </span>
                                         </div>
@@ -137,7 +137,7 @@ export default async function AgentsPage() {
                                 <TableCell className="text-right">
                                     <Button variant="ghost" size="icon" asChild>
                                         <Link href={`/agents/${agent.agent_id}`}>
-                                            <ArrowRight className="h-4 w-4" />
+                                            <ArrowRight className="h-6 w-6" />
                                         </Link>
                                     </Button>
                                 </TableCell>

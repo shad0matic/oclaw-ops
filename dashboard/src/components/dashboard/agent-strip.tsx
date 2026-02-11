@@ -40,7 +40,7 @@ export function AgentStrip({ agents }: AgentStripProps) {
                                     <img
                                         src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`}
                                         alt={`Rank ${agent.level}`}
-                                        className="h-5 w-5"
+                                        className="h-8 w-8"
                                         title={`Level ${agent.level}`}
                                     />
                                 </div>

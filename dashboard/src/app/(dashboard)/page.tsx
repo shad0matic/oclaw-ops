@@ -36,7 +36,7 @@ export default async function DashboardPage() {
   // DB Fetch
   const [agents, events, activeRuns, completedTasks, tokenStats] = await Promise.all([
     prisma.agent_profiles.findMany({ orderBy: { agent_id: 'asc' } }),
-    prisma.agent_events.findMany({ orderBy: { created_at: 'desc' }, take: 20 }),
+    prisma.agent_events.findMany({ orderBy: { created_at: 'desc' }, take: 50 }),
     prisma.runs.count({ where: { status: 'running' } }),
     prisma.runs.count({
       where: {
@@ -90,9 +90,9 @@ export default async function DashboardPage() {
   const serializedEvents = events.map((e: any) => ({
     ...e,
     id: Number(e.id),
+    context_id: e.context_id ? Number(e.context_id) : null,
     created_at: e.created_at?.toISOString() || new Date().toISOString(),
     cost_usd: Number(e.cost_usd),
-    // detail is Json, already compatible if not massive BigInts inside
   }))
 
   return (

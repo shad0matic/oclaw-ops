@@ -67,7 +67,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                         <h2 className="text-3xl font-bold tracking-tight text-white">{agent.name}</h2>
                         <div className="flex items-center gap-2 text-zinc-400">
                             <span className="flex items-center gap-1">
-                                <img src={`/assets/rank-icons/rank-${Math.min(agent.level ?? 1, 10)}.webp`} alt={`Rank ${agent.level}`} className="h-6 w-6" />
+                                <img src={`/assets/rank-icons/rank-${Math.min(agent.level ?? 1, 10)}.webp`} alt={`Rank ${agent.level}`} className="h-10 w-10" />
                                 <span className="text-amber-500 text-sm">Level {agent.level}</span>
                             </span>
                             <span>•</span>
