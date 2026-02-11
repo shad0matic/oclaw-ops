@@ -5,23 +5,18 @@ import { usePathname } from "next/navigation"
 import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, AlertTriangle, Network, AlertCircle, Zap, DollarSign, Layers, Settings, ListTodo } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+// Minimal navigation (keep advanced pages accessible by URL, but hidden from sidebar)
+// Visible for now: Overview, Agents, Kanban, Events, Runs, Settings
 const navItems = [
     { href: "/", label: "Overview", icon: LayoutDashboard },
     { href: "/agents", label: "Agents", icon: Users },
-    { href: "/workflows", label: "Workflows", icon: GitGraph },
-    { href: "/runs", label: "Runs", icon: Play },
     { href: "/tasks", label: "Kanban", icon: ListTodo },
-    { href: "/memory", label: "Memory", icon: Brain },
     { href: "/events", label: "Events", icon: Activity },
-    { href: "/system", label: "System", icon: Server },
-    { href: "/priorities", label: "Priorities", icon: AlertTriangle },
-    { href: "/knowledge", label: "Knowledge", icon: Network },
-    { href: "/mistakes", label: "Mistakes", icon: AlertCircle },
-    { href: "/reactions", label: "Reactions", icon: Zap },
-    { href: "/costs", label: "Costs", icon: DollarSign },
-    { href: "/compounds", label: "Compounds", icon: Layers },
+    { href: "/runs", label: "Runs", icon: Play },
     { href: "/settings", label: "Settings", icon: Settings },
 ]
+
+// Hidden (for later): workflows, memory, system, priorities, knowledge, mistakes, reactions, costs, compounds
 
 export function NavLinks() {
     const pathname = usePathname()
