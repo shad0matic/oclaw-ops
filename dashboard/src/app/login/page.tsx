@@ -13,7 +13,7 @@ export default function LoginPage() {
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 ring-1 ring-amber-500/50">
                         <Rocket className="h-6 w-6 text-amber-500" />
                     </div>
-                    <CardTitle className="text-2xl">Mission Control</CardTitle>
+                    <CardTitle className="text-3xl" style={{ fontFamily: "'Pump Bold', sans-serif", color: '#FFD700' }}>Minions Control</CardTitle>
                     <CardDescription>Enter access code to proceed</CardDescription>
                 </CardHeader>
                 <CardContent>

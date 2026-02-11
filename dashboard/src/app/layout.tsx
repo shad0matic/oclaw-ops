@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mission Control",
+  title: "Minions Control",
   description: "OpenClaw Operations Dashboard",
 };
 

@@ -99,7 +99,7 @@ export default async function DashboardPage() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight text-white mb-4">Mission Control</h2>
+        <h2 className="text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: "'Pump Bold', sans-serif", color: '#FFD700' }}>Minions Control</h2>
       </div>
 
       <KPICards {...kpiData} />
