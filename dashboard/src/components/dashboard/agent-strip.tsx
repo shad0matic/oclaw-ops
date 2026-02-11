@@ -37,9 +37,12 @@ export function AgentStrip({ agents }: AgentStripProps) {
                             <div className="flex flex-1 flex-col">
                                 <div className="flex items-center justify-between">
                                     <span className="font-medium text-white">{agent.name}</span>
-                                    <Badge variant="outline" className="border-amber-500/20 text-amber-500 text-[10px] px-1 py-0 h-4">
-                                        L{agent.level}
-                                    </Badge>
+                                    <img
+                                        src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`}
+                                        alt={`Rank ${agent.level}`}
+                                        className="h-5 w-5"
+                                        title={`Level ${agent.level}`}
+                                    />
                                 </div>
                                 <div className="flex items-center gap-2 mt-1">
                                     <div className="h-1 flex-1 bg-zinc-800 rounded-full overflow-hidden">

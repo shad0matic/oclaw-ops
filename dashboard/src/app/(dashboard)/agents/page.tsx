@@ -104,9 +104,10 @@ export default async function AgentsPage() {
                                         </Avatar>
                                         <div className="flex flex-col">
                                             <span>{agent.name}</span>
-                                            <Badge variant="outline" className="w-fit border-amber-500/20 text-amber-500 text-[10px] px-1 py-0 h-4">
-                                                L{agent.level}
-                                            </Badge>
+                                            <span className="flex items-center gap-1">
+                                                <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`Rank ${agent.level}`} className="h-4 w-4" />
+                                                <span className="text-amber-500 text-[10px]">L{agent.level}</span>
+                                            </span>
                                         </div>
                                     </div>
                                 </TableCell>
