@@ -6,7 +6,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, RefreshCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface CostData {
   total: number;
@@ -32,6 +33,9 @@ const tierStyles = {
 
 export function CostCard() {
   const [data, setData] = useState<CostData | null>(null);
+  const [xaiBalance, setXaiBalance] = useState<number | null>(null);
+  const [balanceMessage, setBalanceMessage] = useState<string>("Not checked yet");
+  const [checkingBalance, setCheckingBalance] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchCosts = async () => {
@@ -47,10 +51,65 @@ export function CostCard() {
             }
         } catch {}
     }
-    fetchCosts()
-    const interval = setInterval(fetchCosts, 300_000) // Refresh every 5min
-    return () => clearInterval(interval)
+    fetchCosts();
+    
+    const fetchXaiBalance = async () => {
+        try {
+            const res = await fetch("/api/costs/xai-balance")
+            if (res.ok) {
+                const balanceData = await res.json();
+                if (balanceData.ok && balanceData.balance !== null) {
+                    setXaiBalance(balanceData.balance);
+                    setBalanceMessage(balanceData.message);
+                } else {
+                    setBalanceMessage(balanceData.error || "Failed to fetch balance");
+                }
+            }
+        } catch {
+            setBalanceMessage("Network error while checking balance");
+        }
+    }
+    fetchXaiBalance();
+    
+    // Auto-refresh costs every 5 minutes
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchCosts();
+      }
+    }, 300000);
+    // Auto-refresh balance every hour
+    const balanceInterval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchXaiBalance();
+      }
+    }, 3600000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(balanceInterval);
+    };
   }, [])
+
+  const checkBalanceNow = async () => {
+    setCheckingBalance(true);
+    try {
+      const res = await fetch("/api/costs/xai-balance")
+      if (res.ok) {
+        const balanceData = await res.json();
+        if (balanceData.ok && balanceData.balance !== null) {
+          setXaiBalance(balanceData.balance);
+          setBalanceMessage(balanceData.message);
+        } else {
+          setBalanceMessage(balanceData.error || "Failed to fetch balance");
+        }
+      } else {
+        setBalanceMessage("Failed to fetch balance");
+      }
+    } catch {
+      setBalanceMessage("Network error while checking balance");
+    } finally {
+      setCheckingBalance(false);
+    }
+  };
 
   if (!data) {
     return null;
@@ -68,15 +127,26 @@ export function CostCard() {
         animationDuration: styles.animationDuration,
       }}
     >
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium text-zinc-400">Variable Costs</CardTitle>
-          <div className="text-2xl font-bold text-white flex items-center">
-             €{total.toFixed(2)}
-             <DollarSign className="h-4 w-4 ml-1" style={{ color: styles.glowColor }}/>
+          <CardTitle className="text-zinc-400 text-sm font-medium">💸 API Costs (30d)</CardTitle>
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-3.5 w-3.5 text-zinc-500" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={checkBalanceNow}
+              disabled={checkingBalance}
+              className="h-7 text-xs border-zinc-700 hover:bg-zinc-800"
+            >
+              <RefreshCcw className="h-3 w-3 mr-1" />
+              {checkingBalance ? "Checking..." : "Check xAI Now"}
+            </Button>
           </div>
         </div>
-        <p className="text-xs text-zinc-500">Last 30 days</p>
+        <div className="mt-1 text-xs text-zinc-500">
+          xAI Balance: {xaiBalance !== null ? `$${xaiBalance}` : balanceMessage}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-32">

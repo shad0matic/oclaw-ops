@@ -26,7 +26,7 @@ export function EventFilters({ agents }: EventFiltersProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
-    const agentId = searchParams.get("agent_id") || ""
+    const agentId = searchParams.get("agent_id") || "__all__"
     const eventType = searchParams.get("event_type") || ""
     const dateFrom = searchParams.get("date_from") || ""
 
@@ -52,12 +52,12 @@ export function EventFilters({ agents }: EventFiltersProps) {
                 <Label htmlFor="agent-filter" className="text-zinc-400 text-sm mb-2 block">
                     Agent
                 </Label>
-                <Select value={agentId} onValueChange={(val) => updateFilter("agent_id", val)}>
+                <Select value={agentId} onValueChange={(val) => updateFilter("agent_id", val === "__all__" ? "" : val)}>
                     <SelectTrigger id="agent-filter" className="bg-zinc-950 border-zinc-800 text-white">
                         <SelectValue placeholder="All agents" />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-900 border-zinc-800">
-                        <SelectItem value="">All agents</SelectItem>
+                        <SelectItem value="__all__">All agents</SelectItem>
                         {agents.map((agent) => (
                             <SelectItem key={agent.agent_id} value={agent.agent_id}>
                                 {agent.name}

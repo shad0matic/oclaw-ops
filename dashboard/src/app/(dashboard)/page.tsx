@@ -53,22 +53,40 @@ export default async function DashboardPage() {
     }),
   ])
 
-  // Enrich agents
+  // Enrich agents with live status
   const enrichedAgents = await Promise.all(agents.map(async (agent: any) => {
-    // Check for active steps
-    const activeStep = await prisma.steps.findFirst({
-      where: {
-        agent_id: agent.agent_id,
-        status: "running"
-      }
-    })
+    const lastTaskStart = await prisma.agent_events.findFirst({
+        where: { agent_id: agent.agent_id, event_type: 'task_start' },
+        orderBy: { created_at: 'desc' },
+    });
 
+    let status: "active" | "idle" = "idle";
+    let current_task: string | null = null;
+
+    if (lastTaskStart) {
+        const taskEnd = await prisma.agent_events.findFirst({
+            where: {
+                agent_id: agent.agent_id,
+                event_type: { in: ['task_complete', 'error'] },
+                // @ts-ignore
+                detail: { path: ['task'], equals: lastTaskStart.detail?.task },
+                created_at: { gte: lastTaskStart.created_at! },
+            },
+        });
+        if (!taskEnd) {
+            status = "active";
+            // @ts-ignore
+            current_task = lastTaskStart.detail?.task || null;
+        }
+    }
+    
     return {
       agent_id: agent.agent_id,
       name: agent.name,
       level: agent.level || 1,
       trust_score: Number(agent.trust_score) || 0.5,
-      status: activeStep ? "running" : "idle", // TODO: Error state
+      status,
+      current_task,
     }
   }))
 
