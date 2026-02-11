@@ -72,10 +72,39 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                     <div>
                         <h2 className="text-3xl font-bold tracking-tight text-white">{agent.name}</h2>
                         <div className="flex items-center gap-2 text-zinc-400">
-                            <span className="flex items-center gap-1">
-                                <img src={`/assets/rank-icons/rank-${Math.min(agent.level ?? 1, 10)}.webp`} alt={`Rank ${agent.level}`} className="h-10 w-10" />
-                                <span className="text-amber-500 text-sm">Level {agent.level}</span>
-                            </span>
+                            <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button className="flex items-center gap-1 cursor-help rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900" aria-label={`Level ${agent.level} — tap for all ranks`}>
+                                            <img src={`/assets/rank-icons/rank-${Math.min(agent.level ?? 1, 10)}.webp`} alt="" className="h-10 w-10" />
+                                            <span className="text-amber-500 text-sm">Level {agent.level}</span>
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-sm p-3" side="bottom" role="tooltip">
+                                        <p className="font-semibold text-sm mb-2">Agent Ranks</p>
+                                        <div className="space-y-1.5">
+                                            {[
+                                                { rank: 1, name: 'Rookie', desc: 'Read-only, observe & learn' },
+                                                { rank: 2, name: 'Watcher', desc: 'Can search & summarize' },
+                                                { rank: 3, name: 'Helper', desc: 'File edits with approval' },
+                                                { rank: 4, name: 'Builder', desc: 'Create files & run scripts' },
+                                                { rank: 5, name: 'Operator', desc: 'Manage workflows & cron' },
+                                                { rank: 6, name: 'Specialist', desc: 'Domain expert, fewer checks' },
+                                                { rank: 7, name: 'Pioneer', desc: 'Cross-agent coordination' },
+                                                { rank: 8, name: 'Commander', desc: 'Spawn & manage sub-agents' },
+                                                { rank: 9, name: 'Champion', desc: 'Near-full autonomy' },
+                                                { rank: 10, name: 'Ultimate Master', desc: 'Fully autonomous' },
+                                            ].map((r) => (
+                                                <div key={r.rank} className={`flex items-center gap-2 text-sm rounded px-1 py-0.5 ${r.rank === (agent.level ?? 1) ? 'bg-amber-500/10 text-amber-400 font-semibold' : 'text-zinc-300'}`}>
+                                                    <img src={`/assets/rank-icons/rank-${r.rank}.webp`} className="h-5 w-5 shrink-0" alt="" aria-hidden="true" />
+                                                    <span className="flex-1">{r.name}</span>
+                                                    <span className="text-zinc-500 text-[11px]">{r.desc}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                             <span>•</span>
                             <span>Joined {agent.created_at?.toLocaleDateString()}</span>
                         </div>
