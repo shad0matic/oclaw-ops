@@ -143,7 +143,7 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', fontSize: 12 }}
                                     labelStyle={{ color: '#a1a1aa' }}
-                                    formatter={(v: any) => [`${v.toFixed(1)}%`, 'CPU']}
+                                    formatter={(v: any) => [`${(v ?? 0).toFixed(1)}%`, 'CPU']}
                                 />
                                 <Area type="monotone" dataKey="cpu" stroke="#ef4444" fillOpacity={1} fill="url(#colorCpu)" />
                             </AreaChart>
@@ -191,7 +191,7 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', fontSize: 12 }}
                                     labelStyle={{ color: '#a1a1aa' }}
-                                    formatter={(v: any) => [`${v.toFixed(1)}%`, 'Memory']}
+                                    formatter={(v: any) => [`${(v ?? 0).toFixed(1)}%`, 'Memory']}
                                 />
                                 <Area type="monotone" dataKey="mem" stroke="#3b82f6" fillOpacity={1} fill="url(#colorMem)" />
                             </AreaChart>

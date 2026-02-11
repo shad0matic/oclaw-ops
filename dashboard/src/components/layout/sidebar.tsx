@@ -33,7 +33,7 @@ export function Sidebar({ className }: { className?: string }) {
             <div className="border-t p-4">
                 <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent/50 p-3">
                     <Avatar>
-                        <AvatarImage src="/avatar.png" />
+                        <AvatarImage src="/avatar.svg" />
                         <AvatarFallback>BO</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-1 flex-col truncate">

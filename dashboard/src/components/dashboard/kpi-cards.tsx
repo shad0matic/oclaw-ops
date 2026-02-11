@@ -36,9 +36,11 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
             const res = await fetch("/api/system/health")
             if (res.ok) {
                 const json = await res.json()
-                setCurrentCpu(json.cpu.usage)
-                setCurrentMem(json.memory.used)
-                setCpuHistory(prev => [...prev.slice(-(MAX_SPARKLINE - 1)), { v: json.cpu.usage }])
+                const cpu = json.cpu?.usage ?? 0
+                const mem = json.memory?.used ?? 0
+                setCurrentCpu(cpu)
+                setCurrentMem(mem)
+                setCpuHistory(prev => [...prev.slice(-(MAX_SPARKLINE - 1)), { v: cpu }])
             }
         } catch {}
     }, [])
@@ -113,11 +115,11 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
                     <Cpu className="h-4 w-4 text-blue-500" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-white" aria-label={`CPU usage at ${currentCpu.toFixed(1)} percent`}>
-                        {currentCpu.toFixed(1)}%
+                    <div className="text-2xl font-bold text-white" aria-label={`CPU usage at ${(currentCpu ?? 0).toFixed(1)} percent`}>
+                        {(currentCpu ?? 0).toFixed(1)}%
                     </div>
                     <p className="text-xs text-zinc-500 mb-2">
-                        Mem: {(currentMem / 1024 / 1024 / 1024).toFixed(1)}GB · avg {cpuAvg.toFixed(1)}%
+                        Mem: {((currentMem ?? 0) / 1024 / 1024 / 1024).toFixed(1)}GB · avg {(cpuAvg ?? 0).toFixed(1)}%
                     </p>
                     {cpuHistory.length > 1 && (
                         <div className="h-[32px] w-full">
