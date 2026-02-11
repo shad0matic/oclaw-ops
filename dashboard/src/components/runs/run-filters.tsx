@@ -32,7 +32,7 @@ export function RunFilters({ workflows }: RunFiltersProps) {
 
     const updateFilter = (key: string, value: string) => {
         const params = new URLSearchParams(searchParams.toString())
-        if (value) {
+        if (value && value !== "__all__") {
             params.set(key, value)
         } else {
             params.delete(key)
@@ -52,12 +52,12 @@ export function RunFilters({ workflows }: RunFiltersProps) {
                 <Label htmlFor="status-filter" className="text-zinc-400 text-sm mb-2 block">
                     Status
                 </Label>
-                <Select value={status} onValueChange={(val) => updateFilter("status", val)}>
+                <Select value={status || "__all__"} onValueChange={(val) => updateFilter("status", val)}>
                     <SelectTrigger id="status-filter" className="bg-zinc-950 border-zinc-800 text-white">
                         <SelectValue placeholder="All statuses" />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-900 border-zinc-800">
-                        <SelectItem value="">All statuses</SelectItem>
+                        <SelectItem value="__all__">All statuses</SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="running">Running</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
@@ -70,12 +70,12 @@ export function RunFilters({ workflows }: RunFiltersProps) {
                 <Label htmlFor="workflow-filter" className="text-zinc-400 text-sm mb-2 block">
                     Workflow
                 </Label>
-                <Select value={workflowId} onValueChange={(val) => updateFilter("workflow_id", val)}>
+                <Select value={workflowId || "__all__"} onValueChange={(val) => updateFilter("workflow_id", val)}>
                     <SelectTrigger id="workflow-filter" className="bg-zinc-950 border-zinc-800 text-white">
                         <SelectValue placeholder="All workflows" />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-900 border-zinc-800">
-                        <SelectItem value="">All workflows</SelectItem>
+                        <SelectItem value="__all__">All workflows</SelectItem>
                         {workflows.map((wf) => (
                             <SelectItem key={wf.id} value={wf.id.toString()}>
                                 {wf.name}
