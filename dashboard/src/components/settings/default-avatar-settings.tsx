@@ -1,55 +1,56 @@
 
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-
-const mockAvatars = ['kevin.webp', 'bob.webp', 'stuart.webp', 'nefario.webp', 'default.webp'];
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
 
 export function DefaultAvatarSettings() {
-  const [defaultAvatar, setDefaultAvatar] = useState('default.webp');
-  const [avatars, setAvatars] = useState(mockAvatars);
+    const [avatars, setAvatars] = useState<string[]>([])
+    const [defaultAvatar, setDefaultAvatar] = useState<string>("")
 
-  // In a real app, you would fetch the current default avatar and the library
-  // useEffect(() => {
-  //   // fetch('/api/settings/default-avatar').then(res => res.json()).then(data => setDefaultAvatar(data.avatar));
-  //   // fetch('/api/avatars/library').then(res => res.json()).then(setAvatars);
-  // }, []);
+    useEffect(() => {
+        // Fetch avatars from API
+        async function fetchData() {
+            const avatarsRes = await fetch("/api/avatars/library")
+            const avatarsData = await avatarsRes.json()
+            setAvatars(avatarsData)
+        }
+        fetchData()
+    }, [])
 
-  const handleSave = () => {
-    // API call to save the new default avatar
-    // fetch('/api/settings/default-avatar', {
-    //   method: 'POST',
-    //   body: JSON.stringify({ avatar: defaultAvatar }),
-    // });
-    console.log('Saved default avatar:', defaultAvatar);
-  };
+    const handleDefaultAvatarChange = (avatar: string) => {
+        setDefaultAvatar(avatar)
+    }
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Default Avatar Configuration</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Choose a default avatar for agents without a specific one assigned.
-        </p>
-        <Select value={defaultAvatar} onValueChange={setDefaultAvatar}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a default avatar" />
-          </SelectTrigger>
-          <SelectContent>
-            {avatars.map((avatar) => (
-              <SelectItem key={avatar} value={avatar}>
-                {avatar}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button onClick={handleSave}>Save Default</Button>
-      </CardContent>
-    </Card>
-  );
+    const handleSave = () => {
+        // Call API to save default avatar
+        console.log(`Saving default avatar: ${defaultAvatar}`)
+    }
+
+    return (
+        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+            <CardHeader>
+                <CardTitle className="text-zinc-400">Default Avatar</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="flex items-center gap-4">
+                    <Select onValueChange={handleDefaultAvatarChange} value={defaultAvatar}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select avatar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {avatars.map((avatar) => (
+                                <SelectItem key={avatar} value={avatar}>
+                                    {avatar}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Button onClick={handleSave}>Save</Button>
+                </div>
+            </CardContent>
+        </Card>
+    )
 }

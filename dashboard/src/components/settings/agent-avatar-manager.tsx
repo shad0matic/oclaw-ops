@@ -1,75 +1,75 @@
 
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-// Mock data for agents and avatars - replace with API calls
-const mockAgents = [
-  { id: 'kevin', name: 'Kevin', avatar: '' },
-  { id: 'bob', name: 'Bob', avatar: '' },
-  { id: 'stuart', name: 'Stuart', avatar: '' },
-];
-
-const mockAvatars = ['kevin.webp', 'bob.webp', 'stuart.webp', 'nefario.webp'];
+interface Agent {
+    agent_id: string
+    name: string
+    avatar: string
+}
 
 export function AgentAvatarManager() {
-  const [agents, setAgents] = useState(mockAgents);
-  const [avatars, setAvatars] = useState(mockAvatars);
+    const [agents, setAgents] = useState<Agent[]>([])
+    const [avatars, setAvatars] = useState<string[]>([])
 
-  // In a real app, you would fetch agents and avatars from your API
-  // useEffect(() => {
-  //   // fetch('/api/agents').then(res => res.json()).then(setAgents);
-  //   // fetch('/api/avatars/library').then(res => res.json()).then(setAvatars);
-  // }, []);
+    useEffect(() => {
+        // Fetch agents and avatars from API
+        async function fetchData() {
+            const agentsRes = await fetch("/api/agents")
+            const agentsData = await agentsRes.json()
+            setAgents(agentsData)
 
-  const handleAvatarChange = (agentId, avatar) => {
-    setAgents(agents.map(agent => 
-      agent.id === agentId ? { ...agent, avatar } : agent
-    ));
-    // Here you would also make an API call to save the change
-    // fetch(`/api/agents/${agentId}/avatar`, {
-    //   method: 'POST',
-    //   body: JSON.stringify({ avatar }),
-    // });
-  };
+            const avatarsRes = await fetch("/api/avatars/library")
+            const avatarsData = await avatarsRes.json()
+            setAvatars(avatarsData)
+        }
+        fetchData()
+    }, [])
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Agent Avatar Management</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {agents.map((agent) => (
-          <div key={agent.id} className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Avatar>
-                <AvatarImage src={`/assets/minion-avatars/${agent.avatar}`} />
-                <AvatarFallback>{agent.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <span>{agent.name}</span>
-            </div>
-            <Select
-              value={agent.avatar}
-              onValueChange={(value) => handleAvatarChange(agent.id, value)}
-            >
-              <SelectTrigger className="w-[220px]">
-                <SelectValue placeholder="Select avatar" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">None</SelectItem>
-                {avatars.map((avatar) => (
-                  <SelectItem key={avatar} value={avatar}>
-                    {avatar}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
+    const handleAvatarChange = (agentId: string, avatar: string) => {
+        // Call API to update agent avatar
+        console.log(`Updating agent ${agentId} to use avatar ${avatar}`)
+    }
+
+    return (
+        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+            <CardHeader>
+                <CardTitle className="text-zinc-400">Agent Avatars</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    {agents.map((agent) => (
+                        <div key={agent.agent_id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <Avatar className="h-10 w-10 border border-zinc-700">
+                                    <AvatarImage src={`/assets/minion-avatars/${agent.avatar}`} />
+                                    <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <div className="font-medium text-white">{agent.name}</div>
+                                    <div className="text-sm text-zinc-500">{agent.agent_id}</div>
+                                </div>
+                            </div>
+                            <Select onValueChange={(value) => handleAvatarChange(agent.agent_id, value)} defaultValue={agent.avatar}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Select avatar" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {avatars.map((avatar) => (
+                                        <SelectItem key={avatar} value={avatar}>
+                                            {avatar}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    )
 }

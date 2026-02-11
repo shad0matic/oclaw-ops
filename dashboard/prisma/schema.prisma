@@ -87,23 +87,29 @@ model agent_events {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model runs {
-  id            BigInt     @id @default(autoincrement())
-  workflow_id   Int?
-  workflow_name String
-  task          String?
-  status        String?    @default("pending")
-  triggered_by  String?    @default("manual")
-  context       Json?      @default("{}")
-  result        Json?      @default("{}")
-  started_at    DateTime?  @db.Timestamptz(6)
-  completed_at  DateTime?  @db.Timestamptz(6)
-  created_at    DateTime?  @default(now()) @db.Timestamptz(6)
-  workflows     workflows? @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  steps         steps[]
-  tasks         tasks[]
+  id              BigInt     @id @default(autoincrement())
+  workflow_id     Int?
+  workflow_name   String
+  task            String?
+  status          String?    @default("pending")
+  triggered_by    String?    @default("manual")
+  context         Json?      @default("{}")
+  result          Json?      @default("{}")
+  started_at      DateTime?  @db.Timestamptz(6)
+  completed_at    DateTime?  @db.Timestamptz(6)
+  created_at      DateTime?  @default(now()) @db.Timestamptz(6)
+  agent_id        String?    @default("main")
+  last_heartbeat  DateTime?  @db.Timestamptz(6)
+  heartbeat_msg   String?
+  timeout_seconds Int?       @default(600)
+  session_key     String?
+  workflows       workflows? @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  steps           steps[]
+  tasks           tasks[]
 
   @@index([status, created_at(sort: Desc)], map: "idx_runs_status")
   @@index([workflow_id], map: "idx_runs_workflow")
+  @@index([agent_id, status], map: "idx_runs_agent_status")
   @@schema("ops")
 }
 
@@ -324,5 +330,21 @@ model subscriptions {
   created_at       DateTime? @default(now()) @db.Timestamptz(6)
   updated_at       DateTime? @default(now()) @db.Timestamptz(6)
 
+  @@schema("ops")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model system_metrics {
+  id               BigInt   @id @default(autoincrement())
+  ts               DateTime @default(now()) @db.Timestamptz(6)
+  cpu_pct          Float    @db.Real
+  mem_used_bytes   BigInt
+  mem_total_bytes  BigInt
+  disk_used_bytes  BigInt?
+  disk_total_bytes BigInt?
+  db_size_bytes    BigInt?
+  db_connections   Int?
+
+  @@index([ts(sort: Desc)], map: "idx_system_metrics_ts")
   @@schema("ops")
 }

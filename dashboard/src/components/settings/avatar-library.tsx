@@ -1,77 +1,56 @@
 
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 
-const mockAvatars = [
-  { name: 'kevin.webp', size: '25KB', assignedTo: 'Kevin' },
-  { name: 'bob.webp', size: '22KB', assignedTo: 'Bob' },
-  { name: 'stuart.webp', size: '28KB', assignedTo: 'Stuart' },
-  { name: 'nefario.webp', size: '35KB', assignedTo: null },
-  { name: 'default.webp', size: '15KB', assignedTo: 'Default' },
-];
+interface Avatar {
+    name: string
+    size: number
+}
 
 export function AvatarLibrary() {
-  const [avatars, setAvatars] = useState(mockAvatars);
+    const [avatars, setAvatars] = useState<Avatar[]>([])
 
-  // Fetch avatar library from API
-  // useEffect(() => {
-  //   fetch('/api/avatars/library').then(res => res.json()).then(setAvatars);
-  // }, []);
+    useEffect(() => {
+        // Fetch avatars from API
+        async function fetchData() {
+            const avatarsRes = await fetch("/api/avatars/library")
+            const avatarsData = await avatarsRes.json()
+            setAvatars(avatarsData)
+        }
+        fetchData()
+    }, [])
 
-  const handleDelete = (avatarName) => {
-    // Prevent deletion if assigned
-    const avatar = avatars.find(a => a.name === avatarName);
-    if (avatar && avatar.assignedTo) {
-      alert(`${avatarName} is currently assigned to ${avatar.assignedTo} and cannot be deleted.`);
-      return;
+    const handleDelete = (avatarName: string) => {
+        // Call API to delete avatar
+        console.log(`Deleting avatar: ${avatarName}`)
     }
-    
-    if (confirm(`Are you sure you want to delete ${avatarName}?`)) {
-      setAvatars(avatars.filter(a => a.name !== avatarName));
-      // API call to delete the avatar
-      // fetch(`/api/avatars/${avatarName}`, { method: 'DELETE' });
-    }
-  };
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Available Images Library</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {avatars.map((avatar) => (
-            <div key={avatar.name} className="relative group">
-              <Image
-                src={`/assets/minion-avatars/${avatar.name}`}
-                alt={avatar.name}
-                width={100}
-                height={100}
-                className="rounded-md object-cover"
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-1 text-xs rounded-b-md">
-                <p className="truncate">{avatar.name}</p>
-                <p>{avatar.size}</p>
-                {avatar.assignedTo && <p className="font-bold">In use</p>}
-              </div>
-              {!avatar.assignedTo && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleDelete(avatar.name)}
-                >
-                  X
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
+    return (
+        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+            <CardHeader>
+                <CardTitle className="text-zinc-400">Avatar Library</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {avatars.map((avatar) => (
+                        <div key={avatar.name} className="flex flex-col items-center gap-2">
+                            <Avatar className="h-20 w-20 border border-zinc-700">
+                                <AvatarImage src={`/assets/minion-avatars/${avatar.name}`} />
+                                <AvatarFallback>{avatar.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="text-sm text-zinc-400">{avatar.name}</div>
+                            <div className="text-xs text-zinc-500">{(avatar.size / 1024).toFixed(1)} KB</div>
+                            <Button variant="destructive" size="sm" onClick={() => handleDelete(avatar.name)}>
+                                Delete
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    )
 }

@@ -7,6 +7,7 @@ import { AgentStrip } from "@/components/dashboard/agent-strip"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { DataRefresh } from "@/components/data-refresh"
 import { CostCard } from "@/components/dashboard/cost-card"
+import { ActiveTasks } from "@/components/dashboard/active-tasks"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -106,6 +107,8 @@ export default async function DashboardPage() {
       <KPICards {...kpiData} />
 
       <CostCard />
+
+      <ActiveTasks />
 
       <div className="space-y-4">
         <h3 className="text-lg font-medium text-zinc-400">Active Agents</h3>

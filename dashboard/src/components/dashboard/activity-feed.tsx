@@ -21,15 +21,20 @@ function formatEventDetail(event: Event): string {
 
     switch (event_type) {
         case 'session_spawn':
-            return `${agent_id} started working on ${detail?.task || 'a new task'}.`;
+            return `🚀 **${agent_id}** started working on *'${detail?.task || 'a new task'}'*.`;
         case 'file_write':
-            return `${agent_id} wrote to ${detail?.path}.`;
+            return `💾 **${agent_id}** wrote to *'${detail?.path}'*.`;
         case 'spec_written':
-            return `${agent_id} finished writing spec to ${detail?.path} in ${duration}.`;
+            return `📝 **${agent_id}** finished writing spec to *'${detail?.path}'* in ${duration}.`;
         case 'task_complete':
-            return `${agent_id} completed work on ${detail?.task || 'a task'} in ${duration}. Result: ${detail?.result?.substring(0, 50) || 'complete'}`;
+            return `✅ **${agent_id}** completed work on *'${detail?.task || 'a task'}'* in ${duration}. Result: ${detail?.result?.substring(0, 50) || 'complete'}`;
+        case 'run_started':
+            return `🏃‍♂️ **${agent_id}** started run *'${detail?.runId}'*.`;
+        case 'run_completed':
+            return `🏁 **${agent_id}** completed run *'${detail?.runId}'*. Status: ${detail?.status}`;
         default:
-            return typeof detail === 'string' ? detail : JSON.stringify(detail);
+            const detailString = typeof detail === 'string' ? detail : JSON.stringify(detail);
+            return `ℹ️ **${agent_id}** triggered event *'${event_type}'* with details: ${detailString}`;
     }
 }
 
