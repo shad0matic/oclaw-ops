@@ -146,6 +146,10 @@ function formatSingleEvent(event: Event): { text: string; status?: string } {
             return { text: `stalled: "${detail?.task || "a task"}" (no heartbeat)`, status: "stalled" }
         case "spawn_stalled":
             return { text: `🪦 sub-agent died: "${detail?.task || "a task"}" (${Math.floor((detail?.elapsed || 0) / 60)}m, no response)`, status: "stalled" }
+        case "worktree_created":
+            return { text: `🌿 started isolated work: "${detail?.task || "a task"}" (${detail?.repo || "?"})`, status: "running" }
+        case "worktree_merged":
+            return { text: `🔀 merged: "${detail?.task || "a task"}" → main (${detail?.repo || "?"})`, status: "complete" }
         case "session_spawn":
             return { text: `spawned sub-agent for "${detail?.task || "a task"}"`, status: "running" }
         case "file_write":
