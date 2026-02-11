@@ -103,12 +103,20 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                                             <Star className="h-4 w-4 text-amber-500" />
                                         </CardHeader>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="text-sm">L1 👁️ (0-25%): Observer</p>
-                                        <p className="text-sm">L2 💡 (26-50%): Contributor</p>
-                                        <p className="text-sm">L3 ⚙️ (51-75%): Operator</p>
-                                        <p className="text-sm">L4 🚀 (76-100%): Autonomous</p>
-                                        <p className="text-xs text-muted-foreground mt-2">Based on task success, error frequency, and manual overrides.</p>
+                                    <TooltipContent className="max-w-xs">
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-sm">
+                                            <span>I 🍌 Rookie</span><span className="text-zinc-400">0-10%</span>
+                                            <span>II 👁️ Watcher</span><span className="text-zinc-400">11-20%</span>
+                                            <span>III 🔧 Helper</span><span className="text-zinc-400">21-30%</span>
+                                            <span>IV 🛠️ Builder</span><span className="text-zinc-400">31-40%</span>
+                                            <span>V ⚙️ Operator</span><span className="text-zinc-400">41-50%</span>
+                                            <span>VI 💜 Specialist</span><span className="text-zinc-400">51-60%</span>
+                                            <span>VII 🚀 Pioneer</span><span className="text-zinc-400">61-70%</span>
+                                            <span>VIII 👑 Commander</span><span className="text-zinc-400">71-80%</span>
+                                            <span>IX 🏆 Champion</span><span className="text-zinc-400">81-90%</span>
+                                            <span>X 🌍 Master</span><span className="text-zinc-400">91-100%</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-2">Based on task success, error rate, and manual overrides.</p>
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
