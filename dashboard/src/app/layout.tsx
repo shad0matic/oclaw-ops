@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Minions Control",
+  title: process.env.NEXT_PUBLIC_DASHBOARD_NAME || "Minions Control",
   description: "OpenClaw Operations Dashboard",
 };
 

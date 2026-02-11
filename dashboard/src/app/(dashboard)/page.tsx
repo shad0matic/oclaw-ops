@@ -122,7 +122,7 @@ export default async function DashboardPage() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div><h2 className="text-4xl font-bold tracking-tight" style={{ fontFamily: "'Pump Bold', sans-serif", color: '#FFD700' }}>Minions Control</h2><p className="text-sm text-zinc-500 mb-4">Your agent workforce at a glance — KPIs, activity, costs, and system health.</p></div>
+        <div><h2 className="text-4xl font-bold tracking-tight" style={{ fontFamily: "'Pump Bold', sans-serif", color: '#FFD700' }}>{process.env.NEXT_PUBLIC_DASHBOARD_NAME || "Minions Control"}</h2><p className="text-sm text-zinc-500 mb-4">{process.env.NEXT_PUBLIC_DASHBOARD_SUBTITLE || "Your agent workforce at a glance — KPIs, activity, costs, and system health."}</p></div>
       </div>
 
       <KPICards {...kpiData} />

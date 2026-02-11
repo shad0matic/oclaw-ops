@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Play, Activity, Menu, Brain, LogOut, Settings } from "lucide-react"
+import { LayoutDashboard, Users, Activity, Menu, LogOut, ListTodo, DollarSign } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
     Sheet,
@@ -16,14 +16,12 @@ import {
 const topItems = [
     { href: "/", label: "Home", icon: LayoutDashboard },
     { href: "/agents", label: "Agents", icon: Users },
-    { href: "/runs", label: "Runs", icon: Play },
+    { href: "/tasks", label: "Kanban", icon: ListTodo },
     { href: "/events", label: "Events", icon: Activity },
-    { href: "/memory", label: "Memory", icon: Brain },
+    { href: "/costs", label: "Costs", icon: DollarSign },
 ]
 
 const overflowItems = [
-    { href: "/workflows", label: "Workflows" },
-    { href: "/system", label: "System" },
     { href: "/settings", label: "Settings" },
 ]
 

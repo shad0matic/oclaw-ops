@@ -92,6 +92,9 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
                     <p className="text-xs text-zinc-500">
                         {kevinStatus.status === 'online' ? `Uptime: ${(kevinStatus.uptime / 3600).toFixed(1)}h` : 'System down'}
                     </p>
+                    <p className="text-[10px] text-zinc-600 mt-0.5">
+                        Model: Claude Opus 4-6
+                    </p>
                 </CardContent>
             </Card>
 
