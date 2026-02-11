@@ -508,6 +508,49 @@ Weekly memory synthesis — distilled learnings from daily notes.
 
 ---
 
+## Agent Coordination
+
+Multi-agent file conflict prevention and activity tracking.
+
+### File Claims (`ops.file_claims`)
+
+Agents claim files before editing to avoid conflicts. Postgres-enforced uniqueness via partial unique index on active claims (where `released_at IS NULL`). Stale claims auto-released after 2h by watchdog.
+
+**Schema:**
+- `id` — bigint PK
+- `agent_id` — text, not null
+- `file_path` — text, not null
+- `description` — text (optional)
+- `claimed_at` — timestamptz, default now()
+- `released_at` — timestamptz (NULL = active)
+
+**Indexes:**
+- `idx_file_claims_unique_active` — UNIQUE on (file_path, agent_id) WHERE released_at IS NULL
+- `idx_file_claims_active` — btree on file_path WHERE released_at IS NULL
+- `idx_file_claims_agent` — btree on agent_id WHERE released_at IS NULL
+
+**CLI:** `tools/file-claim.mjs` — commands: `claim`, `release`, `release-all`, `check`, `active`
+
+### Git Post-Commit Hook
+
+Shared hook (`scripts/git-post-commit-hook.sh`) symlinked to all repos. Auto-logs commits to `ops.agent_events` with hash, message, changed files, and repo name. Agent resolved from `memory.agent_profiles` DB lookup (no hardcoded list), fallback to git author.
+
+### Event Types in `ops.agent_events`
+
+- **commit** — auto-logged by git post-commit hook
+- **task_start** — logged by task-tracker when a task begins
+- **task_complete** — logged by task-tracker on success
+- **task_fail** — logged by task-tracker on failure
+- **task_stalled** — logged by watchdog when a task exceeds its timeout
+
+### Watchdog Enhancements
+
+`scripts/task-watchdog.mjs` now also:
+- Releases stale file claims (>2h old)
+- Logs `task_stalled` events for timed-out tasks
+
+---
+
 ## Out of scope (for now)
 - Real-time WebSocket
 - Multi-user / roles
