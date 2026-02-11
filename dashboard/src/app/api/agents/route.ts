@@ -28,10 +28,31 @@ export async function GET(req: Request) {
                 orderBy: { created_at: 'desc' }
             })
 
+            const todayStart = new Date()
+            todayStart.setHours(0, 0, 0, 0)
+
+            const [todayTotal, todayCompleted] = await Promise.all([
+                prisma.agent_events.count({
+                    where: {
+                        agent_id: agent.agent_id,
+                        created_at: { gte: todayStart },
+                    }
+                }),
+                prisma.agent_events.count({
+                    where: {
+                        agent_id: agent.agent_id,
+                        created_at: { gte: todayStart },
+                        event_type: { in: ['task_complete', 'step_complete', 'phase_complete', 'run_completed'] }
+                    }
+                }),
+            ])
+
             return {
                 ...agent,
-                status: activeStep ? "running" : "idle", // TODO: Check for error state
-                last_active: lastActive?.created_at || agent.updated_at
+                status: activeStep ? "running" : "idle",
+                last_active: lastActive?.created_at || agent.updated_at,
+                today_tasks: todayTotal,
+                today_completed: todayCompleted,
             }
         }))
 

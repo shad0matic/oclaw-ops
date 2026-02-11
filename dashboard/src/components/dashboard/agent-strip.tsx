@@ -9,6 +9,8 @@ interface Agent {
     status: string
     level: number
     trust_score: number
+    today_tasks?: number
+    today_completed?: number
 }
 
 interface AgentStripProps {
@@ -46,6 +48,11 @@ export function AgentStrip({ agents }: AgentStripProps) {
                                             style={{ width: `${(agent.trust_score) * 100}%` }}
                                         />
                                     </div>
+                                    {(agent.today_tasks != null && agent.today_tasks > 0) && (
+                                        <span className="text-[10px] text-zinc-500 whitespace-nowrap">
+                                            {agent.today_completed}/{agent.today_tasks}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
