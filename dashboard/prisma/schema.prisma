@@ -89,26 +89,30 @@ model agent_events {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model runs {
-  id              BigInt         @id @default(autoincrement())
-  workflow_id     Int?
-  workflow_name   String
-  task            String?
-  status          String?        @default("pending")
-  triggered_by    String?        @default("manual")
-  context         Json?          @default("{}")
-  result          Json?          @default("{}")
-  started_at      DateTime?      @db.Timestamptz(6)
-  completed_at    DateTime?      @db.Timestamptz(6)
-  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
-  agent_id        String?        @default("main")
-  last_heartbeat  DateTime?      @db.Timestamptz(6)
-  heartbeat_msg   String?
-  timeout_seconds Int?           @default(600)
-  session_key     String?
-  agent_events    agent_events[]
-  workflows       workflows?     @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  steps           steps[]
-  tasks           tasks[]
+  id                     BigInt             @id @default(autoincrement())
+  workflow_id            Int?
+  workflow_name          String
+  task                   String?
+  status                 String?            @default("pending")
+  triggered_by           String?            @default("manual")
+  context                Json?              @default("{}")
+  result                 Json?              @default("{}")
+  started_at             DateTime?          @db.Timestamptz(6)
+  completed_at           DateTime?          @db.Timestamptz(6)
+  created_at             DateTime?          @default(now()) @db.Timestamptz(6)
+  agent_id               String?            @default("main")
+  last_heartbeat         DateTime?          @db.Timestamptz(6)
+  heartbeat_msg          String?
+  timeout_seconds        Int?               @default(600)
+  session_key            String?
+  source_feature_request String?
+  review_iteration       Int?               @default(0)
+  review_feedback        String?
+  agent_events           agent_events[]
+  workflows              workflows?         @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  steps                  steps[]
+  task_assignments       task_assignments[]
+  tasks                  tasks[]
 
   @@index([status, created_at(sort: Desc)], map: "idx_runs_status")
   @@index([workflow_id], map: "idx_runs_workflow")
@@ -380,5 +384,27 @@ model task_queue {
 
   @@index([project, status], map: "idx_task_queue_project")
   @@index([status, priority(sort: Desc)], map: "idx_task_queue_status")
+  @@schema("ops")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model task_assignments {
+  id                     BigInt             @id @default(autoincrement())
+  agent_id               String
+  repo                   String
+  branch                 String
+  worktree_path          String?
+  description            String
+  file_manifest          String[]           @default([])
+  status                 String             @default("assigned")
+  parent_task_id         BigInt?
+  run_id                 BigInt?
+  created_at             DateTime?          @default(now()) @db.Timestamptz(6)
+  started_at             DateTime?          @db.Timestamptz(6)
+  completed_at           DateTime?          @db.Timestamptz(6)
+  task_assignments       task_assignments?  @relation("task_assignmentsTotask_assignments", fields: [parent_task_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_task_assignments task_assignments[] @relation("task_assignmentsTotask_assignments")
+  runs                   runs?              @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
   @@schema("ops")
 }
