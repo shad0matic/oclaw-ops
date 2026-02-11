@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, AlertTriangle, Network, AlertCircle, Zap, DollarSign, Layers, Settings } from "lucide-react"
+import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, AlertTriangle, Network, AlertCircle, Zap, DollarSign, Layers, Settings, ListTodo } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
     { href: "/agents", label: "Agents", icon: Users },
     { href: "/workflows", label: "Workflows", icon: GitGraph },
     { href: "/runs", label: "Runs", icon: Play },
+    { href: "/tasks", label: "Tasks", icon: ListTodo },
     { href: "/memory", label: "Memory", icon: Brain },
     { href: "/events", label: "Events", icon: Activity },
     { href: "/system", label: "System", icon: Server },
