@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import prisma from "@/lib/db"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { AgentAvatar } from "@/components/ui/agent-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -64,11 +64,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                     <Link href="/agents"><ArrowLeft className="h-4 w-4" /></Link>
                 </Button>
                 <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16 border-2 border-zinc-700">
-                        <AvatarImage src={`/assets/minion-avatars/${id}.webp`} />
-                        <AvatarImage src="/assets/minion-avatars/default.webp" />
-                        <AvatarFallback className="text-xl">{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
+                    <AgentAvatar agentId={id} fallbackText={agent.name.substring(0, 2).toUpperCase()} className="h-16 w-16 border-2 border-zinc-700" />
                     <div>
                         <h2 className="text-3xl font-bold tracking-tight text-white">{agent.name}</h2>
                         <div className="flex items-center gap-2 text-zinc-400">

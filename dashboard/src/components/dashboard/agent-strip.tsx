@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { AgentAvatar } from "@/components/ui/agent-avatar"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 
@@ -25,11 +25,7 @@ export function AgentStrip({ agents }: AgentStripProps) {
                     <Card className="bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer backdrop-blur-sm">
                         <CardContent className="flex items-center gap-4 p-4">
                             <div className="relative">
-                                <Avatar className="h-10 w-10 border border-zinc-700">
-                                    <AvatarImage src={`/assets/minion-avatars/${agent.agent_id}.webp`} />
-                                    <AvatarImage src="/assets/minion-avatars/default.webp" />
-                                    <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                </Avatar>
+                                <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2).toUpperCase()} className="h-10 w-10" />
                                 <div className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-zinc-900 ${agent.status === 'running' ? 'bg-blue-500 animate-pulse' :
                                         agent.status === 'error' ? 'bg-red-500' : 'bg-zinc-500'
                                     }`} />
