@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import prisma from "@/lib/db"
@@ -41,7 +42,7 @@ export async function GET() {
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
     // Parallel DB queries
-    const [agents, runningRuns, pipelineRaw, recentEvents, dailyCostRaw, zombieEvents] = await Promise.all([
+    const [agents, runningRuns, pipelineRaw, recentEvents, dailyCostRaw, zombieEvents, suspectedZombies] = await Promise.all([
       // All agents with profiles
       prisma.agent_profiles.findMany({ orderBy: { agent_id: 'asc' } }),
 
@@ -80,7 +81,41 @@ export async function GET() {
           event_type: 'zombie_killed',
           created_at: { gte: new Date(now.getTime() - 15 * 60 * 1000) }
         }
-      })
+      }),
+      
+      // Suspected Zombies
+      prisma.$queryRawUnsafe(`
+        WITH last_event AS (
+            SELECT
+                session_id,
+                MAX(created_at) AS last_event_time
+            FROM ops.agent_events
+            WHERE event_type <> 'heartbeat'
+            GROUP BY session_id
+        ),
+        last_heartbeat AS (
+            SELECT
+                session_id,
+                MAX(created_at) AS last_heartbeat_time
+            FROM ops.agent_events
+            WHERE event_type = 'heartbeat'
+            GROUP BY session_id
+        )
+        SELECT
+            le.session_id AS "sessionId",
+            a.id as "agentId",
+            a.name as "agentName",
+            'suspected' as "status",
+            lh.last_heartbeat_time as "detectedAt",
+            'no_activity' AS "heuristic",
+            json_build_object('last_event_time', le.last_event_time, 'last_heartbeat_time', lh.last_heartbeat_time) AS "details"
+        FROM last_event le
+        JOIN last_heartbeat lh ON le.session_id = lh.session_id
+        JOIN ops.runs r ON r.session_key = le.session_id
+        JOIN ops.agent_profiles a ON r.agent_id = a.id
+        WHERE lh.last_heartbeat_time > le.last_event_time + INTERVAL '5 minutes'
+        AND r.ended_at IS NULL;
+      `)
     ])
 
     // Build task trees from running runs
@@ -236,7 +271,8 @@ export async function GET() {
       team: enrichedAgents,
       pipeline,
       dailyCost: Number(dailyCostRaw._sum.cost_usd) || 0,
-      recentEvents: serializedEvents
+      recentEvents: serializedEvents,
+      zombies: suspectedZombies
     })
   } catch (error) {
     console.error("Overview API error:", error)

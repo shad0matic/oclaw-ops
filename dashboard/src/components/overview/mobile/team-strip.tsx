@@ -91,6 +91,15 @@ export function TeamStrip({ agents, onAgentClick }: TeamStripProps) {
                     className="h-3 w-3 border-2 border-background"
                   />
                 </span>
+                {/* Low trust warning */}
+                {agent.trustScore < 0.5 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 text-xs bg-background rounded-full"
+                    title={`Low trust: ${Math.round(agent.trustScore * 100)}%`}
+                  >
+                    ⚠️
+                  </span>
+                )}
               </div>
 
               {/* Name and role */}

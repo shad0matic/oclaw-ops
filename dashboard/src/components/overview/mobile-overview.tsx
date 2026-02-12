@@ -43,19 +43,6 @@ function generateAlerts(
     }
   }
 
-  // Check for low trust
-  for (const agent of agents) {
-    if (agent.trustScore < 0.5) {
-      alerts.push({
-        id: `trust-${agent.id}`,
-        severity: 'warning',
-        title: `Low trust: ${agent.name}`,
-        description: `Trust score: ${Math.round(agent.trustScore * 100)}%`,
-        actionUrl: `/agents/${agent.id}`
-      })
-    }
-  }
-
   return alerts
 }
 

@@ -66,6 +66,7 @@ export interface OverviewData {
   pipeline: PipelineData
   dailyCost: number
   recentEvents: OverviewEvent[]
+  zombies: any[]
 }
 
 export function useOverviewData(refreshInterval = 30000) {

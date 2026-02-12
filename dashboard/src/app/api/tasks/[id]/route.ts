@@ -1,27 +1,64 @@
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/db';
 
-import prisma from "@/lib/db";
-import { NextResponse, type NextRequest } from "next/server";
-
-export async function PATCH(
-  request: NextRequest,
+export async function GET(
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const body = await request.json().catch(() => ({} as any));
-  const status = body?.status as string | undefined;
 
-  if (!status) {
-    return NextResponse.json({ error: "Missing status" }, { status: 400 });
+  if (!id) {
+    return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
   }
 
   try {
-    const updatedTask = await prisma.tasks.update({
-      where: { id: BigInt(id) },
-      data: { status },
-    });
-    return NextResponse.json(updatedTask);
-  } catch (error: any) {
-    console.error(`Failed to update task ${id}`, error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Note: The spec mentions tables that might not exist yet (e.g. ops.agent_signals).
+    // The query will be adapted once the database schema is confirmed.
+    // For now, we'll build a query that joins runs, agent_events and other existing tables.
+
+    const taskDetails: any[] = await prisma.$queryRaw`
+      SELECT
+        r.id,
+        r.title,
+        r.status,
+        a.name as "assignedAgent",
+        r.project,
+        r.created_at as "createdAt",
+        EXTRACT(EPOCH FROM (r.completed_at - r.created_at)) * 1000 as "durationMs",
+        r.tokens as "tokenUsage",
+        r.cost as "actualCost",
+        r.model
+      FROM
+        ops.runs r
+      LEFT JOIN
+        ops.agents a ON r.agent_id = a.id
+      WHERE
+        r.id = ${id}::uuid;
+    `;
+
+    if (!taskDetails || taskDetails.length === 0) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
+    const timelineEvents = await prisma.$queryRaw`
+        SELECT
+            'status_change' as type,
+            created_at as timestamp,
+            event_type as status
+        FROM
+            ops.agent_events
+        WHERE
+            run_id = ${id}::uuid
+        ORDER BY
+            created_at ASC;
+    `;
+
+    const task = taskDetails[0];
+    task.timeline = timelineEvents;
+
+    return NextResponse.json({ task });
+  } catch (error) {
+    console.error('Failed to fetch task details:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

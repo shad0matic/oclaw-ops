@@ -110,6 +110,7 @@ model runs {
   source_feature_request String?
   review_iteration       Int?               @default(0)
   review_feedback        String?
+  zombie_status          String?            @default("none")
   agent_events           agent_events[]
   workflows              workflows?         @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   steps                  steps[]

@@ -6,6 +6,7 @@ import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-ki
 import { SortableItem } from './sortable-item';
 import { Button } from '../ui/button';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 const priorityColors: Record<string, string> = {
   P1: 'text-red-500',
@@ -128,7 +129,9 @@ export const KanbanView = ({ tasks }: { tasks: Task[] }) => {
             <SortableItem key={task.id} id={task.id}>
               <div className="flex flex-col border rounded-md p-4 bg-card/50 mb-2">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-medium">{task.title}</h3>
+                  <Link href={`/tasks/${task.id}`} className="font-medium hover:underline">
+                    {task.title}
+                  </Link>
                   <div className="flex items-center gap-2">
                     <span className={`text-sm flex items-center gap-1 ${priorityColors[task.priority || 'P9']}`}>
                       <span className={`inline-block w-2 h-2 rounded-full ${priorityDotColors[task.priority || 'P9']}`}></span>

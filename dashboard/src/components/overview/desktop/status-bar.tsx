@@ -2,6 +2,7 @@
 
 import { AgentStatusDot } from "../shared/agent-status-dot"
 import { CostDisplay } from "../shared/cost-display"
+import { ResearchToggle } from "./research-toggle"
 import { cn } from "@/lib/utils"
 
 export interface StatusBarProps {
@@ -79,6 +80,12 @@ export function StatusBar({
           <span>Mem</span>
         </div>
       </div>
+
+      {/* Separator */}
+      <div className="h-4 w-px bg-border" aria-hidden="true" />
+
+      {/* Research Toggle */}
+      <ResearchToggle />
     </div>
   )
 }

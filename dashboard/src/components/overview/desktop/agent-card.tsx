@@ -110,6 +110,16 @@ export function AgentCard({
               🧟
             </span>
           )}
+          {/* Low trust warning */}
+          {trustScore < 0.5 && !recentZombieKill && (
+            <span
+              className="absolute -bottom-1 -right-1 text-sm bg-background rounded-full"
+              title={`Low trust: ${Math.round(trustScore * 100)}%`}
+              aria-label={`Warning: low trust score ${Math.round(trustScore * 100)}%`}
+            >
+              ⚠️
+            </span>
+          )}
         </div>
 
         {/* Info */}

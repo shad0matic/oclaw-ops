@@ -11,6 +11,9 @@ import Link from "next/link"
 import { ArrowRight, Trophy, Zap, Activity } from "lucide-react"
 import { PageHeader } from "@/components/layout/page-header"
 
+import { ZombieActions } from "@/components/agents/AgentActions"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
 export default async function AgentsPage() {
     const session = await auth()
     if (!session) redirect("/login")
@@ -21,7 +24,7 @@ export default async function AgentsPage() {
 
     // Enrich agents
     const enrichedAgents = await Promise.all(agents.map(async (agent: any) => {
-        const activeStep = await prisma.steps.findFirst({
+        const activeRun = await prisma.runs.findFirst({
             where: { agent_id: agent.agent_id, status: "running" }
         })
 
@@ -32,7 +35,9 @@ export default async function AgentsPage() {
 
         return {
             ...agent,
-            status: activeStep ? "running" : "idle",
+            status: activeRun ? "running" : "idle",
+            zombie_status: activeRun?.zombie_status,
+            session_key: activeRun?.session_key,
             last_active: lastEvent?.created_at || agent.updated_at,
             trust_percent: (Number(agent.trust_score) || 0) * 100
         }
@@ -91,6 +96,18 @@ export default async function AgentsPage() {
                                     <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-10 w-10 shrink-0" />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
+                                            {agent.zombie_status === 'suspected' && (
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger>
+                                                            <span className="text-xl animate-pulse">🧟</span>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Suspected Zombie</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
                                             <span className="font-medium text-foreground truncate">{agent.name}</span>
                                             <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`L${agent.level}`} className="h-5 w-5 shrink-0" />
                                             <Badge variant={agent.status === 'running' ? 'default' : 'secondary'} className={`shrink-0 text-[10px] px-1.5 py-0 ${
@@ -133,7 +150,21 @@ export default async function AgentsPage() {
                                     <div className="flex items-center gap-3">
                                         <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-8 w-8 shrink-0" />
                                         <div className="flex flex-col min-w-0" title={agent.description || ''}>
-                                            <span className="truncate">{agent.name}</span>
+                                            <div className="flex items-center gap-2">
+                                                {agent.zombie_status === 'suspected' && (
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger>
+                                                                <span className="text-xl animate-pulse">🧟</span>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>Suspected Zombie</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                )}
+                                                <span className="truncate">{agent.name}</span>
+                                            </div>
                                             {agent.description && <span className="text-xs text-muted-foreground/70 truncate max-w-[250px]">{agent.description}</span>}
                                             <span className="flex items-center gap-1">
                                                 <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`Rank ${agent.level}`} className="h-6 w-6" />
@@ -166,11 +197,15 @@ export default async function AgentsPage() {
                                     {agent.last_active ? new Date(agent.last_active).toLocaleString() : 'Never'}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon" asChild>
-                                        <Link href={`/agents/${agent.agent_id}`}>
-                                            <ArrowRight className="h-6 w-6" />
-                                        </Link>
-                                    </Button>
+                                    {agent.zombie_status === 'suspected' ? (
+                                        <ZombieActions sessionId={agent.session_key} />
+                                    ) : (
+                                        <Button variant="ghost" size="icon" asChild>
+                                            <Link href={`/agents/${agent.agent_id}`}>
+                                                <ArrowRight className="h-6 w-6" />
+                                            </Link>
+                                        </Button>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}

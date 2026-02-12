@@ -1,3 +1,4 @@
+
 "use client"
 
 import { StatusBar } from "./desktop/status-bar"
@@ -6,6 +7,7 @@ import { TeamRoster } from "./desktop/team-roster"
 import { PipelineStrip } from "./desktop/pipeline-strip"
 import { ActivityTimeline } from "./desktop/activity-timeline"
 import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData"
+import { ZombieAlertBanner } from "@/components/dashboard/ZombieAlertBanner"
 
 export function DesktopOverview() {
   const { data: overviewData, isLoading: overviewLoading } = useOverviewData(30000)
@@ -29,6 +31,11 @@ export function DesktopOverview() {
 
       {/* Main Layout */}
       <div className="p-6 space-y-6">
+        {/* Zombie Alert */}
+        {overviewData?.zombies && overviewData.zombies.length > 0 && (
+          <ZombieAlertBanner zombies={overviewData.zombies} />
+        )}
+
         {/* Top Section: Live Work + Team */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Live Work Panel */}
