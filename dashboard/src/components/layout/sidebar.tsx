@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, LogOut, ListTodo, FlaskConical } from "lucide-react"
+import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, LogOut, ListTodo, FlaskConical, DollarSign } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -17,6 +17,7 @@ const navItems = [
     { href: "/runs", label: "Runs", icon: Play },
     { href: "/memory", label: "Memory", icon: Brain },
     { href: "/events", label: "Events", icon: Activity },
+    { href: "/costs", label: "Costs", icon: DollarSign },
     { href: "/system", label: "System", icon: Server },
 ]
 

@@ -2,7 +2,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/db"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { AgentAvatar } from "@/components/ui/agent-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -99,10 +99,7 @@ export default async function AgentsPage() {
                             <TableRow key={agent.id} className="border-zinc-800 hover:bg-zinc-800/50">
                                 <TableCell className="font-medium text-white">
                                     <div className="flex items-center gap-3">
-                                        <Avatar className="h-8 w-8 border border-zinc-700">
-                                            <AvatarImage src={`/agents/${agent.agent_id}.png`} />
-                                            <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                        </Avatar>
+                                        <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-8 w-8" />
                                         <div className="flex flex-col">
                                             <span>{agent.name}</span>
                                             <span className="flex items-center gap-1">
