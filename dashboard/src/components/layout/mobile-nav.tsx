@@ -16,13 +16,13 @@ import {
 const topItems = [
     { href: "/", label: "Overview", icon: LayoutDashboard },
     { href: "/lab", label: "Lab", icon: FlaskConical },
-    { href: "/agents", label: "Agents", icon: Users },
+    { href: "/costs", label: "Costs", icon: DollarSign },
     { href: "/tasks", label: "Kanban", icon: ListTodo },
 ]
 
 const overflowItems = [
+    { href: "/agents", label: "Agents", icon: Users },
     { href: "/events", label: "Events", icon: Activity },
-    { href: "/costs", label: "Costs", icon: DollarSign },
     { href: "/settings", label: "Settings", icon: Settings },
 ]
 
