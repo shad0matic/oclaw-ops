@@ -55,7 +55,7 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
                 <RunFilters workflows={workflows} />
             </Suspense>
 
-            <div className="rounded-md border border-zinc-800 bg-zinc-900/50">
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/50 overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow className="border-zinc-800 hover:bg-transparent">

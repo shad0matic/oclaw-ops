@@ -81,8 +81,40 @@ export default async function AgentsPage() {
                 </Card>
             </div>
 
-            {/* Agents Table */}
-            <Card className="bg-zinc-900/50 border-zinc-800">
+            {/* Agents — Mobile Cards */}
+            <div className="grid gap-3 md:hidden">
+                {enrichedAgents.map((agent: any) => (
+                    <Link key={agent.id} href={`/agents/${agent.agent_id}`}>
+                        <Card className="bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-colors">
+                            <CardContent className="p-4">
+                                <div className="flex items-center gap-3">
+                                    <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-10 w-10 shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-white truncate">{agent.name}</span>
+                                            <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`L${agent.level}`} className="h-5 w-5 shrink-0" />
+                                            <Badge variant={agent.status === 'running' ? 'default' : 'secondary'} className={`shrink-0 text-[10px] px-1.5 py-0 ${
+                                                agent.status === 'running' ? 'bg-blue-500/10 text-blue-500' : 'bg-zinc-800 text-zinc-400'
+                                            }`}>
+                                                {agent.status}
+                                            </Badge>
+                                        </div>
+                                        {agent.description && <p className="text-xs text-zinc-500 truncate">{agent.description}</p>}
+                                        <div className="flex items-center gap-3 mt-1 text-xs text-zinc-400">
+                                            <span>Trust {agent.trust_percent.toFixed(0)}%</span>
+                                            <span>{agent.successful_tasks}/{agent.total_tasks} tasks</span>
+                                        </div>
+                                    </div>
+                                    <ArrowRight className="h-4 w-4 text-zinc-600 shrink-0" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                ))}
+            </div>
+
+            {/* Agents — Desktop Table */}
+            <Card className="bg-zinc-900/50 border-zinc-800 hidden md:block overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow className="border-zinc-800 hover:bg-transparent">
@@ -99,10 +131,10 @@ export default async function AgentsPage() {
                             <TableRow key={agent.id} className="border-zinc-800 hover:bg-zinc-800/50">
                                 <TableCell className="font-medium text-white">
                                     <div className="flex items-center gap-3">
-                                        <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-8 w-8" />
-                                        <div className="flex flex-col" title={agent.description || ''}>
-                                            <span>{agent.name}</span>
-                                            {agent.description && <span className="text-xs text-zinc-500 truncate max-w-[200px]">{agent.description}</span>}
+                                        <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-8 w-8 shrink-0" />
+                                        <div className="flex flex-col min-w-0" title={agent.description || ''}>
+                                            <span className="truncate">{agent.name}</span>
+                                            {agent.description && <span className="text-xs text-zinc-500 truncate max-w-[250px]">{agent.description}</span>}
                                             <span className="flex items-center gap-1">
                                                 <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`Rank ${agent.level}`} className="h-6 w-6" />
                                                 <span className="text-amber-500 text-[10px]">L{agent.level}</span>
