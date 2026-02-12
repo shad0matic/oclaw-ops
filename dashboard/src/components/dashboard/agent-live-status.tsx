@@ -77,6 +77,9 @@ export function AgentLiveStatus() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-medium text-white">{agent.name}</span>
+                                            {agent.agent_id === "main" && (
+                                                <Badge className="text-[9px] px-1 py-0 h-3.5 bg-amber-500/15 text-amber-400 border-amber-500/30">Lead</Badge>
+                                            )}
                                             <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${cfg.badge}`}>
                                                 {cfg.label}
                                             </Badge>

@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { AgentAvatar } from "@/components/ui/agent-avatar"
 import Link from "next/link"
 
@@ -29,7 +30,12 @@ export function AgentStrip({ agents }: AgentStripProps) {
                         <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-9 w-9" />
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                                <span className="font-medium text-white truncate">{agent.name}</span>
+                                <span className="font-medium text-white truncate">
+                                    {agent.name}
+                                    {agent.agent_id === "main" && (
+                                        <Badge className="ml-1.5 text-[9px] px-1 py-0 h-3.5 bg-amber-500/15 text-amber-400 border-amber-500/30 align-middle">Lead</Badge>
+                                    )}
+                                </span>
                                 <img
                                     src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`}
                                     alt={`Rank ${agent.level}`}

@@ -411,3 +411,52 @@ model task_assignments {
 
   @@schema("ops")
 }
+
+model task_runs {
+  id                 BigInt    @id @default(autoincrement())
+  task_id            String?
+  session_key        String?
+  agent_id           String    @default("main")
+  tier               Int?
+  initial_tier       Int?
+  model_used         String
+  model_alias        String?
+  task_type          String?
+  task_description   String?
+  status             String?   @default("running")
+  input_tokens       Int?
+  output_tokens      Int?
+  total_tokens       Int?
+  cost_usd           Decimal?  @db.Decimal(10, 6)
+  cost_eur           Decimal?  @db.Decimal(10, 6)
+  estimated_tier     Int?
+  estimated_tokens   Int?
+  estimated_cost_usd Decimal?  @db.Decimal(10, 6)
+  escalated_from     Int?
+  escalation_reason  String?
+  escalation_history Json?     @default("[]")
+  duration_ms        Int?
+  started_at         DateTime? @default(now()) @db.Timestamptz
+  completed_at       DateTime? @db.Timestamptz
+  created_at         DateTime? @default(now()) @db.Timestamptz
+
+  @@schema("ops")
+}
+
+model cost_estimates {
+  id                       BigInt    @id @default(autoincrement())
+  task_run_id              BigInt?
+  predicted_input_tokens   Int?
+  predicted_output_tokens  Int?
+  predicted_cost_usd       Decimal?  @db.Decimal(10, 6)
+  actual_input_tokens      Int?
+  actual_output_tokens     Int?
+  actual_cost_usd          Decimal?  @db.Decimal(10, 6)
+  input_features           Json?
+  prediction_model_version String?   @default("heuristic_v1")
+  accuracy_pct             Decimal?  @db.Decimal(5, 2)
+  created_at               DateTime? @default(now()) @db.Timestamptz
+  updated_at               DateTime? @default(now()) @db.Timestamptz
+
+  @@schema("ops")
+}
