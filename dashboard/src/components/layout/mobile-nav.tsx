@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Activity, Menu, LogOut, ListTodo, DollarSign } from "lucide-react"
+import { LayoutDashboard, Users, Activity, Menu, LogOut, ListTodo, DollarSign, FlaskConical, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
     Sheet,
@@ -14,15 +14,16 @@ import {
 } from "@/components/ui/sheet"
 
 const topItems = [
-    { href: "/", label: "Home", icon: LayoutDashboard },
+    { href: "/", label: "Overview", icon: LayoutDashboard },
+    { href: "/lab", label: "Lab", icon: FlaskConical },
     { href: "/agents", label: "Agents", icon: Users },
     { href: "/tasks", label: "Kanban", icon: ListTodo },
-    { href: "/events", label: "Events", icon: Activity },
-    { href: "/costs", label: "Costs", icon: DollarSign },
 ]
 
 const overflowItems = [
-    { href: "/settings", label: "Settings" },
+    { href: "/events", label: "Events", icon: Activity },
+    { href: "/costs", label: "Costs", icon: DollarSign },
+    { href: "/settings", label: "Settings", icon: Settings },
 ]
 
 export function MobileNav() {
@@ -73,12 +74,13 @@ export function MobileNav() {
                                     href={item.href}
                                     onClick={() => setOpen(false)}
                                     className={cn(
-                                        "block rounded-lg p-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500",
+                                        "flex items-center gap-3 rounded-lg p-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500",
                                         isActive 
                                             ? "bg-amber-500/10 text-amber-500" 
                                             : "text-zinc-300 hover:bg-zinc-800"
                                     )}
                                 >
+                                    <item.icon className="h-5 w-5" />
                                     {item.label}
                                 </Link>
                             )
