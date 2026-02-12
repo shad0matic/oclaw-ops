@@ -5,9 +5,9 @@ import { z } from 'zod';
 
 const querySchema = z.object({
   days: z.coerce.number().int().positive().optional().default(30),
-  taskType: z.string().optional(),
-  model: z.string().optional(),
-  tier: z.coerce.number().int().min(1).max(5).optional(),
+  taskType: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  tier: z.coerce.number().int().min(1).max(5).nullable().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -33,15 +33,15 @@ export async function GET(req: NextRequest) {
     let params: any[] = [dateFilter];
     let paramIndex = 2;
 
-    if (taskType) {
+    if (taskType && taskType !== 'all') {
       whereClauses.push(`tr.task_type = $${paramIndex++}`);
       params.push(taskType);
     }
-    if (model) {
+    if (model && model !== 'all') {
       whereClauses.push(`tr.model_alias = $${paramIndex++}`);
       params.push(model);
     }
-    if (tier) {
+    if (tier && tier > 0) {
       whereClauses.push(`tr.tier = $${paramIndex++}`);
       params.push(tier);
     }
@@ -141,7 +141,5 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Failed to fetch cost learning data:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
