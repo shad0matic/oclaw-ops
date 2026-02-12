@@ -8,13 +8,16 @@ export async function GET() {
             orderBy: { name: 'asc' },
         })
 
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+
         const liveStatuses = await Promise.all(
             agents.map(async (agent) => {
-                // Find the most recent task_start event
+                // Find the most recent task_start event (within 1h to avoid stale "active")
                 const lastTaskStart = await prisma.agent_events.findFirst({
                     where: {
                         agent_id: agent.agent_id,
                         event_type: 'task_start',
+                        created_at: { gte: oneHourAgo },
                     },
                     orderBy: { created_at: 'desc' },
                 })
@@ -23,13 +26,10 @@ export async function GET() {
                 let current_task: string | null = null
 
                 if (lastTaskStart) {
-                    // Check if a corresponding task_complete/error exists
                     const taskEnd = await prisma.agent_events.findFirst({
                         where: {
                             agent_id: agent.agent_id,
-                            event_type: { in: ['task_complete', 'error'] },
-                            // @ts-ignore
-                            detail: { path: ['task'], equals: lastTaskStart.detail?.task },
+                            event_type: { in: ['task_complete', 'task_fail', 'error'] },
                             created_at: { gte: lastTaskStart.created_at! },
                         },
                     })
@@ -38,9 +38,18 @@ export async function GET() {
                         status = "active"
                         // @ts-ignore
                         current_task = lastTaskStart.detail?.task || "Working..."
-                    } else {
+                    }
+                }
+
+                // Show last completed task if idle
+                if (status === "idle") {
+                    const lastComplete = await prisma.agent_events.findFirst({
+                        where: { agent_id: agent.agent_id, event_type: 'task_complete' },
+                        orderBy: { created_at: 'desc' },
+                    })
+                    if (lastComplete) {
                         // @ts-ignore
-                        current_task = `Last: ${lastTaskStart.detail?.task}`
+                        current_task = `Last: ${lastComplete.detail?.task || "task"}`
                     }
                 }
 
