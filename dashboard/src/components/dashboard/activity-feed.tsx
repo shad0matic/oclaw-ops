@@ -356,7 +356,7 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
                 <CardTitle className="text-zinc-400">Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
-                <ScrollArea className="h-[400px] pr-4">
+                <ScrollArea className="h-[300px] md:h-[400px] pr-4">
                     {grouped.length === 0 ? (
                         <div className="flex items-center justify-center h-32 text-zinc-500 text-sm">
                             No recent activity yet

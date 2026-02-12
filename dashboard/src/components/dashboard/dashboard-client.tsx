@@ -57,14 +57,14 @@ export const DashboardClient = ({ initialData }: DashboardClientProps) => {
     const { enrichedAgents, serializedEvents, kevinStatus, serverLoad } = initialData
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-4 md:space-y-6">
             <DataRefresh />
 
             {/* Compact header row with status badges */}
             <div>
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
                     <h2 
-                        className="text-4xl font-bold tracking-tight" 
+                        className="text-2xl md:text-4xl font-bold tracking-tight" 
                         style={{ fontFamily: "'Pump Bold', sans-serif", color: '#FFD700' }}
                     >
                         {process.env.NEXT_PUBLIC_DASHBOARD_NAME || "Minions Control"}
@@ -72,10 +72,13 @@ export const DashboardClient = ({ initialData }: DashboardClientProps) => {
                     <StatusBadge status={kevinStatus.status} uptime={kevinStatus.uptime} />
                     <ServerLoadBadge cpu={serverLoad.cpu} memory={serverLoad.memory} />
                 </div>
-                <p className="text-sm text-zinc-500 mt-2">
-                    {process.env.NEXT_PUBLIC_DASHBOARD_SUBTITLE || "Your agent workforce at a glance — KPIs, activity, costs, and system health."}
+                <p className="text-xs md:text-sm text-zinc-500 mt-1">
+                    Agent workforce overview
                 </p>
             </div>
+
+            {/* Minions strip — always visible at top */}
+            <AgentStrip agents={enrichedAgents} />
 
             <CostCard />
 
@@ -87,14 +90,7 @@ export const DashboardClient = ({ initialData }: DashboardClientProps) => {
                 </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-12">
-                <div className="md:col-span-8">
-                    <ActivityFeed events={serializedEvents} />
-                </div>
-                <div className="md:col-span-4 space-y-4">
-                    <AgentStrip agents={enrichedAgents} />
-                </div>
-            </div>
+            <ActivityFeed events={serializedEvents} />
         </div>
     )
 }

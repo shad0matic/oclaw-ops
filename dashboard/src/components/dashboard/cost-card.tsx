@@ -150,7 +150,7 @@ export function CostCard() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-32">
+        <div className="h-24 md:h-32">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={daily} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <defs>
