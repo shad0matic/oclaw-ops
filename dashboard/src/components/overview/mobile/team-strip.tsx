@@ -1,6 +1,6 @@
 "use client"
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AgentStatusDot } from "../shared/agent-status-dot"
 import { cn } from "@/lib/utils"
 import type { AgentData } from "@/hooks/useOverviewData"
@@ -79,6 +79,7 @@ export function TeamStrip({ agents, onAgentClick }: TeamStripProps) {
                     agent.status === 'zombie' && "ring-red-500 motion-safe:animate-pulse"
                   )}
                 >
+                  <AvatarImage src={`/assets/minion-avatars/${agent.id}.webp`} alt={agent.name} />
                   <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                     {initials}
                   </AvatarFallback>

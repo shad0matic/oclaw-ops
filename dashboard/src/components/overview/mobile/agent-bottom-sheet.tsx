@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import Link from "next/link"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AgentStatusDot } from "../shared/agent-status-dot"
 import { cn } from "@/lib/utils"
 import type { AgentData } from "@/hooks/useOverviewData"
@@ -63,6 +63,7 @@ export function AgentBottomSheet({ agent, onClose }: AgentBottomSheetProps) {
           <div className="flex items-center gap-4 mb-4">
             <div className="relative">
               <Avatar className="h-16 w-16 ring-2 ring-border">
+                <AvatarImage src={`/assets/minion-avatars/${agent.id}.webp`} alt={agent.name} />
                 <AvatarFallback className="bg-muted text-muted-foreground">
                   {initials}
                 </AvatarFallback>

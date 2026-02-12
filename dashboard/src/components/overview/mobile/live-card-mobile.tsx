@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ModelBadge } from "../shared/model-badge"
 import { CostDisplay } from "../shared/cost-display"
 import { cn } from "@/lib/utils"
@@ -45,6 +45,7 @@ export function LiveCardMobile({ task }: LiveCardMobileProps) {
       >
         <div className="flex items-start gap-3">
           <Avatar className="h-10 w-10 border-2 border-background shrink-0">
+            <AvatarImage src={`/assets/minion-avatars/${task.agentId}.webp`} alt={task.agentName} />
             <AvatarFallback className="bg-muted text-muted-foreground text-xs">
               {initials}
             </AvatarFallback>

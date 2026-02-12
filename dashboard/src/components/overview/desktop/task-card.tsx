@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ModelBadge } from "../shared/model-badge"
 import { CostDisplay } from "../shared/cost-display"
 import { cn } from "@/lib/utils"
@@ -68,6 +68,7 @@ export function TaskCard({
           aria-label={`View ${agentName}'s profile`}
         >
           <Avatar className="h-10 w-10 border-2 border-background">
+            <AvatarImage src={`/assets/minion-avatars/${agentId}.webp`} alt={agentName} />
             <AvatarFallback className="bg-muted text-muted-foreground text-xs">
               {initials}
             </AvatarFallback>

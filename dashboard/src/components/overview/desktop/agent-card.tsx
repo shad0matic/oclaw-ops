@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AgentStatusDot } from "../shared/agent-status-dot"
 import { cn } from "@/lib/utils"
 
@@ -88,6 +88,7 @@ export function AgentCard({
               status === 'zombie' && "ring-red-500 motion-safe:animate-pulse"
             )}
           >
+            <AvatarImage src={`/assets/minion-avatars/${id}.webp`} alt={name} />
             <AvatarFallback className="bg-muted text-muted-foreground">
               {initials}
             </AvatarFallback>
