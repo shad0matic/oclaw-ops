@@ -100,8 +100,9 @@ export default async function AgentsPage() {
                                 <TableCell className="font-medium text-white">
                                     <div className="flex items-center gap-3">
                                         <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-8 w-8" />
-                                        <div className="flex flex-col">
+                                        <div className="flex flex-col" title={agent.description || ''}>
                                             <span>{agent.name}</span>
+                                            {agent.description && <span className="text-xs text-zinc-500 truncate max-w-[200px]">{agent.description}</span>}
                                             <span className="flex items-center gap-1">
                                                 <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`Rank ${agent.level}`} className="h-6 w-6" />
                                                 <span className="text-amber-500 text-[10px]">L{agent.level}</span>
