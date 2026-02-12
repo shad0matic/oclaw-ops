@@ -88,9 +88,6 @@ export function ActiveTasks() {
         return () => clearInterval(interval)
     }, [])
 
-    // Don't render if nothing to show
-    if (active.length === 0 && recent.length === 0) return null
-
     return (
         <Card className="bg-zinc-900/50 border-zinc-800">
             <CardHeader className="pb-3">
@@ -104,6 +101,9 @@ export function ActiveTasks() {
                 </div>
             </CardHeader>
             <CardContent className="space-y-3">
+                {active.length === 0 && recent.length === 0 && (
+                    <p className="text-zinc-500 text-sm text-center py-4">No tracked tasks right now</p>
+                )}
                 {/* Active tasks */}
                 {active.map(task => {
                     const elapsed = task.elapsedSeconds + tick % 1000 // Rough live counter

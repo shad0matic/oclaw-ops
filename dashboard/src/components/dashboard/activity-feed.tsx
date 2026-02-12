@@ -190,10 +190,9 @@ const MODEL_SHORT: Record<string, string> = {
 }
 
 function ModelChip({ model }: { model?: string }) {
-    if (!model) return null
-    const label = MODEL_SHORT[model] || model.split("/").pop() || model
+    const label = model ? (MODEL_SHORT[model] || model.split("/").pop() || model) : "?"
     return (
-        <span className="text-[9px] px-1 py-0 rounded bg-zinc-800 text-zinc-500 border border-zinc-700/50 font-mono">
+        <span className={`text-[9px] px-1 py-0 rounded border font-mono ${model ? "bg-zinc-800 text-zinc-500 border-zinc-700/50" : "bg-zinc-800/50 text-zinc-600 border-zinc-700/30 italic"}`}>
             {label}
         </span>
     )
