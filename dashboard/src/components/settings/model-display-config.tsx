@@ -22,6 +22,7 @@ const DEFAULT_MODELS: ModelDisplayEntry[] = [
     { id: "openai/gpt-5.2", label: "GPT", color: "#3b82f6", icon: "🔵", warnThreshold: 1.00 },
     { id: "xai/grok-4-fast", label: "Grok4", color: "#f97316", icon: "🟠", warnThreshold: 1.50 },
     { id: "xai/grok-4.1-fast", label: "Grok4.1", color: "#f97316", icon: "🟠", warnThreshold: 1.50 },
+    { id: "anthropic/claude-sonnet-4-5", label: "Sonnet", color: "#a855f7", icon: "🟣", warnThreshold: 0.30 },
 ]
 
 const STORAGE_KEY = "model-display-config"
