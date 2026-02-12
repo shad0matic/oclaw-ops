@@ -179,20 +179,31 @@ function timeAgo(dateStr: string): string {
     return `${diffDays}d ago`
 }
 
-// Model alias display (short labels for known models)
-const MODEL_SHORT: Record<string, string> = {
-    "anthropic/claude-opus-4-6": "Opus",
-    "google/gemini-2.5-pro": "Gemini",
-    "xai/grok-3": "Grok",
-    "openai/gpt-5.2": "GPT",
-    "xai/grok-4-fast": "Grok4",
-    "xai/grok-4.1-fast": "Grok4.1",
-}
+// Model display — reads config from localStorage (set in Settings)
+import { getModelEntry } from "@/components/settings/model-display-config"
 
 function ModelChip({ model }: { model?: string }) {
-    const label = model ? (MODEL_SHORT[model] || model.split("/").pop() || model) : "?"
+    const entry = model ? getModelEntry(model) : null
+    if (!model) {
+        return (
+            <span className="text-[9px] px-1 py-0 rounded border font-mono bg-zinc-800/50 text-zinc-600 border-zinc-700/30 italic">?</span>
+        )
+    }
+    const label = entry?.label || model.split("/").pop() || model
+    const color = entry?.color
+    const icon = entry?.icon
+    if (color) {
+        return (
+            <span
+                className="text-[9px] px-1 py-0 rounded border font-mono"
+                style={{ backgroundColor: `${color}15`, color, borderColor: `${color}40` }}
+            >
+                {icon ? `${icon} ` : ""}{label}
+            </span>
+        )
+    }
     return (
-        <span className={`text-[9px] px-1 py-0 rounded border font-mono ${model ? "bg-zinc-800 text-zinc-500 border-zinc-700/50" : "bg-zinc-800/50 text-zinc-600 border-zinc-700/30 italic"}`}>
+        <span className="text-[9px] px-1 py-0 rounded border font-mono bg-zinc-800 text-zinc-500 border-zinc-700/50">
             {label}
         </span>
     )

@@ -5,6 +5,7 @@ import { AgentAvatarManager } from "@/components/settings/agent-avatar-manager";
 import { AvatarLibrary } from "@/components/settings/avatar-library";
 import { DefaultAvatarSettings } from "@/components/settings/default-avatar-settings";
 import { UploadAvatar } from "@/components/settings/upload-avatar";
+import { ModelDisplayConfig } from "@/components/settings/model-display-config";
 import { PageHeader } from "@/components/layout/page-header"
 
 export default function SettingsPage() {
@@ -14,6 +15,7 @@ export default function SettingsPage() {
     return (
         <div className="space-y-8">
             <PageHeader title="Settings" subtitle="Manage agent avatars, default configurations, and dashboard preferences." />
+            <ModelDisplayConfig />
             <AgentAvatarManager refreshKey={refreshKey} />
             <DefaultAvatarSettings />
             <AvatarLibrary refreshKey={refreshKey} onDelete={refresh} />
