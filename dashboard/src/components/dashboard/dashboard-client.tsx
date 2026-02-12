@@ -6,7 +6,6 @@ import { DataRefresh } from "@/components/data-refresh"
 import { CostCard } from "@/components/dashboard/cost-card"
 import { ActiveTasks } from "@/components/dashboard/active-tasks"
 import { MemoryIntegrity } from "@/components/dashboard/memory-integrity"
-import { AgentLiveStatus } from "@/components/dashboard/agent-live-status"
 import { SubAgentMonitor } from "@/components/dashboard/subagent-monitor"
 import { Badge } from "@/components/ui/badge"
 
@@ -88,17 +87,12 @@ export const DashboardClient = ({ initialData }: DashboardClientProps) => {
                 </div>
             </div>
 
-            <div className="space-y-4">
-                <h3 className="text-lg font-medium text-zinc-400">Minions</h3>
-                <AgentStrip agents={enrichedAgents} />
-            </div>
-
-            <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-8">
+            <div className="grid gap-4 md:grid-cols-12">
+                <div className="md:col-span-8">
                     <ActivityFeed events={serializedEvents} />
                 </div>
-                <div className="col-span-4">
-                    <AgentLiveStatus />
+                <div className="md:col-span-4 space-y-4">
+                    <AgentStrip agents={enrichedAgents} />
                 </div>
             </div>
         </div>
