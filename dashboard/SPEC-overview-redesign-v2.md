@@ -272,6 +272,13 @@ const statusTextColors = {
 │                                                                       │
 ├──────────────────────────────────────────────────────────────────────┤
 │                                                                       │
+│  EPIC TRACKER (active multi-phase projects)                          │
+│  📋 Overview Redesign v2  ██████░░░░ 45%  Phase 2: Mobile 🔄         │
+│  📋 Multi-Project Wkflow  ████░░░░░░ 22%  Phase 1: Context 🔄        │
+│  [Click to expand phases + checkboxes]                                │
+│                                                                       │
+├──────────────────────────────────────────────────────────────────────┤
+│                                                                       │
 │  ACTIVITY TIMELINE (collapsed by default, expandable)                │
 │  ▶ 12 events in last hour [Expand]                                   │
 │                                                                       │
@@ -318,6 +325,12 @@ const statusTextColors = {
 ┌─────────────────────────┐
 │ PIPELINE (mini bar)     │
 │ ████████░░ 80% success  │
+└─────────────────────────┘
+┌─────────────────────────┐
+│ 📋 Epics (2)            │
+│ Redesign v2  ████░░ 45% │
+│ Multi-Proj   ██░░░░ 22% │
+│ [Tap to expand]         │
 └─────────────────────────┘
 ┌─────────────────────────┐
 │ ACTIVITY ▶              │
@@ -1643,6 +1656,138 @@ function Overview() {
 ```
 
 **Important:** Don't use CSS-only responsive. Use component switching for mobile vs desktop. They're different experiences, not the same components with different styles.
+
+---
+
+## 6B. Epic Progress Tracker
+
+### Problem
+Large multi-phase tasks (like "Multi-Project Workflow" or "Overview Redesign v2") span days and have many sub-tasks. Currently there's no way to see their progress on the Overview — Boss has to open the feature request markdown file to check what's done.
+
+### Data Source
+Feature requests live in `planning/feature-requests/*.md` with YAML frontmatter:
+```yaml
+---
+project: oclaw-ops
+priority: high
+status: planned | in-progress | completed
+assigned: kevin
+tags: [dashboard, UX]
+---
+```
+
+Sub-tasks are embedded as markdown with phases/checkboxes:
+```markdown
+## Phase 1: Data Layer (⚡ ~20 min, ~€0.40)
+### 1A. PLANNING — Unified API design (Opus, ~€0.20)
+- [x] Design `/api/overview` endpoint
+- [ ] Define spawn tree builder
+### 1B. EXECUTION — Build API + hooks (Gemini, ~€0.20)
+- [ ] Build route.ts
+- [ ] Build SWR hook
+```
+
+### New DB Table: `ops.epics`
+```sql
+CREATE TABLE ops.epics (
+  id SERIAL PRIMARY KEY,
+  slug TEXT UNIQUE NOT NULL,           -- "overview-redesign-v2"
+  title TEXT NOT NULL,                  -- "Overview Page Redesign v2"
+  source_path TEXT,                     -- "planning/feature-requests/overview-redesign-v2.md"
+  project TEXT,                         -- "oclaw-ops"
+  status TEXT DEFAULT 'planned',        -- planned | in-progress | completed
+  priority TEXT DEFAULT 'medium',       -- low | medium | high | critical
+  assigned_to TEXT,                     -- "kevin"
+  total_steps INTEGER DEFAULT 0,
+  completed_steps INTEGER DEFAULT 0,
+  estimated_cost_eur NUMERIC(10,2),
+  actual_cost_eur NUMERIC(10,2) DEFAULT 0,
+  phases JSONB DEFAULT '[]',           -- [{name, steps: [{desc, done, agent, model, cost}]}]
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+### Sync Mechanism
+- Script `scripts/sync-epics.mjs` parses feature request markdown → extracts phases, checkboxes, cost estimates → upserts to `ops.epics`
+- Agents call `sync-epics.mjs --mark "overview-redesign-v2" "1B"` when completing a sub-task
+- Cron job runs sync every 30 min to catch manual edits to markdown files
+
+### Desktop Component: `EpicTracker`
+
+Position: Between Pipeline Strip and Activity Timeline (or below Live Work Panel if there are active epics)
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  📋 ACTIVE EPICS                                                      │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ Overview Redesign v2          oclaw-ops    kevin               │  │
+│  │ ██████████░░░░░░░░░░ 5/11 tasks (45%)     ~€2.40/€5.40       │  │
+│  │                                                                │  │
+│  │ ✅ Phase 1: Data Layer        ✅ 1A ✅ 1B                     │  │
+│  │ 🔄 Phase 2: Mobile            ✅ 2A 🔄 2B ⬜ 2C              │  │
+│  │ ⬜ Phase 3: Desktop            ⬜ 3A ⬜ 3B ⬜ 3C              │  │
+│  │ ⬜ Phase 4: Integration        ⬜ 4A ⬜ 4B ⬜ 4C              │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ Multi-Project Workflow        infrastructure    kevin          │  │
+│  │ ████░░░░░░░░░░░░░░░░ 2/9 tasks (22%)      ~€0.50/€2.60      │  │
+│  │ ▶ Expand phases...                                             │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**Visual states for steps:**
+- ✅ `text-green-600 dark:text-green-400` — completed
+- 🔄 `text-blue-600 dark:text-blue-400` + pulse animation — in progress
+- ⬜ `text-muted-foreground` — pending
+
+**Interactions:**
+- Click epic card → expand to show all phases with sub-tasks
+- Click phase → expand to show individual checkboxes
+- Click epic title → link to GitHub feature request file
+- Progress bar: colored green for done, blue for in-progress, muted for remaining
+- Cost: shows actual/estimated, turns yellow if actual > 80% estimated, red if over
+
+**Collapsed state (default):** Title + progress bar + fraction + cost. One line per epic.
+**Expanded state:** Full phase breakdown with checkboxes as shown above.
+
+### Mobile Component: `EpicTrackerMobile`
+
+Position: Below TodaySummary (pipeline), above ActivityCollapsed
+
+```
+┌─────────────────────────┐
+│ 📋 Active Epics (2)     │
+│                         │
+│ Overview Redesign v2    │
+│ ██████████░░░░ 45%      │
+│ Phase 2: Mobile 🔄      │
+│                         │
+│ Multi-Project Workflow  │
+│ ████░░░░░░░░░░ 22%      │
+│ Phase 1: Context 🔄     │
+│                         │
+│ [Tap to expand]         │
+└─────────────────────────┘
+```
+
+- Shows: title + progress bar + current active phase name
+- Tap → expand to full phase view (same as desktop expanded)
+- Swipe between epics if >3 (horizontal scroll)
+
+### Accessibility
+- Progress bars: `role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" aria-label="Overview Redesign: 45% complete, 5 of 11 tasks done"`
+- Step icons: `aria-label="Completed"` / `aria-label="In progress"` / `aria-label="Pending"`
+- Epic cards: `role="region" aria-label="Epic: Overview Redesign v2"`
+- Expand/collapse: `aria-expanded` + `aria-controls`
+
+### WCAG
+- Progress bar colors: green-500 on card bg meets 3:1 (UI component)
+- All text follows existing token system
+- Cost warning colors (yellow/red) paired with text labels, never color-only
 
 ---
 
