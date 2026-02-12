@@ -88,7 +88,7 @@ export function AgentAvatarManager({ refreshKey = 0 }: { refreshKey?: number }) 
                             <div className="flex items-center gap-4">
                                 <Avatar className="h-10 w-10 border border-zinc-700">
                                     <AvatarImage
-                                        src={`/assets/minion-avatars/${currentAvatar(agent.agent_id)}`}
+                                        src={`/assets/minion-avatars/${currentAvatar(agent.agent_id)}?v=${refreshKey}`}
                                     />
                                     <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
@@ -102,8 +102,8 @@ export function AgentAvatarManager({ refreshKey = 0 }: { refreshKey?: number }) 
                                     {currentAvatar(agent.agent_id)}
                                 </Badge>
                                 <Select
+                                    value={currentAvatar(agent.agent_id)}
                                     onValueChange={(value) => handleAvatarChange(agent.agent_id, value)}
-                                    defaultValue={currentAvatar(agent.agent_id)}
                                     disabled={assigning === agent.agent_id}
                                 >
                                     <SelectTrigger className="w-[200px] bg-zinc-800 border-zinc-700">
