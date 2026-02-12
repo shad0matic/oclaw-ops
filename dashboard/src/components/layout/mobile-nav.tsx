@@ -3,7 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Activity, Menu, LogOut, ListTodo, DollarSign, FlaskConical, Settings } from "lucide-react"
+import { useTheme } from "next-themes"
+import { LayoutDashboard, Users, Activity, Menu, LogOut, ListTodo, DollarSign, FlaskConical, Settings, Sun, Moon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
     Sheet,
@@ -29,6 +30,7 @@ const overflowItems = [
 export function MobileNav() {
     const pathname = usePathname()
     const [open, setOpen] = useState(false)
+    const { theme, setTheme } = useTheme()
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-zinc-800 bg-zinc-950 px-2 pb-safe md:hidden">
@@ -86,7 +88,14 @@ export function MobileNav() {
                             )
                         })}
                         <div className="border-t border-zinc-800 pt-4 mt-4">
-                            <div className="flex items-center justify-between px-3 py-2">
+                            <button
+                                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                                className="flex items-center gap-3 rounded-lg p-3 w-full text-base font-medium text-zinc-300 hover:bg-zinc-800 transition-colors"
+                            >
+                                {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                                {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                            </button>
+                            <div className="flex items-center justify-between px-3 py-2 mt-2">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center text-sm font-medium text-zinc-400">BO</div>
                                     <div>
