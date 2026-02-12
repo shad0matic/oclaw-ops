@@ -2,23 +2,11 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/db"
 import si from "systeminformation"
-import { KPICards } from "@/components/dashboard/kpi-cards"
-import { AgentStrip } from "@/components/dashboard/agent-strip"
-// IsometricOffice moved to /lab page
-import { ActivityFeed } from "@/components/dashboard/activity-feed"
-import { DataRefresh } from "@/components/data-refresh"
-import { CostCard } from "@/components/dashboard/cost-card"
-import { ActiveTasks } from "@/components/dashboard/active-tasks"
-import { MemoryIntegrity } from "@/components/dashboard/memory-integrity"
-import { AgentLiveStatus } from "@/components/dashboard/agent-live-status"
 import { DashboardClient } from "@/components/dashboard/dashboard-client"
 
 export default async function DashboardPage() {
   const session = await auth()
   if (!session) redirect("/login")
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
 
   // System Stats (can fail in some envs)
   let cpuLoad = 0
@@ -38,15 +26,9 @@ export default async function DashboardPage() {
   }
 
   // DB Fetch
-  const [agents, events, completedTasks] = await Promise.all([
+  const [agents, events] = await Promise.all([
     prisma.agent_profiles.findMany({ orderBy: { agent_id: 'asc' } }),
     prisma.agent_events.findMany({ orderBy: { created_at: 'desc' }, take: 50 }),
-    prisma.runs.count({
-      where: {
-        status: 'completed',
-        completed_at: { gte: today }
-      }
-    }),
   ])
 
   // Enrich agents with live status (1h staleness cutoff)
@@ -85,18 +67,6 @@ export default async function DashboardPage() {
     }
   }))
 
-  const kpiData = {
-    kevinStatus: {
-      status: uptime > 0 ? "online" as const : "offline" as const,
-      uptime: uptime
-    },
-    serverLoad: {
-      cpu: cpuLoad,
-      memory: memStats.active
-    },
-    completedTasks
-  }
-
   // Serialize BigInt for events
   const serializedEvents = events.map((e: any) => ({
     ...e,
@@ -108,8 +78,15 @@ export default async function DashboardPage() {
 
   const initialData = {
       enrichedAgents,
-      kpiData,
-      serializedEvents
+      serializedEvents,
+      kevinStatus: {
+        status: uptime > 0 ? "online" as const : "offline" as const,
+        uptime: uptime
+      },
+      serverLoad: {
+        cpu: cpuLoad,
+        memory: memStats.active
+      }
   }
 
   return <DashboardClient initialData={initialData} />
