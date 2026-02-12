@@ -1,5 +1,4 @@
 import { PrismaClient } from '@/generated/prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
 import pg from 'pg'
 
 // Fix BigInt serialization (Prisma 7 pg adapter returns bigint for bigserial)
@@ -8,24 +7,42 @@ BigInt.prototype.toJSON = function () {
     return Number(this);
 };
 
-const prismaClientSingleton = () => {
+let _prisma: PrismaClient | null = null
+
+function getPrisma(): PrismaClient {
+    if (_prisma) return _prisma
+    
+    // Lazy import to avoid Turbopack evaluation at build time
+    const { PrismaPg } = require('@prisma/adapter-pg')
     const adapter = new PrismaPg({
         connectionString: process.env.DATABASE_URL!,
     })
-    return new PrismaClient({ adapter })
+    _prisma = new PrismaClient({ adapter })
+    return _prisma
 }
 
-declare const globalThis: {
-    prismaGlobal: ReturnType<typeof prismaClientSingleton>;
-} & typeof global;
-
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
+// Use a Proxy so `prisma.xxx` lazily initializes
+const prisma = new Proxy({} as PrismaClient, {
+    get(_target, prop) {
+        return (getPrisma() as any)[prop]
+    }
+})
 
 export default prisma
 
-if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma
+if (process.env.NODE_ENV !== 'production') {
+    (globalThis as any).prismaGlobal = prisma
+}
 
 // Raw pg pool for direct SQL (vector queries, metrics, etc.)
-export const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL!,
+let _pool: pg.Pool | null = null
+export const pool = new Proxy({} as pg.Pool, {
+    get(_target, prop) {
+        if (!_pool) {
+            _pool = new pg.Pool({
+                connectionString: process.env.DATABASE_URL!,
+            })
+        }
+        return (_pool as any)[prop]
+    }
 })
