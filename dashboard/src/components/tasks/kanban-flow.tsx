@@ -9,7 +9,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const stages = [
   { id: 'backlog', title: 'Backlog' },
-  { id: 'planned', title: 'Planned' },
+  { id: 'planned', title: 'Queued' },
   { id: 'running', title: 'Running' },
   { id: 'review', title: 'Review Loop' },
   { id: 'todos', title: 'Human Todos' },
