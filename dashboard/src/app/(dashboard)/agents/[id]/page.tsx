@@ -11,6 +11,7 @@ import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { ArrowLeft, Star, ThumbsUp, Calendar, Activity, Info } from "lucide-react"
 import Link from "next/link"
 import { AgentActions } from "@/components/agents/agent-actions"
+import { AgentDescriptionEditor } from "@/components/agents/agent-description-editor"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { getAgentName } from "@/lib/agent-names"
 
@@ -67,6 +68,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                     <AgentAvatar agentId={id} fallbackText={agent.name.substring(0, 2).toUpperCase()} className="h-16 w-16 border-2 border-border" />
                     <div>
                         <h2 className="text-3xl font-bold tracking-tight text-foreground">{agent.name}</h2>
+                        {agent.description && <p className="text-sm text-muted-foreground">{agent.description}</p>}
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <TooltipProvider delayDuration={200}>
                                 <Tooltip>
@@ -271,7 +273,13 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
                             <CardDescription>Read-only view of the agent&apos;s settings</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-sm font-medium text-muted-foreground">Description</label>
+                                    <AgentDescriptionEditor agentId={agent.agent_id} initialDescription={agent.description || ''} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mt-4">
                                 <div>
                                     <label className="text-sm font-medium text-muted-foreground">Agent ID</label>
                                     <div className="text-foreground p-2 bg-background rounded border border-border font-mono text-sm">{agent.agent_id}</div>

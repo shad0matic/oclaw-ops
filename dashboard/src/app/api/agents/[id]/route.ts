@@ -56,3 +56,34 @@ export async function GET(
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
     }
 }
+
+export async function PATCH(
+    req: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const session = await auth()
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    const { id } = await params
+    const body = await req.json()
+
+    const allowed = ['description', 'name']
+    const data: Record<string, unknown> = {}
+    for (const key of allowed) {
+        if (body[key] !== undefined) data[key] = body[key]
+    }
+    if (Object.keys(data).length === 0) {
+        return NextResponse.json({ error: "No valid fields to update" }, { status: 400 })
+    }
+
+    try {
+        const updated = await prisma.agent_profiles.update({
+            where: { agent_id: id },
+            data: { ...data, updated_at: new Date() }
+        })
+        return NextResponse.json(updated)
+    } catch (error) {
+        console.error("Failed to update agent", error)
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+    }
+}
