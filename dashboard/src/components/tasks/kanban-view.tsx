@@ -32,11 +32,14 @@ const priorityDotColors: Record<string, string> = {
 };
 
 const projectIcons: Record<string, string> = {
-  'Minions Control': '👾',
-  'OpenClaw/Kevin': '🔧',
-  'Teen Founder': '🌟',
-  'OpenPeople-CRM': '👥',
-  'Other': '📦',
+  "Minions Control": "🎛️",
+  "OpenClaw/Kevin": "🦞",
+  "Teen Founder": "📖",
+  "OpenPeople CRM": "👥",
+  "TaskBee": "🐝",
+  "Boris Extensions": "💇",
+  "Directannonces": "🏢",
+  "Other": "📦",
 };
 
 interface Task {

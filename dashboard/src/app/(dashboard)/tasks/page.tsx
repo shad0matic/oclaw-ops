@@ -41,12 +41,26 @@ function getPriorityColor(p: number): { dot: string; text: string; bg: string } 
 // Project icons/labels
 const PROJECT_OPTIONS = [
   { key: "all", label: "All Projects", icon: "🌐" },
-  { key: "minions-control", label: "Minions Control", icon: "🎛️" },
+  { key: "oclaw-ops", label: "Minions Control", icon: "🎛️" },
   { key: "openclaw", label: "OpenClaw/Kevin", icon: "🦞" },
-  { key: "teen-founder", label: "Teen Founder", icon: "🚀" },
-  { key: "openpeople-crm", label: "OpenPeople-CRM", icon: "👥" },
+  { key: "teen-founder", label: "Teen Founder", icon: "📖" },
+  { key: "openpeople-crm", label: "OpenPeople CRM", icon: "👥" },
+  { key: "taskbee", label: "TaskBee", icon: "🐝" },
+  { key: "boris-extensions", label: "Boris Extensions", icon: "💇" },
+  { key: "directannonces", label: "Directannonces", icon: "🏢" },
   { key: "other", label: "Other", icon: "📦" },
 ];
+
+const PROJECT_COLORS: Record<string, string> = {
+  "oclaw-ops": "border-l-amber-500",
+  "openclaw": "border-l-red-500",
+  "teen-founder": "border-l-emerald-500",
+  "openpeople-crm": "border-l-blue-500",
+  "taskbee": "border-l-yellow-500",
+  "boris-extensions": "border-l-pink-500",
+  "directannonces": "border-l-indigo-500",
+  "other": "border-l-zinc-500",
+};
 
 async function fetchQueue(): Promise<QueueTask[]> {
   const res = await fetch("/api/tasks/queue");
@@ -92,7 +106,9 @@ function TaskCard({ task }: { task: QueueTask }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.18 }}
-      className="rounded-lg border border-border bg-background/50 p-3 cursor-grab active:cursor-grabbing"
+      className={`rounded-lg border border-border bg-background/50 p-3 cursor-grab active:cursor-grabbing border-l-2 ${
+        PROJECT_COLORS[task.project || "other"] || "border-l-zinc-500"
+      }`}
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       <div className="flex items-start justify-between gap-2">
