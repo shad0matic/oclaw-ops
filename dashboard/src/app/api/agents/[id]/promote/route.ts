@@ -54,8 +54,11 @@ export async function POST(
             SELECT * FROM ops.agent_profiles WHERE agent_id = '${id}';
         `);
 
+        // Handle the result as an array
+        const updatedAgent = Array.isArray(updatedAgentResult) && updatedAgentResult.length > 0 ? updatedAgentResult[0] : {};
+
         return NextResponse.json({
-            agent: updatedAgentResult[0],
+            agent: updatedAgent,
             review: { feedback: feedback || `Promoted from level ${currentLevel} to ${newLevel}` }
         })
     } catch (error) {

@@ -52,10 +52,13 @@ export async function POST(
         // Fetch updated agent data for response
         const updatedAgentResult = await prisma.$queryRawUnsafe(`
             SELECT * FROM ops.agent_profiles WHERE agent_id = '${id}';
-        `) as Record<string, unknown>[];
+        `);
+
+        // Handle the result as an array
+        const updatedAgent = Array.isArray(updatedAgentResult) && updatedAgentResult.length > 0 ? updatedAgentResult[0] : {};
 
         return NextResponse.json({
-            agent: updatedAgentResult[0],
+            agent: updatedAgent,
             review: { feedback: feedback || `Demoted from level ${currentLevel} to ${newLevel}` }
         })
     } catch (error) {
