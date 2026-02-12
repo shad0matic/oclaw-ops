@@ -71,6 +71,7 @@ export const DashboardClient = ({ initialData }: DashboardClientProps) => {
                     </h2>
                     <StatusBadge status={kevinStatus.status} uptime={kevinStatus.uptime} />
                     <ServerLoadBadge cpu={serverLoad.cpu} memory={serverLoad.memory} />
+                    <MemoryIntegrity />
                 </div>
                 <p className="text-xs md:text-sm text-zinc-500 mt-1">
                     Agent workforce overview
@@ -84,10 +85,7 @@ export const DashboardClient = ({ initialData }: DashboardClientProps) => {
 
             <div className="grid gap-4 md:grid-cols-2">
                 <SubAgentMonitor />
-                <div className="space-y-4">
-                    <ActiveTasks />
-                    <MemoryIntegrity />
-                </div>
+                <ActiveTasks />
             </div>
 
             <ActivityFeed events={serializedEvents} />

@@ -1,35 +1,30 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Brain, RefreshCw, Check, AlertTriangle, X } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface IntegrityReport {
   ok: boolean
   synced?: boolean
   timestamp?: string
-  files?: { total: number; list: { file: string; chunks: number; bytes: number }[] }
-  db?: { total: number; withEmbeddings: number; sources: string[] }
-  issues?: { type: string; source?: string; heading?: string; detail?: string; preview?: string }[]
   summary?: {
     fileChunks: number
     dbEntries: number
-    matched?: number
-    missingFromDb?: number
-    stale?: number
-    orphaned?: number
-    missingEmbeddings?: number
     coveragePercent: number
     healthy?: boolean
+    missingFromDb?: number
+    stale?: number
   }
+  issues?: { type: string; source?: string; heading?: string; detail?: string }[]
   error?: string
 }
 
 export function MemoryIntegrity() {
   const [report, setReport] = useState<IntegrityReport | null>(null)
   const [loading, setLoading] = useState(false)
-  const [syncing, setSyncing] = useState(false)
   const [lastChecked, setLastChecked] = useState<string | null>(() => {
     if (typeof window !== "undefined") return localStorage.getItem("memory-integrity-last-check")
     return null
@@ -52,7 +47,7 @@ export function MemoryIntegrity() {
   }
 
   async function syncAndCheck() {
-    setSyncing(true)
+    setLoading(true)
     try {
       const res = await fetch("/api/memory/integrity", { method: "POST" })
       const data = await res.json()
@@ -63,172 +58,77 @@ export function MemoryIntegrity() {
     } catch (e: any) {
       setReport({ ok: false, error: e.message })
     } finally {
-      setSyncing(false)
+      setLoading(false)
     }
   }
 
   const s = report?.summary
+  const healthy = s?.healthy
+  const issueCount = report?.issues?.length || 0
   const coverage = s?.coveragePercent ?? 0
-  const coverageColor =
-    coverage >= 90 ? "text-green-400" : coverage >= 60 ? "text-amber-400" : "text-red-400"
-  const coverageBg =
-    coverage >= 90 ? "bg-green-500" : coverage >= 60 ? "bg-amber-500" : "bg-red-500"
 
-  return (
-    <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-zinc-400 text-sm font-medium">🧠 Memory Integrity</CardTitle>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={runCheck}
-            disabled={loading || syncing}
-            className="h-7 text-xs border-zinc-700 hover:bg-zinc-800"
-          >
-            {loading ? "Checking…" : "Check"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={syncAndCheck}
-            disabled={loading || syncing}
-            className="h-7 text-xs border-zinc-700 hover:bg-zinc-800"
-          >
-            {syncing ? "Syncing…" : "Sync & Check"}
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {!report && !loading && (
-          <div>
-            <p className="text-zinc-500 text-sm">Click Check to compare flat files vs Postgres memory</p>
-            {lastChecked && (
-              <p className="text-[10px] text-zinc-600 mt-1">Last checked: {new Date(lastChecked).toLocaleString()}</p>
-            )}
-          </div>
-        )}
+  // Determine icon + color
+  let Icon = Brain
+  let iconClass = "text-zinc-500"
+  let tooltipText = "Memory integrity — click to check"
 
-        {report?.error && (
-          <p className="text-red-400 text-sm">❌ {report.error}</p>
-        )}
+  if (report) {
+    if (report.error) {
+      Icon = X
+      iconClass = "text-red-400"
+      tooltipText = `Error: ${report.error}`
+    } else if (healthy) {
+      Icon = Check
+      iconClass = "text-green-400"
+      tooltipText = `Healthy — ${coverage}% coverage, ${s?.dbEntries} entries`
+    } else {
+      Icon = AlertTriangle
+      iconClass = issueCount > 3 ? "text-red-400" : "text-amber-400"
+      tooltipText = `${issueCount} issue${issueCount !== 1 ? "s" : ""} — ${coverage}% coverage`
+    }
+  }
 
-        {s && (
-          <div className="space-y-3">
-            {/* Coverage bar */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="text-zinc-500">Coverage</span>
-                <span className={coverageColor}>{coverage}%</span>
-              </div>
-              <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${coverageBg} rounded-full transition-all duration-500`}
-                  style={{ width: `${Math.min(coverage, 100)}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-zinc-500">File chunks</span>
-                <span className="text-zinc-300">{s.fileChunks}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">DB entries</span>
-                <span className="text-zinc-300">{s.dbEntries}</span>
-              </div>
-              {s.matched !== undefined && (
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Matched</span>
-                  <span className="text-green-400">{s.matched}</span>
-                </div>
-              )}
-              {(s.missingFromDb ?? 0) > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Missing from DB</span>
-                  <span className="text-red-400">{s.missingFromDb}</span>
-                </div>
-              )}
-              {(s.stale ?? 0) > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Stale</span>
-                  <span className="text-amber-400">{s.stale}</span>
-                </div>
-              )}
-              {(s.orphaned ?? 0) > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">Orphaned</span>
-                  <span className="text-zinc-400">{s.orphaned}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Health badge */}
-            <div className="flex items-center gap-2">
-              {s.healthy ? (
-                <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-xs">
-                  ✅ Healthy — all synced
-                </Badge>
-              ) : report.synced ? (
-                <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-xs">
-                  🔄 Synced — re-checked
-                </Badge>
-              ) : (
-                <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-xs">
-                  ⚠️ {report.issues?.length || 0} issue{(report.issues?.length || 0) !== 1 ? "s" : ""} found
-                </Badge>
-              )}
-              {report.timestamp && (
-                <span className="text-[10px] text-zinc-600">
-                  {new Date(report.timestamp).toLocaleTimeString()}
-                </span>
-              )}
-            </div>
-
-            {/* Issues list (collapsed if >5) */}
-            {report.issues && report.issues.length > 0 && (
-              <IssuesList issues={report.issues} />
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-function IssuesList({ issues }: { issues: NonNullable<IntegrityReport["issues"]> }) {
-  const [expanded, setExpanded] = useState(false)
-  const show = expanded ? issues : issues.slice(0, 5)
-
-  const typeEmoji: Record<string, string> = {
-    missing_from_db: "🔴",
-    stale: "🟡",
-    orphaned_in_db: "⚪",
-    missing_embedding: "🟠",
+  if (lastChecked && !report) {
+    tooltipText += ` · Last: ${new Date(lastChecked).toLocaleString()}`
   }
 
   return (
-    <div className="space-y-1">
-      <p className="text-xs text-zinc-500 font-medium">Issues:</p>
-      {show.map((issue, i) => (
-        <div key={i} className="text-xs text-zinc-400 flex gap-1.5">
-          <span>{typeEmoji[issue.type] || "•"}</span>
-          <span>
-            <span className="text-zinc-500">{issue.source || ""}</span>
-            {issue.heading && <span> → {issue.heading}</span>}
-            {issue.detail && <span className="text-zinc-600"> — {issue.detail}</span>}
-          </span>
-        </div>
-      ))}
-      {issues.length > 5 && (
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="text-xs text-zinc-500 hover:text-zinc-300"
-        >
-          {expanded ? "Show less" : `+${issues.length - 5} more…`}
-        </button>
+    <div className="flex items-center gap-1.5">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={runCheck}
+              disabled={loading}
+              className="h-8 w-8 p-0 hover:bg-zinc-800"
+            >
+              {loading ? (
+                <RefreshCw className="h-4 w-4 text-zinc-400 animate-spin" />
+              ) : (
+                <Icon className={`h-4 w-4 ${iconClass}`} />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p className="text-xs">{tooltipText}</p>
+            {report && !report.error && (
+              <p className="text-[10px] text-zinc-400 mt-0.5">Right-click to sync & check</p>
+            )}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Show mini badge only when issues exist */}
+      {report && !report.error && !healthy && issueCount > 0 && (
+        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-500/10 text-amber-400 border-amber-500/20">
+          {issueCount}
+        </Badge>
+      )}
+
+      {report && healthy && (
+        <span className="text-[10px] text-green-500/60">{coverage}%</span>
       )}
     </div>
   )
