@@ -12,7 +12,7 @@ export async function GET() {
                e.detail->>'model' as model
         FROM ops.runs r
         LEFT JOIN memory.agent_profiles p ON p.agent_id = r.agent_id
-        LEFT JOIN ops.agent_events e ON e.run_id = r.id AND e.event_type = 'task_start'
+        LEFT JOIN ops.agent_events e ON e.context_id = r.id AND e.event_type = 'task_start'
         WHERE r.status IN ('running', 'stalled')
         ORDER BY r.started_at DESC
     `)
@@ -26,7 +26,7 @@ export async function GET() {
                e.detail->>'model' as model
         FROM ops.runs r
         LEFT JOIN memory.agent_profiles p ON p.agent_id = r.agent_id
-        LEFT JOIN ops.agent_events e ON e.run_id = r.id AND e.event_type = 'task_start'
+        LEFT JOIN ops.agent_events e ON e.context_id = r.id AND e.event_type = 'task_start'
         WHERE r.status IN ('completed', 'failed', 'stalled')
           AND r.completed_at > now() - interval '30 minutes'
         ORDER BY r.completed_at DESC
