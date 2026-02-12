@@ -1,25 +1,10 @@
-import Link from "next/link"
-
-import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, LogOut, ListTodo, FlaskConical, DollarSign } from "lucide-react"
+import { LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut } from "@/auth"
 import { NavLinks } from "./nav-links"
 import { ThemeToggle } from "@/components/theme-toggle"
-
-const navItems = [
-    { href: "/", label: "Overview", icon: LayoutDashboard },
-    { href: "/lab", label: "The Lab", icon: FlaskConical },
-    { href: "/agents", label: "Agents", icon: Users },
-    { href: "/workflows", label: "Workflows", icon: GitGraph },
-    { href: "/tasks", label: "Tasks", icon: ListTodo },
-    { href: "/runs", label: "Runs", icon: Play },
-    { href: "/memory", label: "Memory", icon: Brain },
-    { href: "/events", label: "Events", icon: Activity },
-    { href: "/costs", label: "Costs", icon: DollarSign },
-    { href: "/system", label: "System", icon: Server },
-]
 
 export function Sidebar({ className }: { className?: string }) {
     return (
