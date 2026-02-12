@@ -146,36 +146,27 @@ export function ActiveTasks() {
                                 ? 'border-red-500/50 bg-red-500/5' 
                                 : 'border-zinc-800 bg-zinc-950/50'
                         }`}>
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                                <div className="flex items-center gap-2 min-w-0">
-                                    <span className="text-lg">{emoji}</span>
-                                    <span className="font-medium text-white truncate">{task.agentName}</span>
-                                    {task.model && <ModelChip modelId={task.model} />}
-                                </div>
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="text-lg">{emoji}</span>
+                                <span className="font-medium text-white">{task.agentName}</span>
+                                {task.model && <ModelChip modelId={task.model} />}
                                 <StatusBadge status={task.status} isStalled={task.isStalled} />
                             </div>
-                            <p className="text-sm text-zinc-300 mb-1.5 truncate" title={task.task}>
+                            <p className="text-sm text-zinc-300 mb-1.5 break-words" title={task.task}>
                                 "{task.task}"
                             </p>
-                            <div className="flex items-center justify-between text-xs text-zinc-500">
-                                <div className="flex items-center gap-2 font-mono">
-                                    <span>⏱ {formatDuration(elapsed)}</span>
-                                    {estimatedCost > 0 && (
-                                        <span className="flex items-center gap-1">
-                                            · ~€{estimatedCost.toFixed(2)}
-                                            {showWarning && (
-                                                <span className="relative flex h-3 w-3" title={`Cost > €${warnThreshold}`}>
-                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-3 w-3 text-orange-400">
-                                                        <AlertTriangle className="h-3 w-3" />
-                                                    </span>
-                                                </span>
-                                            )}
-                                        </span>
-                                    )}
-                                </div>
+                            <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
+                                <span className="font-mono">⏱ {formatDuration(elapsed)}</span>
+                                {estimatedCost > 0 && (
+                                    <span className="flex items-center gap-1 font-mono">
+                                        · ~€{estimatedCost.toFixed(2)}
+                                        {showWarning && (
+                                            <AlertTriangle className="h-3 w-3 text-orange-400" />
+                                        )}
+                                    </span>
+                                )}
                                 {task.heartbeatMsg && (
-                                    <span className="truncate ml-2 text-zinc-400">💓 {task.heartbeatMsg}</span>
+                                    <span className="text-zinc-400 break-all">💓 {task.heartbeatMsg}</span>
                                 )}
                             </div>
                             {/* Heartbeat health bar */}
@@ -202,19 +193,20 @@ export function ActiveTasks() {
                             const estimatedCost = costPerMinute ? (task.durationSeconds / 60) * costPerMinute : 0
                             
                             return (
-                                <div key={task.id} className="flex items-center gap-2 py-1 text-sm">
-                                    <span>{emoji}</span>
-                                    <div className="text-zinc-400 truncate flex-1 flex items-center gap-2">
-                                        <span className="truncate">{task.agentName} — "{task.task}"</span>
+                                <div key={task.id} className="py-1.5 text-sm">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span>{emoji}</span>
+                                        <span className="text-zinc-400">{task.agentName}</span>
                                         {task.model && <ModelChip modelId={task.model} />}
+                                        <StatusBadge status={task.status} />
                                     </div>
-                                    <div className="text-xs font-mono text-zinc-500 flex items-center gap-2">
-                                        {estimatedCost > 0.01 && <span>~€{estimatedCost.toFixed(2)}</span>}
-                                        <span>
+                                    <p className="text-xs text-zinc-500 break-words mt-0.5">
+                                        "{task.task}"
+                                        <span className="font-mono ml-2">
                                             {task.durationSeconds != null ? formatDuration(task.durationSeconds) : '—'}
+                                            {estimatedCost > 0.01 && ` · ~€${estimatedCost.toFixed(2)}`}
                                         </span>
-                                    </div>
-                                    <StatusBadge status={task.status} />
+                                    </p>
                                 </div>
                             )
                         })}

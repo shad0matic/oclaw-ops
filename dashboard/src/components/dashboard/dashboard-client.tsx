@@ -57,7 +57,7 @@ export const DashboardClient = ({ initialData }: DashboardClientProps) => {
     const { enrichedAgents, serializedEvents, kevinStatus, serverLoad } = initialData
 
     return (
-        <div className="space-y-4 md:space-y-6">
+        <div className="space-y-4 md:space-y-6 overflow-hidden">
             <DataRefresh />
 
             {/* Compact header row with status badges */}

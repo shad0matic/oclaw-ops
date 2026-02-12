@@ -119,11 +119,11 @@ export function SubAgentMonitor() {
                                             </div>
                                         </div>
                                         
-                                        <p className="text-xs text-zinc-400 line-clamp-2" title={run.task}>
+                                        <p className="text-xs text-zinc-400 break-words" title={run.task}>
                                             {run.task}
                                         </p>
                                         
-                                        <div className="flex items-center gap-2 text-[10px] text-zinc-600">
+                                        <div className="flex items-center gap-2 text-[10px] text-zinc-600 flex-wrap">
                                             <span>by {run.spawned_by}</span>
                                             <span>•</span>
                                             <span>{formatDuration(run.duration_minutes)}</span>
