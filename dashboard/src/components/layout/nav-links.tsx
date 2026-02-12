@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils"
 const navItems = [
     { href: "/", label: "Overview", icon: LayoutDashboard },
     { href: "/lab", label: "Lab", icon: FlaskConical },
-    { href: "/agents", label: "Agents", icon: Users },
     { href: "/tasks", label: "Kanban", icon: ListTodo },
-    { href: "/events", label: "Events", icon: Activity },
     { href: "/costs", label: "Costs", icon: DollarSign },
+    { href: "/agents", label: "Agents", icon: Users },
+    { href: "/events", label: "Events", icon: Activity },
     { href: "/settings", label: "Settings", icon: Settings },
 ]
 
