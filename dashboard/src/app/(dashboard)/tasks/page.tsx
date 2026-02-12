@@ -116,9 +116,22 @@ function TaskCard({ task, projects }: { task: QueueTask; projects: Project[] }) 
             P{task.priority}
           </span>
         </div>
-        <div className="mt-1 flex items-center gap-1.5 text-xs">
-          <span>{projectIcon}</span>
-          <span className="font-medium text-foreground/80">{proj?.label || task.project}</span>
+        <div className="mt-1.5 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5">
+            <span>{projectIcon}</span>
+            <span className="font-medium text-foreground/80">{proj?.label || task.project}</span>
+          </div>
+          {task.agent_id && (
+            <div className="flex items-center gap-1.5">
+              <img
+                src={`/assets/minion-avatars/${task.agent_id}.webp`}
+                alt={task.agent_name || task.agent_id}
+                className="w-4 h-4 rounded-full"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+              <span className="text-muted-foreground">{task.agent_name || task.agent_id}</span>
+            </div>
+          )}
         </div>
       </div>
       {expanded && (
