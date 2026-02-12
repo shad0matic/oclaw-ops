@@ -4,7 +4,7 @@ import prisma from "@/lib/db"
 import si from "systeminformation"
 import { KPICards } from "@/components/dashboard/kpi-cards"
 import { AgentStrip } from "@/components/dashboard/agent-strip"
-import { IsometricOfficeWrapper } from "@/components/dashboard/isometric-office"
+// IsometricOffice moved to /lab page
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { DataRefresh } from "@/components/data-refresh"
 import { CostCard } from "@/components/dashboard/cost-card"

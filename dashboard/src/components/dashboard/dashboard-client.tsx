@@ -1,9 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { KPICards } from "@/components/dashboard/kpi-cards"
 import { AgentStrip } from "@/components/dashboard/agent-strip"
-import { IsometricOfficeWrapper } from "@/components/dashboard/isometric-office"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { DataRefresh } from "@/components/data-refresh"
 import { CostCard } from "@/components/dashboard/cost-card"
@@ -12,7 +10,6 @@ import { MemoryIntegrity } from "@/components/dashboard/memory-integrity"
 import { AgentLiveStatus } from "@/components/dashboard/agent-live-status"
 
 export const DashboardClient = ({ initialData }: { initialData: any }) => {
-    const [viewMode, setViewMode] = useState<'office' | 'grid'>('office');
     const { enrichedAgents, kpiData, serializedEvents } = initialData;
 
     return (
@@ -34,14 +31,8 @@ export const DashboardClient = ({ initialData }: { initialData: any }) => {
             </div>
 
             <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-zinc-400">Agent View</h3>
-                    <div>
-                        <button onClick={() => setViewMode('grid')} className={`px-3 py-1 text-sm rounded-l-md ${viewMode === 'grid' ? 'bg-yellow-500 text-black' : 'bg-zinc-700 text-white'}`}>Grid View</button>
-                        <button onClick={() => setViewMode('office')} className={`px-3 py-1 text-sm rounded-r-md ${viewMode === 'office' ? 'bg-yellow-500 text-black' : 'bg-zinc-700 text-white'}`}>Office View</button>
-                    </div>
-                </div>
-                {viewMode === 'office' ? <IsometricOfficeWrapper /> : <AgentStrip agents={enrichedAgents} />}
+                <h3 className="text-lg font-medium text-zinc-400">Minions</h3>
+                <AgentStrip agents={enrichedAgents} />
             </div>
 
             <div className="grid grid-cols-12 gap-4">

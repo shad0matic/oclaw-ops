@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, AlertTriangle, Network, AlertCircle, Zap, DollarSign, Layers, Settings, ListTodo } from "lucide-react"
+import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, AlertTriangle, Network, AlertCircle, Zap, DollarSign, Layers, Settings, ListTodo, FlaskConical } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // Minimal navigation (keep advanced pages accessible by URL, but hidden from sidebar)
@@ -13,7 +13,7 @@ const navItems = [
     { href: "/tasks", label: "Kanban", icon: ListTodo },
     { href: "/events", label: "Events", icon: Activity },
     { href: "/costs", label: "Costs", icon: DollarSign },
-    // { href: "/runs", label: "Runs", icon: Play },
+    { href: "/lab", label: "Lab", icon: FlaskConical },
     { href: "/settings", label: "Settings", icon: Settings },
 ]
 
