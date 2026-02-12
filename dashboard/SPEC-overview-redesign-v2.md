@@ -691,6 +691,12 @@ SELECT * FROM running_tasks ORDER BY started_at ASC;
 - ⚫ Gray: idle
 - 🔴 Red: error/stalled task
 - 🟡 Yellow: spawned by another (working as sub-agent)
+- 🧟 Red flash + zombie icon overlay: agent has a zombie task (detected by Mel, not yet killed or just killed). Flashes for 60s after kill event, then reverts to normal status.
+
+**Zombie Visual (from zombie-detection.md backlog):**
+- When `zombie_killed` event exists for agent in last 15 min → show 🧟 overlay on avatar
+- Agent card shows warning text: "Zombie killed 5m ago — [task name]"
+- If agent currently has a stale run (pre-kill) → flashing red border on card
 
 **Data:**
 - Source: `memory.agent_profiles` + live status from `ops.runs`
@@ -1113,6 +1119,24 @@ WHERE started_at > NOW() - INTERVAL '1 hour';
 | `/api/agents/status` | GET | Agent list with live status | 30s |
 | `/api/pipeline/stats` | GET | Pipeline counts (last hour) | 60s |
 | `/api/events/recent` | GET | Recent events for timeline | 30s |
+
+### Prerequisite: Spawn Tracker (from spawn-visibility.md backlog)
+
+Before the overview can show spawn relationships, ALL spawns must be tracked:
+
+1. **`tools/spawn-tracker.mjs`** — wrapper around `sessions_spawn` that auto-logs:
+   - `task_start` event with `detail.spawned_by`, `detail.model`, `detail.session_key`
+   - `task_complete` / `task_fail` when session ends
+   - Parent → child relationship stored in `detail.spawned_by` field
+
+2. **Kevin's spawn habit** — every `sessions_spawn` call must go through task-tracker:
+   ```bash
+   node tools/task-tracker.mjs start --agent bob --task "Fix layout" --model gemini --spawned-by kevin
+   ```
+
+3. **Data dependency** — the TaskTree builder in `/api/overview` relies on `detail.spawned_by` to build parent→child spawn trees. Without consistent logging, trees are broken.
+
+This is NOT new work — task-tracker already supports `--spawned-by`. The gap is making it mandatory (now baked into AGENTS.md).
 
 ### New Unified Endpoint: `/api/overview`
 
