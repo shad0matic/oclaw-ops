@@ -32,8 +32,8 @@ export async function GET() {
         for (const start of taskStarts) {
             const detail = start.detail as any
             
-            // Only include if it's a sub-agent (has spawned_by or is known sub-agent)
-            const isSubAgent = detail?.spawned_by || ["bob", "nefario", "xreader"].includes(start.agent_id)
+            // Include if: has spawned_by, is known sub-agent, or agent_id != "main"
+            const isSubAgent = detail?.spawned_by || start.agent_id !== "main"
             if (!isSubAgent) continue
 
             // Look for completion event
