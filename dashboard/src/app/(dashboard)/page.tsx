@@ -10,7 +10,7 @@ import { CostCard } from "@/components/dashboard/cost-card"
 import { ActiveTasks } from "@/components/dashboard/active-tasks"
 import { MemoryIntegrity } from "@/components/dashboard/memory-integrity"
 import { AgentLiveStatus } from "@/components/dashboard/agent-live-status"
-import { WorktreeStatus } from "@/components/dashboard/worktree-status"
+// import { WorktreeStatus } from "@/components/dashboard/worktree-status" // hidden for now
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -37,26 +37,22 @@ export default async function DashboardPage() {
   }
 
   // DB Fetch
-  const [agents, events, activeRuns, completedTasks, tokenStats] = await Promise.all([
+  const [agents, events, completedTasks] = await Promise.all([
     prisma.agent_profiles.findMany({ orderBy: { agent_id: 'asc' } }),
     prisma.agent_events.findMany({ orderBy: { created_at: 'desc' }, take: 50 }),
-    prisma.runs.count({ where: { status: 'running' } }),
     prisma.runs.count({
       where: {
         status: 'completed',
         completed_at: { gte: today }
       }
     }),
-    prisma.agent_events.aggregate({
-      _sum: { tokens_used: true, cost_usd: true },
-      where: { created_at: { gte: today } }
-    }),
   ])
 
-  // Enrich agents with live status
+  // Enrich agents with live status (1h staleness cutoff)
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
   const enrichedAgents = await Promise.all(agents.map(async (agent: any) => {
     const lastTaskStart = await prisma.agent_events.findFirst({
-        where: { agent_id: agent.agent_id, event_type: 'task_start' },
+        where: { agent_id: agent.agent_id, event_type: 'task_start', created_at: { gte: oneHourAgo } },
         orderBy: { created_at: 'desc' },
     });
 
@@ -67,16 +63,14 @@ export default async function DashboardPage() {
         const taskEnd = await prisma.agent_events.findFirst({
             where: {
                 agent_id: agent.agent_id,
-                event_type: { in: ['task_complete', 'error'] },
-                // @ts-ignore
-                detail: { path: ['task'], equals: lastTaskStart.detail?.task },
+                event_type: { in: ['task_complete', 'task_fail', 'error'] },
                 created_at: { gte: lastTaskStart.created_at! },
             },
         });
         if (!taskEnd) {
             status = "active";
             // @ts-ignore
-            current_task = lastTaskStart.detail?.task || null;
+            current_task = lastTaskStart.detail?.task || lastTaskStart.detail?.description || null;
         }
     }
     
@@ -92,18 +86,13 @@ export default async function DashboardPage() {
 
   const kpiData = {
     kevinStatus: {
-      status: uptime > 0 ? "online" as const : "offline" as const, // casting for TS
+      status: uptime > 0 ? "online" as const : "offline" as const,
       uptime: uptime
-    },
-    tokenUsage: {
-      today: tokenStats._sum.tokens_used || 0,
-      cost: Number(tokenStats._sum.cost_usd) || 0
     },
     serverLoad: {
       cpu: cpuLoad,
       memory: memStats.active
     },
-    activeRuns,
     completedTasks
   }
 
@@ -129,9 +118,8 @@ export default async function DashboardPage() {
 
       <CostCard />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <ActiveTasks />
-        <WorktreeStatus />
         <MemoryIntegrity />
       </div>
 

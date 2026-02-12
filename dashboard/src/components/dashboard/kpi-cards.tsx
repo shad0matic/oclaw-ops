@@ -11,15 +11,10 @@ interface KPICardsProps {
         status: "online" | "offline"
         uptime: number
     }
-    tokenUsage: {
-        today: number
-        cost: number
-    }
     serverLoad: {
         cpu: number
         memory: number
     }
-    activeRuns: number
     completedTasks: number
 }
 
@@ -27,7 +22,7 @@ interface KPICardsProps {
 const MAX_SPARKLINE = 120
 const POLL_MS = 30_000
 
-export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, completedTasks }: KPICardsProps) {
+export function KPICards({ kevinStatus, serverLoad, completedTasks }: KPICardsProps) {
     const [cpuHistory, setCpuHistory] = useState<{ v: number }[]>([{ v: serverLoad.cpu }])
     const [currentCpu, setCurrentCpu] = useState(serverLoad.cpu)
     const [currentMem, setCurrentMem] = useState(serverLoad.memory)
@@ -73,7 +68,7 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
         : currentCpu
 
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5" role="region" aria-label="Key Performance Indicators">
+        <div className="grid gap-4 md:grid-cols-3" role="region" aria-label="Key Performance Indicators">
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">Kevin Status</CardTitle>
@@ -98,20 +93,7 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
                 </CardContent>
             </Card>
 
-            <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Token Usage</CardTitle>
-                    <Zap className="h-4 w-4 text-amber-500" aria-hidden="true" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold text-white" aria-label={`${tokenUsage.today.toLocaleString()} tokens used today`}>
-                        {tokenUsage.today.toLocaleString()}
-                    </div>
-                    <p className="text-xs text-zinc-500">
-                        Est. cost: ${tokenUsage.cost.toFixed(2)}
-                    </p>
-                </CardContent>
-            </Card>
+{/* Token Usage card removed — data not yet wired */}
 
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -143,29 +125,7 @@ export function KPICards({ kevinStatus, tokenUsage, serverLoad, activeRuns, comp
                 </CardContent>
             </Card>
 
-            <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <CardTitle className="text-sm font-medium text-zinc-400">Active Workflows</CardTitle>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Background tasks or workflows currently executing.</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <Database className="h-4 w-4 text-purple-500" aria-hidden="true" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold text-white" aria-label={`${activeRuns} active workflow runs`}>
-                        {activeRuns}
-                    </div>
-                    <p className="text-xs text-zinc-500">
-                        Workflows running
-                    </p>
-                </CardContent>
-            </Card>
+{/* Active Workflows card removed — not relevant yet */}
 
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

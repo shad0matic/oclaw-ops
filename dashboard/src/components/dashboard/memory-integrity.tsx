@@ -30,6 +30,10 @@ export function MemoryIntegrity() {
   const [report, setReport] = useState<IntegrityReport | null>(null)
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [lastChecked, setLastChecked] = useState<string | null>(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("memory-integrity-last-check")
+    return null
+  })
 
   async function runCheck() {
     setLoading(true)
@@ -37,6 +41,9 @@ export function MemoryIntegrity() {
       const res = await fetch("/api/memory/integrity")
       const data = await res.json()
       setReport(data)
+      const now = new Date().toISOString()
+      setLastChecked(now)
+      localStorage.setItem("memory-integrity-last-check", now)
     } catch (e: any) {
       setReport({ ok: false, error: e.message })
     } finally {
@@ -50,6 +57,9 @@ export function MemoryIntegrity() {
       const res = await fetch("/api/memory/integrity", { method: "POST" })
       const data = await res.json()
       setReport(data)
+      const now = new Date().toISOString()
+      setLastChecked(now)
+      localStorage.setItem("memory-integrity-last-check", now)
     } catch (e: any) {
       setReport({ ok: false, error: e.message })
     } finally {
@@ -91,7 +101,12 @@ export function MemoryIntegrity() {
       </CardHeader>
       <CardContent>
         {!report && !loading && (
-          <p className="text-zinc-500 text-sm">Click Check to compare flat files vs Postgres memory</p>
+          <div>
+            <p className="text-zinc-500 text-sm">Click Check to compare flat files vs Postgres memory</p>
+            {lastChecked && (
+              <p className="text-[10px] text-zinc-600 mt-1">Last checked: {new Date(lastChecked).toLocaleString()}</p>
+            )}
+          </div>
         )}
 
         {report?.error && (
