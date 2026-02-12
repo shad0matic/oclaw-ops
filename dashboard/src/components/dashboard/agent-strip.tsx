@@ -31,17 +31,17 @@ export function AgentStrip({ agents }: AgentStripProps) {
                 const isActive = agent.status === 'active' || agent.status === 'running'
                 return (
                     <Link key={agent.agent_id} href={`/agents/${agent.agent_id}`} className="block">
-                        <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-zinc-800/60 ${isActive ? 'bg-zinc-800/40' : ''}`}>
+                        <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-muted/60 ${isActive ? 'bg-muted/40' : ''}`}>
                             {/* Avatar with status dot */}
                             <div className="relative shrink-0">
                                 <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-6 w-6" />
-                                <div className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-zinc-900 ${isActive ? 'bg-green-500 animate-pulse' : 'bg-zinc-600'}`} />
+                                <div className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-background ${isActive ? 'bg-green-500 animate-pulse' : 'bg-zinc-600'}`} />
                             </div>
 
                             {/* Name + task */}
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1">
-                                    <span className={`text-xs font-medium truncate ${isActive ? 'text-white' : 'text-zinc-500'}`}>
+                                    <span className={`text-xs font-medium truncate ${isActive ? 'text-foreground' : 'text-muted-foreground/70'}`}>
                                         {agent.name}
                                     </span>
                                     {agent.agent_id === "main" && (
@@ -51,7 +51,7 @@ export function AgentStrip({ agents }: AgentStripProps) {
                                 {isActive && agent.current_task ? (
                                     <p className="text-[10px] text-green-400/80 truncate" title={agent.current_task}>► {agent.current_task}</p>
                                 ) : (
-                                    <p className="text-[10px] text-zinc-600">idle</p>
+                                    <p className="text-[10px] text-muted-foreground/50">idle</p>
                                 )}
                             </div>
                         </div>

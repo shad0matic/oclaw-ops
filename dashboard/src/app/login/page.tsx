@@ -7,8 +7,8 @@ import { Rocket } from "lucide-react"
 
 export default function LoginPage() {
     return (
-        <div className="flex min-h-screen w-full items-center justify-center bg-zinc-950 p-4">
-            <Card className="w-full max-w-sm border-zinc-800 bg-zinc-900 text-zinc-50">
+        <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
+            <Card className="w-full max-w-sm border-border bg-card text-zinc-50">
                 <CardHeader className="text-center">
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 ring-1 ring-amber-500/50">
                         <Rocket className="h-6 w-6 text-amber-500" />
@@ -32,7 +32,7 @@ export default function LoginPage() {
                                 type="password"
                                 required
                                 placeholder="••••••••"
-                                className="border-zinc-800 bg-zinc-950 focus-visible:ring-amber-500"
+                                className="border-border bg-background focus-visible:ring-amber-500"
                             />
                         </div>
                         <Button type="submit" className="w-full bg-amber-500 text-zinc-950 hover:bg-amber-400">

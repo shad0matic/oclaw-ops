@@ -47,7 +47,7 @@ function ServerLoadBadge({ cpu, memory }: { cpu: number, memory: number }) {
     const memoryGB = (memory / 1024 / 1024 / 1024).toFixed(1)
     
     return (
-        <span className="text-sm text-zinc-500">
+        <span className="text-sm text-muted-foreground/70">
             CPU {cpu.toFixed(1)}% · Mem {memoryGB}GB
         </span>
     )
@@ -73,7 +73,7 @@ export const DashboardClient = ({ initialData }: DashboardClientProps) => {
                     <ServerLoadBadge cpu={serverLoad.cpu} memory={serverLoad.memory} />
                     <MemoryIntegrity />
                 </div>
-                <p className="text-xs md:text-sm text-zinc-500 mt-1">
+                <p className="text-xs md:text-sm text-muted-foreground/70 mt-1">
                     Agent workforce overview
                 </p>
             </div>

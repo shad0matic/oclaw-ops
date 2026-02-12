@@ -74,10 +74,10 @@ export function ModelDisplayConfig() {
     }
 
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800">
+        <Card className="bg-card/50 border-border">
             <CardHeader>
-                <CardTitle className="text-zinc-400 text-base">Model Display & Cost Warnings</CardTitle>
-                <p className="text-xs text-zinc-500">Customize how each model appears in the activity feed. Set colors to spot expensive models at a glance.</p>
+                <CardTitle className="text-muted-foreground text-base">Model Display & Cost Warnings</CardTitle>
+                <p className="text-xs text-muted-foreground/70">Customize how each model appears in the activity feed. Set colors to spot expensive models at a glance.</p>
             </CardHeader>
             <CardContent className="space-y-4">
                 {models.map((model, idx) => (
@@ -95,59 +95,59 @@ export function ModelDisplayConfig() {
                         </Badge>
 
                         {/* Model ID (read-only) */}
-                        <span className="text-[10px] text-zinc-600 font-mono w-48 truncate shrink-0">{model.id}</span>
+                        <span className="text-[10px] text-muted-foreground/50 font-mono w-48 truncate shrink-0">{model.id}</span>
 
                         {/* Label */}
                         <div className="flex items-center gap-1">
-                            <Label className="text-[10px] text-zinc-500">Label</Label>
+                            <Label className="text-[10px] text-muted-foreground/70">Label</Label>
                             <Input
                                 value={model.label}
                                 onChange={e => updateModel(idx, "label", e.target.value)}
-                                className="h-7 w-20 text-xs bg-zinc-950 border-zinc-800"
+                                className="h-7 w-20 text-xs bg-background border-border"
                             />
                         </div>
 
                         {/* Icon */}
                         <div className="flex items-center gap-1">
-                            <Label className="text-[10px] text-zinc-500">Icon</Label>
+                            <Label className="text-[10px] text-muted-foreground/70">Icon</Label>
                             <Input
                                 value={model.icon}
                                 onChange={e => updateModel(idx, "icon", e.target.value)}
-                                className="h-7 w-12 text-xs bg-zinc-950 border-zinc-800 text-center"
+                                className="h-7 w-12 text-xs bg-background border-border text-center"
                             />
                         </div>
 
                         {/* Color */}
                         <div className="flex items-center gap-1">
-                            <Label className="text-[10px] text-zinc-500">Color</Label>
+                            <Label className="text-[10px] text-muted-foreground/70">Color</Label>
                             <input
                                 type="color"
                                 value={model.color}
                                 onChange={e => updateModel(idx, "color", e.target.value)}
-                                className="h-7 w-8 rounded border border-zinc-800 bg-zinc-950 cursor-pointer"
+                                className="h-7 w-8 rounded border border-border bg-background cursor-pointer"
                             />
                         </div>
 
                         {/* Warn threshold */}
                         <div className="flex items-center gap-1">
-                            <Label className="text-[10px] text-zinc-500">Warn €&gt;</Label>
+                            <Label className="text-[10px] text-muted-foreground/70">Warn €&gt;</Label>
                             <Input
                                 type="number"
                                 step="0.10"
                                 min="0"
                                 value={model.warnThreshold}
                                 onChange={e => updateModel(idx, "warnThreshold", parseFloat(e.target.value) || 0)}
-                                className="h-7 w-16 text-xs bg-zinc-950 border-zinc-800"
+                                className="h-7 w-16 text-xs bg-background border-border"
                             />
                         </div>
                     </div>
                 ))}
 
                 <div className="flex gap-2 pt-2">
-                    <Button onClick={save} size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+                    <Button onClick={save} size="sm" className="bg-amber-600 hover:bg-amber-700 text-foreground">
                         {saved ? "✓ Saved" : "Save"}
                     </Button>
-                    <Button onClick={reset} variant="outline" size="sm" className="border-zinc-700 text-zinc-400 hover:bg-zinc-800">
+                    <Button onClick={reset} variant="outline" size="sm" className="border-border text-muted-foreground hover:bg-muted">
                         Reset to defaults
                     </Button>
                 </div>

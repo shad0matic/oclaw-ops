@@ -34,8 +34,8 @@ function getPriorityColor(p: number): { dot: string; text: string; bg: string } 
   if (p <= 5) return { dot: "bg-lime-500", text: "text-lime-400", bg: "bg-lime-500/10" };
   if (p <= 6) return { dot: "bg-green-500", text: "text-green-400", bg: "bg-green-500/10" };
   if (p <= 7) return { dot: "bg-teal-500", text: "text-teal-400", bg: "bg-teal-500/10" };
-  if (p <= 8) return { dot: "bg-zinc-400", text: "text-zinc-400", bg: "bg-zinc-500/10" };
-  return { dot: "bg-zinc-600", text: "text-zinc-500", bg: "bg-zinc-600/10" };
+  if (p <= 8) return { dot: "bg-zinc-400", text: "text-muted-foreground", bg: "bg-zinc-500/10" };
+  return { dot: "bg-zinc-600", text: "text-muted-foreground/70", bg: "bg-zinc-600/10" };
 }
 
 // Project icons/labels
@@ -92,11 +92,11 @@ function TaskCard({ task }: { task: QueueTask }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.18 }}
-      className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 cursor-grab active:cursor-grabbing"
+      className="rounded-lg border border-border bg-background/50 p-3 cursor-grab active:cursor-grabbing"
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="text-sm font-semibold text-white leading-snug flex-1">{task.title}</h3>
+        <h3 className="text-sm font-semibold text-foreground leading-snug flex-1">{task.title}</h3>
         <span className={`flex items-center gap-1 text-[10px] font-mono shrink-0 ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
           <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />
           P{task.priority}
@@ -105,7 +105,7 @@ function TaskCard({ task }: { task: QueueTask }) {
       {task.description && (
         <div className="mt-1">
           <p
-            className={`text-xs text-zinc-400 ${expanded ? "" : "line-clamp-2"} cursor-pointer`}
+            className={`text-xs text-muted-foreground ${expanded ? "" : "line-clamp-2"} cursor-pointer`}
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
           >
             {task.description}
@@ -113,14 +113,14 @@ function TaskCard({ task }: { task: QueueTask }) {
           {task.description.length > 80 && (
             <button
               onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-              className="text-[10px] text-zinc-500 hover:text-zinc-300 mt-0.5 flex items-center gap-0.5"
+              className="text-[10px] text-muted-foreground/70 hover:text-foreground/80 mt-0.5 flex items-center gap-0.5"
             >
               {expanded ? <><ChevronUp className="w-3 h-3" /> Less</> : <><ChevronDown className="w-3 h-3" /> More</>}
             </button>
           )}
         </div>
       )}
-      <div className="mt-2 flex items-center justify-between text-[11px] text-zinc-500">
+      <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground/70">
         <span>{projectIcon} {task.project || "other"}</span>
         <span>{task.agent_name || task.agent_id || "Unassigned"}</span>
       </div>
@@ -162,7 +162,7 @@ function Column({
 
   // Column header color based on status
   const headerColors: Record<string, string> = {
-    backlog: "text-zinc-400",
+    backlog: "text-muted-foreground",
     planned: "text-blue-400",
     running: "text-amber-400",
     review: "text-purple-400",
@@ -173,13 +173,13 @@ function Column({
   return (
     <div
       ref={ref}
-      className={`rounded-xl border p-3 bg-zinc-900/30 border-zinc-800 min-h-[50vh] transition-colors ${
-        isOver ? "bg-zinc-900/60 border-zinc-600" : ""
+      className={`rounded-xl border p-3 bg-card/30 border-border min-h-[50vh] transition-colors ${
+        isOver ? "bg-card/60 border-zinc-600" : ""
       }`}
     >
       <div className="mb-3 flex items-center justify-between">
-        <h2 className={`text-sm font-medium ${headerColors[status] || "text-zinc-300"}`}>{title}</h2>
-        <span className="text-xs text-zinc-500 bg-zinc-800 rounded-full px-2 py-0.5">{tasks.length}</span>
+        <h2 className={`text-sm font-medium ${headerColors[status] || "text-foreground/80"}`}>{title}</h2>
+        <span className="text-xs text-muted-foreground/70 bg-muted rounded-full px-2 py-0.5">{tasks.length}</span>
       </div>
       <div className="space-y-2">
         <AnimatePresence>
@@ -246,18 +246,18 @@ export default function TasksPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-white">Kanban Board</h1>
-            <p className="text-xs text-zinc-500 mt-1">Operations flow: Backlog → Planned → Running → Review → Human Todos → Done</p>
+            <h1 className="text-2xl font-semibold text-foreground">Kanban Board</h1>
+            <p className="text-xs text-muted-foreground/70 mt-1">Operations flow: Backlog → Planned → Running → Review → Human Todos → Done</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white bg-zinc-800 rounded-lg px-3 py-1.5 transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground bg-muted rounded-lg px-3 py-1.5 transition-colors"
             >
               <Filter className="w-3.5 h-3.5" />
               Filter
             </button>
-            <p className="text-xs text-zinc-600">Auto-refresh: 10s</p>
+            <p className="text-xs text-muted-foreground/50">Auto-refresh: 10s</p>
           </div>
         </div>
 
@@ -270,7 +270,7 @@ export default function TasksPage() {
                 className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 transition-colors border ${
                   projectFilter === p.key
                     ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
-                    : "bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:border-zinc-600"
+                    : "bg-muted/50 text-muted-foreground border-border hover:border-zinc-600"
                 }`}
               >
                 <span>{p.icon}</span>
@@ -281,7 +281,7 @@ export default function TasksPage() {
         )}
 
         {isLoading ? (
-          <p className="text-sm text-zinc-400">Loading…</p>
+          <p className="text-sm text-muted-foreground">Loading…</p>
         ) : error ? (
           <p className="text-sm text-red-400">Failed to load tasks.</p>
         ) : (

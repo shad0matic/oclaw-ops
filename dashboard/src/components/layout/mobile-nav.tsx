@@ -33,7 +33,7 @@ export function MobileNav() {
     const { theme, setTheme } = useTheme()
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-zinc-800 bg-zinc-950 px-2 pb-safe md:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-border bg-background px-2 pb-safe md:hidden">
             {topItems.map((item) => {
                 const isActive = pathname === item.href
                 return (
@@ -42,7 +42,7 @@ export function MobileNav() {
                         href={item.href}
                         className={cn(
                             "flex flex-col items-center gap-1 rounded-lg p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500",
-                            isActive ? "text-amber-500" : "text-zinc-500 hover:text-zinc-300"
+                            isActive ? "text-amber-500" : "text-muted-foreground/70 hover:text-foreground/80"
                         )}
                         aria-label={item.label}
                         aria-current={isActive ? "page" : undefined}
@@ -56,16 +56,16 @@ export function MobileNav() {
             <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
                     <button
-                        className="flex flex-col items-center gap-1 rounded-lg p-2 text-zinc-500 hover:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                        className="flex flex-col items-center gap-1 rounded-lg p-2 text-muted-foreground/70 hover:text-foreground/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                         aria-label="More menu items"
                     >
                         <Menu className="h-5 w-5" />
                         <span className="text-[10px] font-medium">More</span>
                     </button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="bg-zinc-900 border-zinc-800">
+                <SheetContent side="bottom" className="bg-card border-border">
                     <SheetHeader>
-                        <SheetTitle className="text-white">More Pages</SheetTitle>
+                        <SheetTitle className="text-foreground">More Pages</SheetTitle>
                     </SheetHeader>
                     <div className="mt-4 space-y-2">
                         {overflowItems.map((item) => {
@@ -79,7 +79,7 @@ export function MobileNav() {
                                         "flex items-center gap-3 rounded-lg p-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500",
                                         isActive 
                                             ? "bg-amber-500/10 text-amber-500" 
-                                            : "text-zinc-300 hover:bg-zinc-800"
+                                            : "text-foreground/80 hover:bg-muted"
                                     )}
                                 >
                                     <item.icon className="h-5 w-5" />
@@ -87,20 +87,20 @@ export function MobileNav() {
                                 </Link>
                             )
                         })}
-                        <div className="border-t border-zinc-800 pt-4 mt-4">
+                        <div className="border-t border-border pt-4 mt-4">
                             <button
                                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                                className="flex items-center gap-3 rounded-lg p-3 w-full text-base font-medium text-zinc-300 hover:bg-zinc-800 transition-colors"
+                                className="flex items-center gap-3 rounded-lg p-3 w-full text-base font-medium text-foreground/80 hover:bg-muted transition-colors"
                             >
                                 {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                                 {theme === "dark" ? "Light Mode" : "Dark Mode"}
                             </button>
                             <div className="flex items-center justify-between px-3 py-2 mt-2">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center text-sm font-medium text-zinc-400">BO</div>
+                                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground">BO</div>
                                     <div>
-                                        <div className="text-sm font-medium text-white">Boss</div>
-                                        <div className="text-xs text-zinc-500">Admin</div>
+                                        <div className="text-sm font-medium text-foreground">Boss</div>
+                                        <div className="text-xs text-muted-foreground/70">Admin</div>
                                     </div>
                                 </div>
                                 <form action="/api/auth/signout" method="POST">

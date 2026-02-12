@@ -51,32 +51,32 @@ export default async function AgentsPage() {
 
             {/* Summary Bar */}
             <div className="grid gap-4 md:grid-cols-3">
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-card/50 border-border">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Total Agents</CardTitle>
-                        <UsersIcon className="h-4 w-4 text-zinc-400" />
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Agents</CardTitle>
+                        <UsersIcon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-white">{agents.length}</div>
+                        <div className="text-2xl font-bold text-foreground">{agents.length}</div>
                     </CardContent>
                 </Card>
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-card/50 border-border">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Avg Trust Score</CardTitle>
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Avg Trust Score</CardTitle>
                         <Trophy className="h-4 w-4 text-amber-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-white">{avgTrust.toFixed(1)}%</div>
+                        <div className="text-2xl font-bold text-foreground">{avgTrust.toFixed(1)}%</div>
                         <Progress value={avgTrust} className="mt-2 h-1" />
                     </CardContent>
                 </Card>
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-card/50 border-border">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Total Tasks</CardTitle>
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Tasks</CardTitle>
                         <Zap className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-white">{totalTasks}</div>
+                        <div className="text-2xl font-bold text-foreground">{totalTasks}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -85,27 +85,27 @@ export default async function AgentsPage() {
             <div className="grid gap-3 md:hidden">
                 {enrichedAgents.map((agent: any) => (
                     <Link key={agent.id} href={`/agents/${agent.agent_id}`}>
-                        <Card className="bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-colors">
+                        <Card className="bg-card/50 border-border hover:bg-muted/50 transition-colors">
                             <CardContent className="p-4">
                                 <div className="flex items-center gap-3">
                                     <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-10 w-10 shrink-0" />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-medium text-white truncate">{agent.name}</span>
+                                            <span className="font-medium text-foreground truncate">{agent.name}</span>
                                             <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`L${agent.level}`} className="h-5 w-5 shrink-0" />
                                             <Badge variant={agent.status === 'running' ? 'default' : 'secondary'} className={`shrink-0 text-[10px] px-1.5 py-0 ${
-                                                agent.status === 'running' ? 'bg-blue-500/10 text-blue-500' : 'bg-zinc-800 text-zinc-400'
+                                                agent.status === 'running' ? 'bg-blue-500/10 text-blue-500' : 'bg-muted text-muted-foreground'
                                             }`}>
                                                 {agent.status}
                                             </Badge>
                                         </div>
-                                        {agent.description && <p className="text-xs text-zinc-500 truncate">{agent.description}</p>}
-                                        <div className="flex items-center gap-3 mt-1 text-xs text-zinc-400">
+                                        {agent.description && <p className="text-xs text-muted-foreground/70 truncate">{agent.description}</p>}
+                                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                                             <span>Trust {agent.trust_percent.toFixed(0)}%</span>
                                             <span>{agent.successful_tasks}/{agent.total_tasks} tasks</span>
                                         </div>
                                     </div>
-                                    <ArrowRight className="h-4 w-4 text-zinc-600 shrink-0" />
+                                    <ArrowRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                                 </div>
                             </CardContent>
                         </Card>
@@ -114,27 +114,27 @@ export default async function AgentsPage() {
             </div>
 
             {/* Agents — Desktop Table */}
-            <Card className="bg-zinc-900/50 border-zinc-800 hidden md:block overflow-x-auto">
+            <Card className="bg-card/50 border-border hidden md:block overflow-x-auto">
                 <Table>
                     <TableHeader>
-                        <TableRow className="border-zinc-800 hover:bg-transparent">
-                            <TableHead className="text-zinc-400">Agent</TableHead>
-                            <TableHead className="text-zinc-400">Status</TableHead>
-                            <TableHead className="text-zinc-400">Trust Score</TableHead>
-                            <TableHead className="text-zinc-400">Tasks</TableHead>
-                            <TableHead className="text-zinc-400">Last Active</TableHead>
-                            <TableHead className="text-right text-zinc-400">Action</TableHead>
+                        <TableRow className="border-border hover:bg-transparent">
+                            <TableHead className="text-muted-foreground">Agent</TableHead>
+                            <TableHead className="text-muted-foreground">Status</TableHead>
+                            <TableHead className="text-muted-foreground">Trust Score</TableHead>
+                            <TableHead className="text-muted-foreground">Tasks</TableHead>
+                            <TableHead className="text-muted-foreground">Last Active</TableHead>
+                            <TableHead className="text-right text-muted-foreground">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {enrichedAgents.map((agent: any) => (
-                            <TableRow key={agent.id} className="border-zinc-800 hover:bg-zinc-800/50">
-                                <TableCell className="font-medium text-white">
+                            <TableRow key={agent.id} className="border-border hover:bg-muted/50">
+                                <TableCell className="font-medium text-foreground">
                                     <div className="flex items-center gap-3">
                                         <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-8 w-8 shrink-0" />
                                         <div className="flex flex-col min-w-0" title={agent.description || ''}>
                                             <span className="truncate">{agent.name}</span>
-                                            {agent.description && <span className="text-xs text-zinc-500 truncate max-w-[250px]">{agent.description}</span>}
+                                            {agent.description && <span className="text-xs text-muted-foreground/70 truncate max-w-[250px]">{agent.description}</span>}
                                             <span className="flex items-center gap-1">
                                                 <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`Rank ${agent.level}`} className="h-6 w-6" />
                                                 <span className="text-amber-500 text-[10px]">L{agent.level}</span>
@@ -145,7 +145,7 @@ export default async function AgentsPage() {
                                 <TableCell>
                                     <Badge variant={agent.status === 'running' ? 'default' : 'secondary'} className={
                                         agent.status === 'running' ? 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20' :
-                                            'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                                            'bg-muted text-muted-foreground hover:bg-zinc-700'
                                     }>
                                         {agent.status}
                                     </Badge>
@@ -153,16 +153,16 @@ export default async function AgentsPage() {
                                 <TableCell>
                                     <div className="flex items-center gap-2">
                                         <Progress value={agent.trust_percent} className="w-[60px] h-2" />
-                                        <span className="text-xs text-zinc-400">{agent.trust_percent.toFixed(0)}%</span>
+                                        <span className="text-xs text-muted-foreground">{agent.trust_percent.toFixed(0)}%</span>
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <div className="flex flex-col text-xs text-zinc-400">
-                                        <span className="text-white">{agent.successful_tasks} / {agent.total_tasks}</span>
+                                    <div className="flex flex-col text-xs text-muted-foreground">
+                                        <span className="text-foreground">{agent.successful_tasks} / {agent.total_tasks}</span>
                                         <span>{agent.total_tasks ? ((agent.successful_tasks! / agent.total_tasks) * 100).toFixed(0) : 0}% success</span>
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-zinc-400 text-sm">
+                                <TableCell className="text-muted-foreground text-sm">
                                     {agent.last_active ? new Date(agent.last_active).toLocaleString() : 'Never'}
                                 </TableCell>
                                 <TableCell className="text-right">

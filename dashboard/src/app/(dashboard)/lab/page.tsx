@@ -12,7 +12,7 @@ export default async function LabPage() {
             <PageHeader title="Lab" subtitle="Experimental views and prototypes — isometric office, war room, and future experiments." />
 
             <div className="space-y-4">
-                <h3 className="text-lg font-medium text-zinc-400">🏢 Isometric Office</h3>
+                <h3 className="text-lg font-medium text-muted-foreground">🏢 Isometric Office</h3>
                 <IsometricOfficeWrapper />
             </div>
         </div>

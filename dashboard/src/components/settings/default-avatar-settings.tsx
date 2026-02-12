@@ -27,19 +27,19 @@ export function DefaultAvatarSettings() {
     }, [])
 
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+        <Card className="bg-card/50 border-border backdrop-blur-sm">
             <CardHeader>
-                <CardTitle className="text-zinc-400">Default Avatar</CardTitle>
+                <CardTitle className="text-muted-foreground">Default Avatar</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12 border border-zinc-700">
+                    <Avatar className="h-12 w-12 border border-border">
                         <AvatarImage src={`/assets/minion-avatars/${current}`} />
                     </Avatar>
-                    <div className="text-sm text-zinc-400">
+                    <div className="text-sm text-muted-foreground">
                         This avatar is used for agents without a custom one.
                         <br />
-                        <span className="text-zinc-500">Current: {current}</span>
+                        <span className="text-muted-foreground/70">Current: {current}</span>
                     </div>
                 </div>
             </CardContent>

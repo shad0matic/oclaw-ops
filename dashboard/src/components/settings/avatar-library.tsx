@@ -53,28 +53,28 @@ export function AvatarLibrary({ refreshKey = 0, onDelete }: { refreshKey?: numbe
     }
 
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+        <Card className="bg-card/50 border-border backdrop-blur-sm">
             <CardHeader>
-                <CardTitle className="text-zinc-400">Avatar Library</CardTitle>
+                <CardTitle className="text-muted-foreground">Avatar Library</CardTitle>
             </CardHeader>
             <CardContent>
                 {message && (
-                    <div className="mb-4 text-sm text-zinc-300 bg-zinc-800/50 rounded px-3 py-2">
+                    <div className="mb-4 text-sm text-foreground/80 bg-muted/50 rounded px-3 py-2">
                         {message}
                     </div>
                 )}
                 {avatars.length === 0 ? (
-                    <div className="text-zinc-500 text-sm">No avatars found. Upload some!</div>
+                    <div className="text-muted-foreground/70 text-sm">No avatars found. Upload some!</div>
                 ) : (
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         {avatars.map((avatar) => (
-                            <div key={avatar.name} className="group flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors relative">
-                                <Avatar className="h-16 w-16 border border-zinc-700">
+                            <div key={avatar.name} className="group flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors relative">
+                                <Avatar className="h-16 w-16 border border-border">
                                     <AvatarImage src={`/assets/minion-avatars/${avatar.name}`} />
                                     <AvatarFallback className="text-xs">{avatar.name.substring(0, 3)}</AvatarFallback>
                                 </Avatar>
-                                <div className="text-xs text-zinc-400 text-center truncate w-full">{avatar.name}</div>
-                                <div className="text-[10px] text-zinc-600">{(avatar.size / 1024).toFixed(1)} KB</div>
+                                <div className="text-xs text-muted-foreground text-center truncate w-full">{avatar.name}</div>
+                                <div className="text-[10px] text-muted-foreground/50">{(avatar.size / 1024).toFixed(1)} KB</div>
                                 {avatar.name !== "default.webp" && (
                                     <Button
                                         variant="ghost"

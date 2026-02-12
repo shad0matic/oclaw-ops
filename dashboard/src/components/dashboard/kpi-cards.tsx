@@ -69,9 +69,9 @@ export function KPICards({ kevinStatus, serverLoad, completedTasks }: KPICardsPr
 
     return (
         <div className="grid gap-4 md:grid-cols-3" role="region" aria-label="Key Performance Indicators">
-            <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+            <Card className="bg-card/50 border-border backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Kevin Status</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Kevin Status</CardTitle>
                     <Activity 
                         className={`h-4 w-4 ${kevinStatus.status === 'online' ? 'text-green-500' : 'text-red-500'}`} 
                         aria-hidden="true"
@@ -79,15 +79,15 @@ export function KPICards({ kevinStatus, serverLoad, completedTasks }: KPICardsPr
                 </CardHeader>
                 <CardContent>
                     <div 
-                        className="text-2xl font-bold text-white"
+                        className="text-2xl font-bold text-foreground"
                         aria-label={`System status: ${kevinStatus.status}`}
                     >
                         {kevinStatus.status === 'online' ? 'Online' : 'Offline'}
                     </div>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted-foreground/70">
                         {kevinStatus.status === 'online' ? `Uptime: ${(kevinStatus.uptime / 3600).toFixed(1)}h` : 'System down'}
                     </p>
-                    <p className="text-[10px] text-zinc-600 mt-0.5">
+                    <p className="text-[10px] text-muted-foreground/50 mt-0.5">
                         Model: Claude Opus 4-6
                     </p>
                 </CardContent>
@@ -95,16 +95,16 @@ export function KPICards({ kevinStatus, serverLoad, completedTasks }: KPICardsPr
 
 {/* Token Usage card removed — data not yet wired */}
 
-            <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+            <Card className="bg-card/50 border-border backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Server Load</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Server Load</CardTitle>
                     <Cpu className="h-4 w-4 text-blue-500" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-white" aria-label={`CPU usage at ${(currentCpu ?? 0).toFixed(1)} percent`}>
+                    <div className="text-2xl font-bold text-foreground" aria-label={`CPU usage at ${(currentCpu ?? 0).toFixed(1)} percent`}>
                         {(currentCpu ?? 0).toFixed(1)}%
                     </div>
-                    <p className="text-xs text-zinc-500 mb-2">
+                    <p className="text-xs text-muted-foreground/70 mb-2">
                         Mem: {((currentMem ?? 0) / 1024 / 1024 / 1024).toFixed(1)}GB · avg {(cpuAvg ?? 0).toFixed(1)}%
                     </p>
                     {cpuHistory.length > 1 && (
@@ -127,12 +127,12 @@ export function KPICards({ kevinStatus, serverLoad, completedTasks }: KPICardsPr
 
 {/* Active Workflows card removed — not relevant yet */}
 
-            <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+            <Card className="bg-card/50 border-border backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <CardTitle className="text-sm font-medium text-zinc-400">Tasks Completed</CardTitle>
+                                <CardTitle className="text-sm font-medium text-muted-foreground">Tasks Completed</CardTitle>
                             </TooltipTrigger>
                             <TooltipContent>
                                 <p>Number of significant tasks marked as 'completed' by agents today. Event logging is pending integration.</p>
@@ -142,10 +142,10 @@ export function KPICards({ kevinStatus, serverLoad, completedTasks }: KPICardsPr
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-white" aria-label={`${completedTasks} tasks completed today`}>
+                    <div className="text-2xl font-bold text-foreground" aria-label={`${completedTasks} tasks completed today`}>
                         {completedTasks}
                     </div>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted-foreground/70">
                         Today
                     </p>
                 </CardContent>

@@ -69,7 +69,7 @@ export function MemoryIntegrity() {
 
   // Determine icon + color
   let Icon = Brain
-  let iconClass = "text-zinc-500"
+  let iconClass = "text-muted-foreground/70"
   let tooltipText = "Memory integrity — click to check"
 
   if (report) {
@@ -102,10 +102,10 @@ export function MemoryIntegrity() {
               size="sm"
               onClick={runCheck}
               disabled={loading}
-              className="h-8 w-8 p-0 hover:bg-zinc-800"
+              className="h-8 w-8 p-0 hover:bg-muted"
             >
               {loading ? (
-                <RefreshCw className="h-4 w-4 text-zinc-400 animate-spin" />
+                <RefreshCw className="h-4 w-4 text-muted-foreground animate-spin" />
               ) : (
                 <Icon className={`h-4 w-4 ${iconClass}`} />
               )}
@@ -114,7 +114,7 @@ export function MemoryIntegrity() {
           <TooltipContent side="bottom">
             <p className="text-xs">{tooltipText}</p>
             {report && !report.error && (
-              <p className="text-[10px] text-zinc-400 mt-0.5">Right-click to sync & check</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Right-click to sync & check</p>
             )}
           </TooltipContent>
         </Tooltip>

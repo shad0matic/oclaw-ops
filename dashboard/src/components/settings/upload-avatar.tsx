@@ -59,14 +59,14 @@ export function UploadAvatar({ onUpload }: { onUpload?: () => void }) {
     }
 
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+        <Card className="bg-card/50 border-border backdrop-blur-sm">
             <CardHeader>
-                <CardTitle className="text-zinc-400">Upload Avatar</CardTitle>
+                <CardTitle className="text-muted-foreground">Upload Avatar</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
                     {message && (
-                        <div className="text-sm text-zinc-300 bg-zinc-800/50 rounded px-3 py-2">
+                        <div className="text-sm text-foreground/80 bg-muted/50 rounded px-3 py-2">
                             {message}
                         </div>
                     )}
@@ -76,10 +76,10 @@ export function UploadAvatar({ onUpload }: { onUpload?: () => void }) {
                             type="file"
                             onChange={handleFileChange}
                             accept="image/*"
-                            className="bg-zinc-800 border-zinc-700"
+                            className="bg-muted border-border"
                         />
                         {preview && (
-                            <Avatar className="h-14 w-14 border border-zinc-700 shrink-0">
+                            <Avatar className="h-14 w-14 border border-border shrink-0">
                                 <AvatarImage src={preview} />
                             </Avatar>
                         )}
@@ -90,7 +90,7 @@ export function UploadAvatar({ onUpload }: { onUpload?: () => void }) {
                                 value={filename}
                                 onChange={(e) => setFilename(e.target.value)}
                                 placeholder="Filename (e.g. stuart.webp)"
-                                className="bg-zinc-800 border-zinc-700 max-w-xs"
+                                className="bg-muted border-border max-w-xs"
                             />
                             <Button onClick={handleUpload} disabled={uploading}>
                                 {uploading ? "Uploading..." : "Upload"}

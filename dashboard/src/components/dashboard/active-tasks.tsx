@@ -112,10 +112,10 @@ export function ActiveTasks() {
     }, [])
 
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800">
+        <Card className="bg-card/50 border-border">
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-zinc-400 text-base">Agent Tasks</CardTitle>
+                    <CardTitle className="text-muted-foreground text-base">Agent Tasks</CardTitle>
                     {active.length > 0 && (
                         <span className="text-xs text-blue-400 animate-pulse">
                             {active.length} active
@@ -125,7 +125,7 @@ export function ActiveTasks() {
             </CardHeader>
             <CardContent className="space-y-3">
                 {active.length === 0 && recent.length === 0 && (
-                    <p className="text-zinc-500 text-sm text-center py-4">No tracked tasks right now</p>
+                    <p className="text-muted-foreground/70 text-sm text-center py-4">No tracked tasks right now</p>
                 )}
                 {/* Active tasks */}
                 {active.map(task => {
@@ -144,18 +144,18 @@ export function ActiveTasks() {
                         <div key={task.id} className={`p-3 rounded-lg border ${
                             task.isStalled 
                                 ? 'border-red-500/50 bg-red-500/5' 
-                                : 'border-zinc-800 bg-zinc-950/50'
+                                : 'border-border bg-background/50'
                         }`}>
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 <span className="text-lg">{emoji}</span>
-                                <span className="font-medium text-white">{task.agentName}</span>
+                                <span className="font-medium text-foreground">{task.agentName}</span>
                                 {task.model && <ModelChip modelId={task.model} />}
                                 <StatusBadge status={task.status} isStalled={task.isStalled} />
                             </div>
-                            <p className="text-sm text-zinc-300 mb-1.5 break-words" title={task.task}>
+                            <p className="text-sm text-foreground/80 mb-1.5 break-words" title={task.task}>
                                 "{task.task}"
                             </p>
-                            <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground/70 flex-wrap">
                                 <span className="font-mono">⏱ {formatDuration(elapsed)}</span>
                                 {estimatedCost > 0 && (
                                     <span className="flex items-center gap-1 font-mono">
@@ -166,11 +166,11 @@ export function ActiveTasks() {
                                     </span>
                                 )}
                                 {task.heartbeatMsg && (
-                                    <span className="text-zinc-400 break-all">💓 {task.heartbeatMsg}</span>
+                                    <span className="text-muted-foreground break-all">💓 {task.heartbeatMsg}</span>
                                 )}
                             </div>
                             {/* Heartbeat health bar */}
-                            <div className="mt-2 h-1 rounded-full bg-zinc-800 overflow-hidden">
+                            <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
                                 <div 
                                     className={`h-full rounded-full transition-all duration-1000 ${
                                         healthPct > 60 ? 'bg-green-500' : healthPct > 30 ? 'bg-yellow-500' : 'bg-red-500'
@@ -185,8 +185,8 @@ export function ActiveTasks() {
                 {/* Recent completed/failed */}
                 {recent.length > 0 && (
                     <>
-                        {active.length > 0 && <div className="border-t border-zinc-800 pt-2" />}
-                        <p className="text-xs text-zinc-600 uppercase tracking-wider">Recent</p>
+                        {active.length > 0 && <div className="border-t border-border pt-2" />}
+                        <p className="text-xs text-muted-foreground/50 uppercase tracking-wider">Recent</p>
                         {recent.map(task => {
                             const emoji = AGENT_EMOJI[task.agentId] || "🤖"
                             const costPerMinute = task.model ? MODEL_RATES[task.model] : 0
@@ -196,11 +196,11 @@ export function ActiveTasks() {
                                 <div key={task.id} className="py-1.5 text-sm">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span>{emoji}</span>
-                                        <span className="text-zinc-400">{task.agentName}</span>
+                                        <span className="text-muted-foreground">{task.agentName}</span>
                                         {task.model && <ModelChip modelId={task.model} />}
                                         <StatusBadge status={task.status} />
                                     </div>
-                                    <p className="text-xs text-zinc-500 break-words mt-0.5">
+                                    <p className="text-xs text-muted-foreground/70 break-words mt-0.5">
                                         "{task.task}"
                                         <span className="font-mono ml-2">
                                             {task.durationSeconds != null ? formatDuration(task.durationSeconds) : '—'}

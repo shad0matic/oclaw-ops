@@ -35,18 +35,18 @@ export default async function CostsPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-card/50 border-border">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                             <DollarSign className="h-4 w-4" />
                             Monthly Fixed
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold text-white">
+                        <div className="text-3xl font-bold text-foreground">
                             €{totalMonthlyFixed.toFixed(2)}
                         </div>
-                        <p className="text-xs text-zinc-500 mt-1">
+                        <p className="text-xs text-muted-foreground/70 mt-1">
                             {subscriptions.length} active subscriptions
                         </p>
                     </CardContent>
@@ -54,34 +54,34 @@ export default async function CostsPage() {
 
                 {latestSnapshot && (
                     <>
-                        <Card className="bg-zinc-900/50 border-zinc-800">
+                        <Card className="bg-card/50 border-border">
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+                                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                     <TrendingUp className="h-4 w-4" />
                                     Latest Variable
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-3xl font-bold text-white">
+                                <div className="text-3xl font-bold text-foreground">
                                     €{Number(latestSnapshot.variable_eur).toFixed(2)}
                                 </div>
-                                <p className="text-xs text-zinc-500 mt-1">
+                                <p className="text-xs text-muted-foreground/70 mt-1">
                                     Hourly snapshot
                                 </p>
                             </CardContent>
                         </Card>
 
-                        <Card className="bg-zinc-900/50 border-zinc-800">
+                        <Card className="bg-card/50 border-border">
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium text-zinc-400">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">
                                     Total (Latest Hour)
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-3xl font-bold text-white">
+                                <div className="text-3xl font-bold text-foreground">
                                     €{Number(latestSnapshot.total_eur).toFixed(2)}
                                 </div>
-                                <p className="text-xs text-zinc-500 mt-1">
+                                <p className="text-xs text-muted-foreground/70 mt-1">
                                     Fixed + Variable
                                 </p>
                             </CardContent>
@@ -90,7 +90,7 @@ export default async function CostsPage() {
                 )}
             </div>
 
-            <Card className="bg-zinc-900/50 border-zinc-800">
+            <Card className="bg-card/50 border-border">
                 <CardHeader>
                     <CardTitle>Active Subscriptions</CardTitle>
                 </CardHeader>
@@ -99,19 +99,19 @@ export default async function CostsPage() {
                         {subscriptions.map((sub) => (
                             <div
                                 key={sub.id}
-                                className="flex items-center justify-between p-3 rounded-lg bg-zinc-950/50 border border-zinc-800"
+                                className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border"
                             >
                                 <div>
-                                    <div className="font-medium text-white">{sub.name}</div>
+                                    <div className="font-medium text-foreground">{sub.name}</div>
                                     {sub.provider && (
-                                        <div className="text-xs text-zinc-500">{sub.provider}</div>
+                                        <div className="text-xs text-muted-foreground/70">{sub.provider}</div>
                                     )}
                                 </div>
                                 <div className="text-right">
-                                    <div className="font-mono text-white">
+                                    <div className="font-mono text-foreground">
                                         €{Number(sub.monthly_price).toFixed(2)}
                                     </div>
-                                    <div className="text-xs text-zinc-500">/month</div>
+                                    <div className="text-xs text-muted-foreground/70">/month</div>
                                 </div>
                             </div>
                         ))}

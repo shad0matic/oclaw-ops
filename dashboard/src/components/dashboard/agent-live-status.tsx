@@ -27,7 +27,7 @@ function timeAgo(dateStr: string | null): string {
 
 const statusConfig = {
     active: { label: "Working", dot: "bg-green-500 animate-pulse", badge: "bg-green-500/10 text-green-400 border-green-500/20" },
-    idle: { label: "Idle", dot: "bg-zinc-500", badge: "bg-zinc-800 text-zinc-400 border-zinc-700" },
+    idle: { label: "Idle", dot: "bg-zinc-500", badge: "bg-muted text-muted-foreground border-border" },
     error: { label: "Error", dot: "bg-red-500", badge: "bg-red-500/10 text-red-400 border-red-500/20" },
 }
 
@@ -51,19 +51,19 @@ export function AgentLiveStatus() {
     }, [])
 
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+        <Card className="bg-card/50 border-border backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-zinc-400 flex items-center gap-2">
+                <CardTitle className="text-muted-foreground flex items-center gap-2">
                     <Radio className="h-4 w-4 text-green-500" />
                     Live Status
                 </CardTitle>
-                <span className="text-[10px] text-zinc-600">auto-refresh 15s</span>
+                <span className="text-[10px] text-muted-foreground/50">auto-refresh 15s</span>
             </CardHeader>
             <CardContent>
                 {loading ? (
-                    <div className="text-zinc-500 text-sm">Loading...</div>
+                    <div className="text-muted-foreground/70 text-sm">Loading...</div>
                 ) : agents.length === 0 ? (
-                    <div className="text-zinc-500 text-sm">No agents registered</div>
+                    <div className="text-muted-foreground/70 text-sm">No agents registered</div>
                 ) : (
                     <div className="space-y-3">
                         {agents.map((agent) => {
@@ -72,11 +72,11 @@ export function AgentLiveStatus() {
                                 <div key={agent.agent_id} className="flex items-center gap-3">
                                     <div className="relative">
                                         <AgentAvatar agentId={agent.agent_id} fallbackText={agent.name.substring(0, 2)} className="h-8 w-8" />
-                                        <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-zinc-900 ${cfg.dot}`} />
+                                        <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background ${cfg.dot}`} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-medium text-white">{agent.name}</span>
+                                            <span className="text-sm font-medium text-foreground">{agent.name}</span>
                                             {agent.agent_id === "main" && (
                                                 <Badge className="text-[9px] px-1 py-0 h-3.5 bg-amber-500/15 text-amber-400 border-amber-500/30">Lead</Badge>
                                             )}
@@ -84,10 +84,10 @@ export function AgentLiveStatus() {
                                                 {cfg.label}
                                             </Badge>
                                         </div>
-                                        <p className="text-xs text-zinc-500 truncate" title={agent.current_task || ''}>
+                                        <p className="text-xs text-muted-foreground/70 truncate" title={agent.current_task || ''}>
                                             {agent.current_task || "No active task"}
                                             {agent.last_seen && (
-                                                <span className="text-zinc-600"> · {timeAgo(agent.last_seen)}</span>
+                                                <span className="text-muted-foreground/50"> · {timeAgo(agent.last_seen)}</span>
                                             )}
                                         </p>
                                     </div>

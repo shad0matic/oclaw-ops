@@ -52,7 +52,7 @@ export function VariableCostCard() {
 
   return (
     <Card
-      className={cn('bg-zinc-900/50 border backdrop-blur-sm animate-cost-pulse')}
+      className={cn('bg-card/50 border backdrop-blur-sm animate-cost-pulse')}
       style={{
         '--glow-color': styles.glowColor,
         borderColor: styles.glowColor,
@@ -61,10 +61,10 @@ export function VariableCostCard() {
     >
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-zinc-400">API Burn</CardTitle>
-          <div className="text-2xl font-bold text-white">€{total.toFixed(2)}</div>
+          <CardTitle className="text-muted-foreground">API Burn</CardTitle>
+          <div className="text-2xl font-bold text-foreground">€{total.toFixed(2)}</div>
         </div>
-        <p className="text-xs text-zinc-500">Last 30 days</p>
+        <p className="text-xs text-muted-foreground/70">Last 30 days</p>
       </CardHeader>
       <CardContent>
         <div className="h-40">
@@ -89,7 +89,7 @@ export function VariableCostCard() {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-xs text-center text-zinc-500 mt-2">
+        <p className="text-xs text-center text-muted-foreground/70 mt-2">
           Projected: ~€{projected.toFixed(2)} by month end
         </p>
       </CardContent>

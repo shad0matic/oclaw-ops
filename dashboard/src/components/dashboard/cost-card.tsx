@@ -121,7 +121,7 @@ export function CostCard() {
 
   return (
     <Card
-      className={cn('bg-zinc-900/50 border backdrop-blur-sm animate-cost-pulse')}
+      className={cn('bg-card/50 border backdrop-blur-sm animate-cost-pulse')}
       style={{
         ['--glow-color' as any]: styles.glowColor,
         borderColor: styles.glowColor,
@@ -130,22 +130,22 @@ export function CostCard() {
     >
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-zinc-400 text-sm font-medium"><Link href="/costs" className="hover:text-zinc-200 transition-colors">💸 API Costs (30d)</Link></CardTitle>
+          <CardTitle className="text-muted-foreground text-sm font-medium"><Link href="/costs" className="hover:text-zinc-200 transition-colors">💸 API Costs (30d)</Link></CardTitle>
           <div className="flex items-center gap-2">
-            <DollarSign className="h-3.5 w-3.5 text-zinc-500" />
+            <DollarSign className="h-3.5 w-3.5 text-muted-foreground/70" />
             <Button
               variant="outline"
               size="sm"
               onClick={checkBalanceNow}
               disabled={checkingBalance}
-              className="h-7 text-xs border-zinc-700 hover:bg-zinc-800"
+              className="h-7 text-xs border-border hover:bg-muted"
             >
               <RefreshCcw className="h-3 w-3 mr-1" />
               {checkingBalance ? "Checking..." : "Check xAI Now"}
             </Button>
           </div>
         </div>
-        <div className="mt-1 text-xs text-zinc-500">
+        <div className="mt-1 text-xs text-muted-foreground/70">
           xAI Balance: {xaiBalance !== null ? `$${xaiBalance}` : balanceMessage}
         </div>
       </CardHeader>

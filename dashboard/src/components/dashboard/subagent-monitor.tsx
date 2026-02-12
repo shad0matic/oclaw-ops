@@ -73,19 +73,19 @@ export function SubAgentMonitor() {
     }, [])
 
     return (
-        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+        <Card className="bg-card/50 border-border backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-zinc-400 flex items-center gap-2">
+                <CardTitle className="text-muted-foreground flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     Sub-Agents
                 </CardTitle>
-                <span className="text-[10px] text-zinc-600">auto-refresh 30s</span>
+                <span className="text-[10px] text-muted-foreground/50">auto-refresh 30s</span>
             </CardHeader>
             <CardContent>
                 {loading ? (
-                    <div className="text-zinc-500 text-sm">Loading...</div>
+                    <div className="text-muted-foreground/70 text-sm">Loading...</div>
                 ) : runs.length === 0 ? (
-                    <div className="text-zinc-500 text-sm">No sub-agent activity in the last 24h</div>
+                    <div className="text-muted-foreground/70 text-sm">No sub-agent activity in the last 24h</div>
                 ) : (
                     <div className="space-y-3">
                         {runs.map((run, idx) => {
@@ -103,27 +103,27 @@ export function SubAgentMonitor() {
                                             fallbackText={run.agent_id.substring(0, 2)} 
                                             className="h-8 w-8" 
                                         />
-                                        <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-zinc-900 ${cfg.dot}`} />
+                                        <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background ${cfg.dot}`} />
                                     </div>
                                     
                                     <div className="flex-1 min-w-0 space-y-1">
                                         <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-sm font-medium text-white capitalize">{run.agent_id}</span>
+                                            <span className="text-sm font-medium text-foreground capitalize">{run.agent_id}</span>
                                             <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${cfg.badge}`}>
                                                 {isZombie && <Skull className="h-2.5 w-2.5 mr-0.5" />}
                                                 {cfg.label}
                                             </Badge>
                                             <div className="flex items-center gap-1">
                                                 <div className={`h-1.5 w-1.5 rounded-full ${getModelColor(run.model)}`} />
-                                                <span className="text-[10px] text-zinc-500">{run.model.split('/').pop()}</span>
+                                                <span className="text-[10px] text-muted-foreground/70">{run.model.split('/').pop()}</span>
                                             </div>
                                         </div>
                                         
-                                        <p className="text-xs text-zinc-400 break-words" title={run.task}>
+                                        <p className="text-xs text-muted-foreground break-words" title={run.task}>
                                             {run.task}
                                         </p>
                                         
-                                        <div className="flex items-center gap-2 text-[10px] text-zinc-600 flex-wrap">
+                                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground/50 flex-wrap">
                                             <span>by {run.spawned_by}</span>
                                             <span>•</span>
                                             <span>{formatDuration(run.duration_minutes)}</span>

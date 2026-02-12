@@ -14,7 +14,7 @@ export function AgentAvatar({ agentId, fallbackText, className }: AgentAvatarPro
     const [src, setSrc] = useState(`/assets/minion-avatars/${agentId}.webp`)
 
     return (
-        <Avatar className={cn("border border-zinc-700", className)}>
+        <Avatar className={cn("border border-border", className)}>
             <AvatarImage
                 src={src}
                 onError={() => setSrc("/assets/minion-avatars/default.webp")}

@@ -186,7 +186,7 @@ function ModelChip({ model }: { model?: string }) {
     const entry = model ? getModelEntry(model) : null
     if (!model) {
         return (
-            <span className="text-[9px] px-1 py-0 rounded border font-mono bg-zinc-800/50 text-zinc-600 border-zinc-700/30 italic">?</span>
+            <span className="text-[9px] px-1 py-0 rounded border font-mono bg-muted/50 text-muted-foreground/50 border-border/30 italic">?</span>
         )
     }
     const label = entry?.label || model.split("/").pop() || model
@@ -203,7 +203,7 @@ function ModelChip({ model }: { model?: string }) {
         )
     }
     return (
-        <span className="text-[9px] px-1 py-0 rounded border font-mono bg-zinc-800 text-zinc-500 border-zinc-700/50">
+        <span className="text-[9px] px-1 py-0 rounded border font-mono bg-muted text-muted-foreground/70 border-border/50">
             {label}
         </span>
     )
@@ -218,26 +218,26 @@ function CommitGroup({ events, agent_id }: { events: Event[]; agent_id: string }
     const repoStr = repos.length > 0 ? ` in ${repos.join(", ")}` : ""
 
     return (
-        <div className="border-b border-zinc-800/50 pb-4 last:border-0">
+        <div className="border-b border-border/50 pb-4 last:border-0">
             <div className="flex items-start gap-3 text-sm">
-                <Avatar className="h-8 w-8 border border-zinc-700 mt-0.5 shrink-0">
+                <Avatar className="h-8 w-8 border border-border mt-0.5 shrink-0">
                     <AvatarImage src={getAgentAvatar(agent_id)} />
-                    <AvatarFallback className="bg-zinc-800 text-zinc-400 text-xs">{agent.emoji}</AvatarFallback>
+                    <AvatarFallback className="bg-muted text-muted-foreground text-xs">{agent.emoji}</AvatarFallback>
                 </Avatar>
                 <div className="grid gap-1 min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-white">{agent.name}</span>
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-zinc-800 text-zinc-400 border-zinc-700">
+                        <span className="font-semibold text-foreground">{agent.name}</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-muted text-muted-foreground border-border">
                             {events.length} commits{repoStr}
                         </Badge>
                         <ModelChip model={events[0].detail?.model} />
-                        <span className="text-xs text-zinc-500 ml-auto shrink-0">
+                        <span className="text-xs text-muted-foreground/70 ml-auto shrink-0">
                             {timeAgo(events[0].created_at)}
                         </span>
                     </div>
                     <button
                         onClick={() => setExpanded(!expanded)}
-                        className="text-left text-zinc-400 hover:text-zinc-200 transition-colors"
+                        className="text-left text-muted-foreground hover:text-foreground/90 transition-colors"
                     >
                         <span className="text-xs">
                             {expanded ? "▾" : "▸"} {events[0].detail?.message || "commits"}
@@ -245,7 +245,7 @@ function CommitGroup({ events, agent_id }: { events: Event[]; agent_id: string }
                         </span>
                     </button>
                     {expanded && (
-                        <ul className="mt-1 space-y-0.5 text-xs text-zinc-500">
+                        <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground/70">
                             {events.map((e) => (
                                 <li key={e.id} className="flex gap-2">
                                     <code className="text-amber-400/70 font-mono">{e.detail?.hash || "?"}</code>
@@ -271,38 +271,38 @@ function TaskGroup({ events, agent_id }: { events: Event[]; agent_id: string }) 
     const badge = statusBadge(status)
 
     return (
-        <div className="border-b border-zinc-800/50 pb-4 last:border-0">
+        <div className="border-b border-border/50 pb-4 last:border-0">
             <div className="flex items-start gap-3 text-sm">
-                <Avatar className="h-8 w-8 border border-zinc-700 mt-0.5 shrink-0">
+                <Avatar className="h-8 w-8 border border-border mt-0.5 shrink-0">
                     <AvatarImage src={getAgentAvatar(agent_id)} />
-                    <AvatarFallback className="bg-zinc-800 text-zinc-400 text-xs">{agent.emoji}</AvatarFallback>
+                    <AvatarFallback className="bg-muted text-muted-foreground text-xs">{agent.emoji}</AvatarFallback>
                 </Avatar>
                 <div className="grid gap-1 min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-white">{agent.name}</span>
+                        <span className="font-semibold text-foreground">{agent.name}</span>
                         {badge && (
                             <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${badge.className}`}>
                                 {badge.label}
                             </Badge>
                         )}
                         <ModelChip model={startEvent?.detail?.model || endEvent?.detail?.model} />
-                        <span className="text-xs text-zinc-500 ml-auto shrink-0">
+                        <span className="text-xs text-muted-foreground/70 ml-auto shrink-0">
                             {timeAgo(events[0].created_at)}
                         </span>
                     </div>
                     <button
                         onClick={() => setExpanded(!expanded)}
-                        className="text-left text-zinc-400 hover:text-zinc-200 transition-colors"
+                        className="text-left text-muted-foreground hover:text-foreground/90 transition-colors"
                     >
                         <span>{taskName}</span>
                         {commits.length > 0 && (
-                            <span className="text-xs text-zinc-500 ml-2">
+                            <span className="text-xs text-muted-foreground/70 ml-2">
                                 {expanded ? "▾" : "▸"} {commits.length} commit{commits.length !== 1 ? "s" : ""}
                             </span>
                         )}
                     </button>
                     {expanded && commits.length > 0 && (
-                        <ul className="mt-1 space-y-0.5 text-xs text-zinc-500">
+                        <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground/70">
                             {commits.map((e) => (
                                 <li key={e.id} className="flex gap-2">
                                     <code className="text-amber-400/70 font-mono">{e.detail?.hash || "?"}</code>
@@ -323,25 +323,25 @@ function SingleEvent({ event }: { event: Event }) {
     const badge = statusBadge(status)
 
     return (
-        <div className="flex items-start gap-3 text-sm border-b border-zinc-800/50 pb-4 last:border-0">
-            <Avatar className="h-8 w-8 border border-zinc-700 mt-0.5 shrink-0">
+        <div className="flex items-start gap-3 text-sm border-b border-border/50 pb-4 last:border-0">
+            <Avatar className="h-8 w-8 border border-border mt-0.5 shrink-0">
                 <AvatarImage src={getAgentAvatar(event.agent_id)} />
-                <AvatarFallback className="bg-zinc-800 text-zinc-400 text-xs">{agent.emoji}</AvatarFallback>
+                <AvatarFallback className="bg-muted text-muted-foreground text-xs">{agent.emoji}</AvatarFallback>
             </Avatar>
             <div className="grid gap-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-white">{agent.name}</span>
+                    <span className="font-semibold text-foreground">{agent.name}</span>
                     {badge && (
                         <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${badge.className}`}>
                             {badge.label}
                         </Badge>
                     )}
                     <ModelChip model={event.detail?.model} />
-                    <span className="text-xs text-zinc-500 ml-auto shrink-0">
+                    <span className="text-xs text-muted-foreground/70 ml-auto shrink-0">
                         {timeAgo(event.created_at)}
                     </span>
                 </div>
-                <p className="text-zinc-400 break-words">{text}</p>
+                <p className="text-muted-foreground break-words">{text}</p>
             </div>
         </div>
     )
@@ -351,14 +351,14 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
     const grouped = groupEvents(events)
 
     return (
-        <Card className="col-span-3 bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+        <Card className="col-span-3 bg-card/50 border-border backdrop-blur-sm">
             <CardHeader>
-                <CardTitle className="text-zinc-400">Recent Activity</CardTitle>
+                <CardTitle className="text-muted-foreground">Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
                 <ScrollArea className="h-[300px] md:h-[400px] pr-4">
                     {grouped.length === 0 ? (
-                        <div className="flex items-center justify-center h-32 text-zinc-500 text-sm">
+                        <div className="flex items-center justify-center h-32 text-muted-foreground/70 text-sm">
                             No recent activity yet
                         </div>
                     ) : (
