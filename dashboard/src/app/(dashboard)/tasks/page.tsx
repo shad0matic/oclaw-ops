@@ -5,9 +5,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useRef, useState } from "react";
-import { Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { Filter, ChevronDown, ChevronUp, Plus } from "lucide-react";
 
 const ItemTypes = { CARD: "card" } as const;
+
+interface Project {
+  id: string;
+  label: string;
+  icon: string;
+  color: string;
+  description?: string;
+}
 
 type QueueStatus = "backlog" | "planned" | "running" | "review" | "human_todo" | "done";
 
@@ -38,29 +46,17 @@ function getPriorityColor(p: number): { dot: string; text: string; bg: string } 
   return { dot: "bg-zinc-600", text: "text-muted-foreground/70", bg: "bg-zinc-600/10" };
 }
 
-// Project icons/labels
-const PROJECT_OPTIONS = [
-  { key: "all", label: "All Projects", icon: "🌐" },
-  { key: "oclaw-ops", label: "Minions Control", icon: "🎛️" },
-  { key: "openclaw", label: "OpenClaw/Kevin", icon: "🦞" },
-  { key: "teen-founder", label: "Teen Founder", icon: "📖" },
-  { key: "openpeople-crm", label: "OpenPeople CRM", icon: "👥" },
-  { key: "taskbee", label: "TaskBee", icon: "🐝" },
-  { key: "boris-extensions", label: "Boris Extensions", icon: "💇" },
-  { key: "directannonces", label: "Directannonces", icon: "🏢" },
-  { key: "other", label: "Other", icon: "📦" },
+// Fallback projects (used while DB loads)
+const FALLBACK_PROJECTS: Project[] = [
+  { id: "oclaw-ops", label: "Minions Control", icon: "🎛️", color: "border-l-amber-500" },
+  { id: "other", label: "Other", icon: "📦", color: "border-l-zinc-500" },
 ];
 
-const PROJECT_COLORS: Record<string, string> = {
-  "oclaw-ops": "border-l-amber-500",
-  "openclaw": "border-l-red-500",
-  "teen-founder": "border-l-emerald-500",
-  "openpeople-crm": "border-l-blue-500",
-  "taskbee": "border-l-yellow-500",
-  "boris-extensions": "border-l-pink-500",
-  "directannonces": "border-l-indigo-500",
-  "other": "border-l-zinc-500",
-};
+async function fetchProjects(): Promise<Project[]> {
+  const res = await fetch("/api/projects");
+  if (!res.ok) return FALLBACK_PROJECTS;
+  return res.json();
+}
 
 async function fetchQueue(): Promise<QueueTask[]> {
   const res = await fetch("/api/tasks/queue");
@@ -78,7 +74,7 @@ async function transitionTask({ id, to }: { id: number; to: string }) {
   return res.json();
 }
 
-function TaskCard({ task }: { task: QueueTask }) {
+function TaskCard({ task, projects }: { task: QueueTask; projects: Project[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
   const pc = getPriorityColor(task.priority);
@@ -94,9 +90,9 @@ function TaskCard({ task }: { task: QueueTask }) {
 
   drag(ref);
 
-  const projectIcon = PROJECT_OPTIONS.find(
-    (p) => p.key === (task.project || "other")
-  )?.icon || "📦";
+  const proj = projects.find(p => p.id === (task.project || "other"));
+  const projectIcon = proj?.icon || "📦";
+  const projectColor = proj?.color || "border-l-zinc-500";
 
   return (
     <motion.div
@@ -106,40 +102,36 @@ function TaskCard({ task }: { task: QueueTask }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.18 }}
-      className={`rounded-lg border border-border bg-background/50 p-3 cursor-grab active:cursor-grabbing border-l-2 ${
-        PROJECT_COLORS[task.project || "other"] || "border-l-zinc-500"
-      }`}
+      className={`rounded-lg border border-border bg-background/50 p-3 cursor-grab active:cursor-grabbing border-l-2 ${projectColor}`}
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground leading-snug flex-1">{task.title}</h3>
-        <span className={`flex items-center gap-1 text-[10px] font-mono shrink-0 ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
-          <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />
-          P{task.priority}
-        </span>
+      <div
+        className="cursor-pointer"
+        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-sm font-semibold text-foreground leading-snug flex-1">{task.title}</h3>
+          <span className={`flex items-center gap-1 text-[10px] font-mono shrink-0 ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
+            <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />
+            P{task.priority}
+          </span>
+        </div>
+        <div className="mt-1 flex items-center gap-1.5 text-xs">
+          <span>{projectIcon}</span>
+          <span className="font-medium text-foreground/80">{proj?.label || task.project}</span>
+        </div>
       </div>
-      {task.description && (
-        <div className="mt-1">
-          <p
-            className={`text-xs text-muted-foreground ${expanded ? "" : "line-clamp-2"} cursor-pointer`}
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-          >
-            {task.description}
-          </p>
-          {task.description.length > 80 && (
-            <button
-              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-              className="text-[10px] text-muted-foreground/70 hover:text-foreground/80 mt-0.5 flex items-center gap-0.5"
-            >
-              {expanded ? <><ChevronUp className="w-3 h-3" /> Less</> : <><ChevronDown className="w-3 h-3" /> More</>}
-            </button>
+      {expanded && (
+        <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
+          {task.description && (
+            <p className="text-xs text-muted-foreground">{task.description}</p>
           )}
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground/70">
+            <span>{task.agent_name || task.agent_id || "Unassigned"}</span>
+            {task.created_at && <span>{new Date(task.created_at).toLocaleDateString('fr-FR')}</span>}
+          </div>
         </div>
       )}
-      <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground/70">
-        <span>{projectIcon} {task.project || "other"}</span>
-        <span>{task.agent_name || task.agent_id || "Unassigned"}</span>
-      </div>
     </motion.div>
   );
 }
@@ -149,11 +141,13 @@ function Column({
   status,
   tasks,
   actionMap,
+  projects,
 }: {
   title: string;
   status: string;
   tasks: QueueTask[];
   actionMap: Record<string, string>;
+  projects: Project[];
 }) {
   const qc = useQueryClient();
   const mutation = useMutation({
@@ -202,7 +196,7 @@ function Column({
           {tasks
             .sort((a, b) => a.priority - b.priority)
             .map((t) => (
-              <TaskCard key={t.id} task={t} />
+              <TaskCard key={t.id} task={t} projects={projects} />
             ))}
         </AnimatePresence>
       </div>
@@ -218,6 +212,12 @@ export default function TasksPage() {
     queryKey: ["task-queue"],
     queryFn: fetchQueue,
     refetchInterval: 10_000,
+  });
+
+  const { data: projects = FALLBACK_PROJECTS } = useQuery({
+    queryKey: ["projects"],
+    queryFn: fetchProjects,
+    staleTime: 60_000,
   });
 
   // Map DB statuses to kanban columns
@@ -242,6 +242,8 @@ export default function TasksPage() {
     projectFilter === "all"
       ? tasks
       : tasks.filter((t) => (t.project || "other") === projectFilter);
+
+  const projectMap = Object.fromEntries(projects.map(p => [p.id, p]));
 
   // Action map: status → API action name
   const actionMap: Record<string, string> = {
@@ -284,12 +286,22 @@ export default function TasksPage() {
 
         {showFilters && (
           <div className="flex gap-2 flex-wrap">
-            {PROJECT_OPTIONS.map((p) => (
+            <button
+              onClick={() => setProjectFilter("all")}
+              className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 transition-colors border ${
+                projectFilter === "all"
+                  ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  : "bg-muted/50 text-muted-foreground border-border hover:border-zinc-600"
+              }`}
+            >
+              🌐 All Projects
+            </button>
+            {projects.map((p) => (
               <button
-                key={p.key}
-                onClick={() => setProjectFilter(p.key)}
+                key={p.id}
+                onClick={() => setProjectFilter(p.id)}
                 className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 transition-colors border ${
-                  projectFilter === p.key
+                  projectFilter === p.id
                     ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
                     : "bg-muted/50 text-muted-foreground border-border hover:border-zinc-600"
                 }`}
@@ -314,6 +326,7 @@ export default function TasksPage() {
                 status={c.status}
                 tasks={filteredTasks.filter((t) => t.status === c.status)}
                 actionMap={actionMap}
+                projects={projects}
               />
             ))}
           </div>
