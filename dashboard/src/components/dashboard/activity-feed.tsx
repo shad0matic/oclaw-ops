@@ -179,6 +179,26 @@ function timeAgo(dateStr: string): string {
     return `${diffDays}d ago`
 }
 
+// Model alias display (short labels for known models)
+const MODEL_SHORT: Record<string, string> = {
+    "anthropic/claude-opus-4-6": "Opus",
+    "google/gemini-2.5-pro": "Gemini",
+    "xai/grok-3": "Grok",
+    "openai/gpt-5.2": "GPT",
+    "xai/grok-4-fast": "Grok4",
+    "xai/grok-4.1-fast": "Grok4.1",
+}
+
+function ModelChip({ model }: { model?: string }) {
+    if (!model) return null
+    const label = MODEL_SHORT[model] || model.split("/").pop() || model
+    return (
+        <span className="text-[9px] px-1 py-0 rounded bg-zinc-800 text-zinc-500 border border-zinc-700/50 font-mono">
+            {label}
+        </span>
+    )
+}
+
 // --- Components ---
 
 function CommitGroup({ events, agent_id }: { events: Event[]; agent_id: string }) {
@@ -200,6 +220,7 @@ function CommitGroup({ events, agent_id }: { events: Event[]; agent_id: string }
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-zinc-800 text-zinc-400 border-zinc-700">
                             {events.length} commits{repoStr}
                         </Badge>
+                        <ModelChip model={events[0].detail?.model} />
                         <span className="text-xs text-zinc-500 ml-auto shrink-0">
                             {timeAgo(events[0].created_at)}
                         </span>
@@ -254,6 +275,7 @@ function TaskGroup({ events, agent_id }: { events: Event[]; agent_id: string }) 
                                 {badge.label}
                             </Badge>
                         )}
+                        <ModelChip model={startEvent?.detail?.model || endEvent?.detail?.model} />
                         <span className="text-xs text-zinc-500 ml-auto shrink-0">
                             {timeAgo(events[0].created_at)}
                         </span>
@@ -304,6 +326,7 @@ function SingleEvent({ event }: { event: Event }) {
                             {badge.label}
                         </Badge>
                     )}
+                    <ModelChip model={event.detail?.model} />
                     <span className="text-xs text-zinc-500 ml-auto shrink-0">
                         {timeAgo(event.created_at)}
                     </span>
