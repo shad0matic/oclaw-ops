@@ -220,12 +220,17 @@ export default function TasksPage() {
     refetchInterval: 10_000,
   });
 
-  // Map old statuses to new flow
+  // Map DB statuses to kanban columns
   const statusMapping: Record<string, string> = {
     queued: "backlog",
+    assigned: "planned",
+    planned: "planned",
     running: "running",
+    review: "review",
+    human_todo: "human_todo",
     done: "done",
     failed: "review",
+    cancelled: "done",
   };
 
   const tasks = (data ?? []).map((t) => ({

@@ -38,6 +38,24 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 [id]
             )
             break
+        case "plan":
+            await pool.query(
+                `UPDATE ops.task_queue SET status = 'planned' WHERE id = $1`,
+                [id]
+            )
+            break
+        case "review":
+            await pool.query(
+                `UPDATE ops.task_queue SET status = 'review' WHERE id = $1`,
+                [id]
+            )
+            break
+        case "human":
+            await pool.query(
+                `UPDATE ops.task_queue SET status = 'human_todo' WHERE id = $1`,
+                [id]
+            )
+            break
         case "requeue":
             await pool.query(
                 `UPDATE ops.task_queue SET status = 'queued', agent_id = NULL, started_at = NULL, completed_at = NULL WHERE id = $1`,
