@@ -1,28 +1,23 @@
 "use client"
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React from 'react'
 
 // --- Types ---
-type AgentStatus = 'idle' | 'active' | 'zombie' | 'dead';
+type AgentStatus = 'idle' | 'active' | 'zombie' | 'dead'
 
 interface SubSpawn {
-  id: string;
-  name: string;
-  status: AgentStatus;
+  id: string
+  name: string
+  status: AgentStatus
 }
 
 interface Agent {
-  id: string;
-  name: string;
-  emoji: string;
-  status: AgentStatus;
-  currentTask?: string;
-  subSpawns?: SubSpawn[];
-}
-
-interface IsometricOfficeProps {
-  agents: Agent[];
+  id: string
+  name: string
+  emoji: string
+  status: AgentStatus
+  currentTask?: string
+  subSpawns?: SubSpawn[]
 }
 
 // --- Mock Data ---
@@ -33,106 +28,184 @@ const mockAgents: Agent[] = [
   { id: 'nefario', name: 'Dr. Nefario', emoji: '🔬', status: 'active', currentTask: 'Researching cost estimation' },
   { id: 'bob', name: 'Bob', emoji: '🎨', status: 'idle' },
   { id: 'xreader', name: 'X Reader', emoji: '📰', status: 'zombie' },
-];
+]
 
-// --- Helper Functions ---
-const getAgentPosition = (agent: Agent, index: number, totalAgentsInStatus: number) => {
-  const stagger = (index / (totalAgentsInStatus || 1)) * 50 + 25; // %
-  switch (agent.status) {
-    case 'idle':
-      return { x: 15, y: 80, cx: `${stagger}%`, cy: '50%' };
-    case 'active':
-      return { x: 55, y: 50, cx: `${stagger}%`, cy: '50%' };
-    case 'zombie':
-      return { x: 85, y: 20, cx: `${stagger}%`, cy: '50%' };
-    case 'dead':
-      return { x: 85, y: 85, cx: `${stagger}%`, cy: '50%' };
-    default:
-      return { x: 50, y: 50, cx: '50%', cy: '50%' };
-  }
-};
+// --- Room definitions (isometric diamond shapes) ---
+const ROOMS = {
+  lounge:   { cx: 150, cy: 380, w: 200, h: 120, label: '🛋️ Idle Lounge', color: '#3f3f46' },
+  active:   { cx: 400, cy: 250, w: 280, h: 160, label: '💻 Active Room', color: '#854d0e' },
+  warRoom:  { cx: 650, cy: 120, w: 180, h: 110, label: '⚔️ War Room', color: '#991b1b' },
+  graveyard:{ cx: 650, cy: 400, w: 120, h: 80, label: '🪦 Graveyard', color: '#27272a' },
+}
 
-// --- Sub-Components ---
-const OfficeRoom: React.FC<{ id: string; label: string; x: string; y: string; width: string; height: string; color: string }> = 
-  ({ id, label, x, y, width, height, color }) => (
-  <g id={id}>
-    <rect x={x} y={y} width={width} height={height} fill={`rgba(${color}, 0.1)`} stroke={`rgb(${color})`} strokeWidth="1" />
-    <text x={`calc(${x} + ${width} / 2)`} y={`calc(${y} + 20)`} fill={`rgb(${color})`} fontSize="12" textAnchor="middle" >
-      {label}
-    </text>
-  </g>
-);
+// Map status to room
+const STATUS_ROOM: Record<AgentStatus, keyof typeof ROOMS> = {
+  idle: 'lounge',
+  active: 'active',
+  zombie: 'active', // zombies are in active room with alarm
+  dead: 'graveyard',
+}
 
-const AgentIcon: React.FC<{ agent: Agent; x: string; y: string }> = ({ agent, x, y }) => {
-    const glowing = agent.status === 'active';
-    const isZombie = agent.status === 'zombie';
+// Isometric diamond path from center point
+function diamondPath(cx: number, cy: number, w: number, h: number) {
+  return `M ${cx} ${cy - h/2} L ${cx + w/2} ${cy} L ${cx} ${cy + h/2} L ${cx - w/2} ${cy} Z`
+}
 
-    return (
-        <g transform={`translate(${x}, ${y})`}>
-            {glowing && <circle cx="15" cy="15" r="15" fill="yellow" opacity="0.3" />}
-            <text x="15" y="15" fontSize="24" textAnchor="middle" dominantBaseline="central"
-                style={{
-                    filter: isZombie ? 'grayscale(100%) brightness(50%) sepia(100%) hue-rotate(50deg)' : 'none',
-                    transition: 'all 0.3s ease',
-                }}>
-                {agent.emoji}
-            </text>
-             {isZombie && <text x="15" y="15" fontSize="18" textAnchor="middle" dominantBaseline="central">🧟</text>}
-        </g>
-    );
-};
+// Position agents within a room, spread evenly
+function getAgentPos(roomKey: keyof typeof ROOMS, index: number, total: number) {
+  const room = ROOMS[roomKey]
+  const spread = Math.min(total, 4)
+  const offsetX = (index - (spread - 1) / 2) * 50
+  const offsetY = (index - (spread - 1) / 2) * 20
+  return { x: room.cx + offsetX, y: room.cy + offsetY + 15 }
+}
 
+// --- Room Component ---
+function Room({ roomKey }: { roomKey: keyof typeof ROOMS }) {
+  const r = ROOMS[roomKey]
+  return (
+    <g>
+      <path
+        d={diamondPath(r.cx, r.cy, r.w, r.h)}
+        fill={r.color}
+        fillOpacity={0.15}
+        stroke={r.color}
+        strokeWidth={1.5}
+        strokeOpacity={0.6}
+      />
+      <text x={r.cx} y={r.cy - r.h/2 + 18} fill="#a1a1aa" fontSize={11} textAnchor="middle" fontWeight="bold">
+        {r.label}
+      </text>
+    </g>
+  )
+}
 
-// --- Main Component ---
-const IsometricOffice: React.FC<IsometricOfficeProps> = ({ agents }) => {
-  const agentsByStatus = {
-    idle: agents.filter(a => a.status === 'idle'),
-    active: agents.filter(a => a.status === 'active'),
-    zombie: agents.filter(a => a.status === 'zombie'),
-    dead: agents.filter(a => a.status === 'dead'),
-  };
+// --- Agent Sprite ---
+function AgentSprite({ agent, x, y }: { agent: Agent; x: number; y: number }) {
+  const isZombie = agent.status === 'zombie'
+  const isActive = agent.status === 'active'
 
   return (
-    <div className="w-full h-[500px] bg-zinc-900 rounded-lg border border-zinc-700 p-4 flex items-center justify-center overflow-hidden">
-      <svg width="100%" height="100%" viewBox="0 0 400 300" style={{ transform: 'rotateX(55deg) rotateZ(-45deg)', transformStyle: 'preserve-3d' }}>
-        <defs>
-            <filter id="glow">
-                <feGaussianBlur stdDeviation="3.5" result="coloredBlur" />
-                <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
-        </defs>
+    <g>
+      {/* Glow for active agents */}
+      {isActive && (
+        <circle cx={x} cy={y} r={22} fill="#eab308" fillOpacity={0.15}>
+          <animate attributeName="fillOpacity" values="0.1;0.25;0.1" dur="2s" repeatCount="indefinite" />
+        </circle>
+      )}
 
-        {/* --- Rooms --- */}
-        <OfficeRoom id="idle-lounge" label="🛋️ Idle Lounge" x="5%" y="65%" width="35%" height="30%" color="74, 74, 74" />
-        <OfficeRoom id="active-room" label="💻 Active Room" x="35%" y="25%" width="50%" height="50%" color="140, 110, 38" />
-        <OfficeRoom id="war-room" label="⚔️ War Room" x="65%" y="5%" width="30%" height="25%" color="160, 68, 68" />
-        <OfficeRoom id="graveyard" label="🪦 Graveyard" x="80%" y="75%" width="15%" height="20%" color="51, 51, 51" />
+      {/* Zombie alarm flash */}
+      {isZombie && (
+        <circle cx={x + 18} cy={y - 18} r={5} fill="#ef4444">
+          <animate attributeName="opacity" values="1;0.2;1" dur="0.5s" repeatCount="indefinite" />
+        </circle>
+      )}
 
-        {/* --- Agents --- */}
-        {agents.map((agent) => {
-            const statusAgents = agentsByStatus[agent.status];
-            const index = statusAgents.findIndex(a => a.id === agent.id);
-            const { x, y } = getAgentPosition(agent, index, statusAgents.length);
+      {/* Agent emoji */}
+      <text x={x} y={y} fontSize={28} textAnchor="middle" dominantBaseline="central"
+        style={{ filter: isZombie ? 'saturate(0.3) brightness(0.6)' : 'none' }}>
+        {agent.emoji}
+      </text>
 
-            return (
-                 <motion.g
-                    key={agent.id}
-                    initial={{ x: `${x}%`, y: `${y}%` }}
-                    animate={{ x: `${x}%`, y: `${y}%` }}
-                    transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                    <AgentIcon agent={agent} x="0" y="0" />
-                </motion.g>
-            );
+      {/* Zombie overlay */}
+      {isZombie && (
+        <text x={x + 12} y={y - 10} fontSize={14} textAnchor="middle" dominantBaseline="central">
+          🧟
+        </text>
+      )}
+
+      {/* Name label */}
+      <text x={x} y={y + 22} fill="#d4d4d8" fontSize={9} textAnchor="middle" fontWeight="500">
+        {agent.name}
+      </text>
+
+      {/* Current task */}
+      {agent.currentTask && (
+        <text x={x} y={y + 33} fill="#71717a" fontSize={7} textAnchor="middle">
+          {agent.currentTask.length > 25 ? agent.currentTask.slice(0, 25) + '…' : agent.currentTask}
+        </text>
+      )}
+
+      {/* Sub-spawns */}
+      {agent.subSpawns?.map((sub, i) => (
+        <g key={sub.id}>
+          {/* Dotted line to parent */}
+          <line x1={x + 20} y1={y} x2={x + 40 + i * 30} y2={y - 15}
+            stroke="#71717a" strokeWidth={1} strokeDasharray="3,3" />
+          {/* Mini bubble */}
+          <circle cx={x + 40 + i * 30} cy={y - 15} r={12} fill="#27272a" stroke="#3f3f46" strokeWidth={1} />
+          <text x={x + 40 + i * 30} y={y - 15} fontSize={10} textAnchor="middle" dominantBaseline="central">
+            ⚡
+          </text>
+          <text x={x + 40 + i * 30} y={y - 1} fill="#71717a" fontSize={6} textAnchor="middle">
+            {sub.name}
+          </text>
+        </g>
+      ))}
+    </g>
+  )
+}
+
+// --- Grid lines (isometric floor) ---
+function IsoGrid() {
+  const lines = []
+  for (let i = 0; i < 10; i++) {
+    const y = 50 + i * 45
+    lines.push(
+      <line key={`h${i}`} x1={50} y1={y} x2={750} y2={y} stroke="#27272a" strokeWidth={0.5} />
+    )
+  }
+  for (let i = 0; i < 12; i++) {
+    const x = 50 + i * 65
+    lines.push(
+      <line key={`v${i}`} x1={x} y1={50} x2={x} y2={460} stroke="#27272a" strokeWidth={0.5} />
+    )
+  }
+  return <g opacity={0.4}>{lines}</g>
+}
+
+// --- Main Component ---
+export function IsometricOffice({ agents }: { agents: Agent[] }) {
+  // Group agents by their target room
+  const agentsByRoom: Record<string, Agent[]> = {}
+  agents.forEach(a => {
+    const room = STATUS_ROOM[a.status]
+    if (!agentsByRoom[room]) agentsByRoom[room] = []
+    agentsByRoom[room].push(a)
+  })
+
+  return (
+    <div className="w-full bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden">
+      <svg viewBox="0 0 800 480" className="w-full" style={{ minHeight: 400 }}>
+        {/* Background */}
+        <rect width="800" height="480" fill="#09090b" />
+
+        {/* Floor grid */}
+        <IsoGrid />
+
+        {/* Rooms */}
+        {(Object.keys(ROOMS) as (keyof typeof ROOMS)[]).map(key => (
+          <Room key={key} roomKey={key} />
+        ))}
+
+        {/* Agents */}
+        {agents.map(agent => {
+          const room = STATUS_ROOM[agent.status]
+          const roomAgents = agentsByRoom[room] || []
+          const index = roomAgents.findIndex(a => a.id === agent.id)
+          const pos = getAgentPos(room, index, roomAgents.length)
+          return <AgentSprite key={agent.id} agent={agent} x={pos.x} y={pos.y} />
         })}
+
+        {/* Title */}
+        <text x={400} y={25} fill="#fafafa" fontSize={14} textAnchor="middle" fontWeight="bold" letterSpacing={2}>
+          🍌 THE LAB
+        </text>
       </svg>
     </div>
-  );
-};
+  )
+}
 
-export const IsometricOfficeWrapper: React.FC = () => {
-    return <IsometricOffice agents={mockAgents} />;
+export function IsometricOfficeWrapper() {
+  return <IsometricOffice agents={mockAgents} />
 }

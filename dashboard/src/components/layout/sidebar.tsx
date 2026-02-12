@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, LogOut, ListTodo } from "lucide-react"
+import { LayoutDashboard, Users, GitGraph, Play, Brain, Activity, Server, LogOut, ListTodo, FlaskConical } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 
 const navItems = [
     { href: "/", label: "Overview", icon: LayoutDashboard },
+    { href: "/lab", label: "The Lab", icon: FlaskConical },
     { href: "/agents", label: "Agents", icon: Users },
     { href: "/workflows", label: "Workflows", icon: GitGraph },
     { href: "/tasks", label: "Tasks", icon: ListTodo },
