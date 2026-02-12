@@ -3,7 +3,15 @@
 import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Clock, AlertTriangle, CheckCircle2, XCircle, Skull } from "lucide-react"
+import { Clock, AlertTriangle, CheckCircle2, XCircle, Skull, Zap } from "lucide-react"
+import { getModelEntry } from "../settings/model-display-config"
+
+const MODEL_RATES: Record<string, number> = {
+    "anthropic/claude-3-opus-20240229": 0.10,
+    "google/gemini-pro": 0.005,
+    "groq/llama3-70b-8192": 0.02,
+    "openai/gpt-4-turbo": 0.03,
+}
 
 interface ActiveTask {
     id: number
@@ -17,6 +25,7 @@ interface ActiveTask {
     timeoutSeconds: number
     isStalled: boolean
     startedAt: string
+    model?: string
 }
 
 interface RecentTask {
@@ -28,6 +37,7 @@ interface RecentTask {
     heartbeatMsg: string | null
     durationSeconds: number
     completedAt: string
+    model?: string
 }
 
 const AGENT_EMOJI: Record<string, string> = {
@@ -57,6 +67,19 @@ function StatusBadge({ status, isStalled }: { status: string; isStalled?: boolea
         default:
             return <Badge className="bg-zinc-500/10 text-zinc-400">{status}</Badge>
     }
+}
+
+function ModelChip({ modelId }: { modelId: string }) {
+    const model = getModelEntry(modelId)
+    if (!model) return null
+    return (
+        <Badge
+            className="font-mono text-xs"
+            style={{ backgroundColor: model.color, color: "#111" }}
+        >
+            {model.icon} {model.label}
+        </Badge>
+    )
 }
 
 export function ActiveTasks() {
@@ -111,6 +134,12 @@ export function ActiveTasks() {
                     const heartbeatAge = task.sinceHeartbeat + tick % 1000
                     const healthPct = Math.max(0, 100 - (heartbeatAge / task.timeoutSeconds) * 100)
 
+                    const costPerMinute = task.model ? MODEL_RATES[task.model] : 0
+                    const estimatedCost = costPerMinute ? (elapsed / 60) * costPerMinute : 0
+                    const modelEntry = task.model ? getModelEntry(task.model) : null
+                    const warnThreshold = modelEntry?.warnThreshold || 999
+                    const showWarning = estimatedCost > warnThreshold
+
                     return (
                         <div key={task.id} className={`p-3 rounded-lg border ${
                             task.isStalled 
@@ -121,6 +150,7 @@ export function ActiveTasks() {
                                 <div className="flex items-center gap-2 min-w-0">
                                     <span className="text-lg">{emoji}</span>
                                     <span className="font-medium text-white truncate">{task.agentName}</span>
+                                    {task.model && <ModelChip modelId={task.model} />}
                                 </div>
                                 <StatusBadge status={task.status} isStalled={task.isStalled} />
                             </div>
@@ -128,7 +158,22 @@ export function ActiveTasks() {
                                 "{task.task}"
                             </p>
                             <div className="flex items-center justify-between text-xs text-zinc-500">
-                                <span className="font-mono">{formatDuration(elapsed)}</span>
+                                <div className="flex items-center gap-2 font-mono">
+                                    <span>⏱ {formatDuration(elapsed)}</span>
+                                    {estimatedCost > 0 && (
+                                        <span className="flex items-center gap-1">
+                                            · ~€{estimatedCost.toFixed(2)}
+                                            {showWarning && (
+                                                <span className="relative flex h-3 w-3" title={`Cost > €${warnThreshold}`}>
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-3 w-3 text-orange-400">
+                                                        <AlertTriangle className="h-3 w-3" />
+                                                    </span>
+                                                </span>
+                                            )}
+                                        </span>
+                                    )}
+                                </div>
                                 {task.heartbeatMsg && (
                                     <span className="truncate ml-2 text-zinc-400">💓 {task.heartbeatMsg}</span>
                                 )}
@@ -153,13 +198,22 @@ export function ActiveTasks() {
                         <p className="text-xs text-zinc-600 uppercase tracking-wider">Recent</p>
                         {recent.map(task => {
                             const emoji = AGENT_EMOJI[task.agentId] || "🤖"
+                            const costPerMinute = task.model ? MODEL_RATES[task.model] : 0
+                            const estimatedCost = costPerMinute ? (task.durationSeconds / 60) * costPerMinute : 0
+                            
                             return (
                                 <div key={task.id} className="flex items-center gap-2 py-1 text-sm">
                                     <span>{emoji}</span>
-                                    <span className="text-zinc-400 truncate flex-1">{task.agentName} — "{task.task}"</span>
-                                    <span className="text-xs font-mono text-zinc-500">
-                                        {task.durationSeconds != null ? formatDuration(task.durationSeconds) : '—'}
-                                    </span>
+                                    <div className="text-zinc-400 truncate flex-1 flex items-center gap-2">
+                                        <span className="truncate">{task.agentName} — "{task.task}"</span>
+                                        {task.model && <ModelChip modelId={task.model} />}
+                                    </div>
+                                    <div className="text-xs font-mono text-zinc-500 flex items-center gap-2">
+                                        {estimatedCost > 0.01 && <span>~€{estimatedCost.toFixed(2)}</span>}
+                                        <span>
+                                            {task.durationSeconds != null ? formatDuration(task.durationSeconds) : '—'}
+                                        </span>
+                                    </div>
                                     <StatusBadge status={task.status} />
                                 </div>
                             )
@@ -170,3 +224,4 @@ export function ActiveTasks() {
         </Card>
     )
 }
+
