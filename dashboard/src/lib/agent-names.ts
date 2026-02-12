@@ -13,6 +13,8 @@ const AGENTS: Record<string, AgentMeta> = {
   bob:     { name: 'Bob',         emoji: '🎨', avatar: 'bob.webp' },
   xreader: { name: 'X Reader',    emoji: '📰', avatar: 'default.webp' },
   stuart:  { name: 'Stuart',      emoji: '🔒', avatar: 'default.webp' },
+  mel:     { name: 'Mel',         emoji: '🚔', avatar: 'default.webp' },
+  dave:    { name: 'Dave',        emoji: '💰', avatar: 'default.webp' },
 };
 
 const DEFAULT_META: AgentMeta = {
