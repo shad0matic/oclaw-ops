@@ -1,5 +1,6 @@
 "use client";
 
+import TaskDetailView from "./task-detail-view";
 import {
   Sheet,
   SheetContent,
@@ -264,7 +265,7 @@ const renderAgentPicker = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <EpicInput epic={item.epic || ''} onSave={(epic) => updateField('epic', epic)} />
+                {'epic' in item && <EpicInput epic={(item as any).epic || ''} onSave={(epic) => updateField('epic', epic)} />}
               </div>
             </SheetHeader>
           </div>

@@ -87,7 +87,7 @@ export function EpicTracker() {
               </CollapsibleTrigger>
             </CardHeader>
             <CardContent className="p-2">
-              <Progress value={epic.progress} className="w-full h-2 bg-muted mb-2" indicatorClassName="bg-green-500" />
+              <Progress value={epic.progress} className="w-full h-2 bg-muted mb-2" />
               <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                 <span className="text-green-500">{`${epic.done}/${epic.total} done`}</span>
                 <span className="text-blue-500">{`${epic.running} running`}</span>
