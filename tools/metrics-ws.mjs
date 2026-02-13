@@ -4,7 +4,7 @@ import { WebSocketServer } from 'ws';
 import si from 'systeminformation';
 
 const PORT = 3101;
-const HOST = '127.0.0.1';
+const HOST = '0.0.0.0';
 
 const wss = new WebSocketServer({ port: PORT, host: HOST });
 

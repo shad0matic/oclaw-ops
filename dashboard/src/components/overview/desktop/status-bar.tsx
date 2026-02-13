@@ -1,42 +1,214 @@
 "use client"
 
+import { useState, useEffect, useRef } from 'react';
 import { AgentStatusDot } from "../shared/agent-status-dot"
 import { CostDisplay } from "../shared/cost-display"
 import { ResearchToggle } from "./research-toggle"
 import { cn } from "@/lib/utils"
 
+// --- Merged from LiveMetricsBar ---
+
+// Simplified version of lucide-react circle
+const StatusCircle = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="none"
+    className={className}
+    {...props}
+  >
+    <circle cx="12" cy="12" r="10" />
+  </svg>
+);
+
+const Sparkline = ({
+  data,
+  width = 120,
+  height = 24,
+  lastValue,
+}: {
+  data: number[];
+  width?: number;
+  height?: number;
+  lastValue: number;
+}) => {
+  if (data.length < 2) {
+    return <div style={{ width, height }} className="bg-muted/20 rounded-sm" />;
+  }
+
+  const maxVal = 100;
+  const points = data
+    .map((d, i) => {
+      const x = (i / (data.length - 1)) * width;
+      const y = height - (Math.min(d, maxVal) / maxVal) * height;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(' ');
+
+  const strokeColor = lastValue > 90 ? 'stroke-red-500' : lastValue > 70 ? 'stroke-yellow-500' : 'stroke-green-500';
+  const gradientId = `sparkline-gradient-${Math.random().toString(36).substring(7)}`;
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      <defs>
+        <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline
+        points={points}
+        fill="none"
+        strokeWidth="2"
+        className={cn("transition-all", strokeColor)}
+      />
+      <polygon
+        points={`0,${height} ${points} ${width},${height}`}
+        fill={`url(#${gradientId})`}
+        className={cn("transition-all", strokeColor.replace('stroke-', 'text-'))}
+      />
+    </svg>
+  );
+};
+
+interface MetricsData {
+  ts: number;
+  cpu: number;
+  memUsed: number;
+  memTotal: number;
+  memPercent: number;
+}
+
+const MAX_DATA_POINTS = 150; // 5 minutes of data at 2s interval
+
+// --- End of Merged Code ---
+
+
 export interface StatusBarProps {
   status: 'online' | 'offline' | 'degraded'
   uptime: number
-  cpu: number
-  memory: number
   activeCount: number
   dailyCost: number
 }
 
 function formatUptime(seconds: number): string {
+  if (seconds < 60) return `${Math.floor(seconds)}s`;
   const hours = Math.floor(seconds / 3600)
   const mins = Math.floor((seconds % 3600) / 60)
-  return `${hours}h ${mins}m`
+  if (hours > 0) return `${hours}h ${mins}m`
+  return `${mins}m`
+}
+
+const formatBytes = (bytes: number, decimals = 1) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 export function StatusBar({
   status,
   uptime,
-  cpu,
-  memory,
   activeCount,
   dailyCost
 }: StatusBarProps) {
   const statusText = status === 'online' ? `Online · ${formatUptime(uptime)}` : status
+  
+  // --- WebSocket Logic from LiveMetricsBar ---
+  const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'stale' | 'disconnected'>('connecting');
+  const [latestData, setLatestData] = useState<MetricsData | null>(null);
+  const [cpuHistory, setCpuHistory] = useState<number[]>([]);
+  const [memHistory, setMemHistory] = useState<number[]>([]);
+  const ws = useRef<WebSocket | null>(null);
+  const staleTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const disconnectTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const reconnectTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  const connect = () => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) return;
+    if (typeof window === 'undefined') return;
+
+    const wsUrl = `ws://${window.location.hostname}:3101`;
+    ws.current = new WebSocket(wsUrl);
+
+    ws.current.onopen = () => {
+      setWsStatus('connected');
+      clearTimeout(reconnectTimer.current);
+      reconnectTimer.current = undefined;
+    };
+
+    ws.current.onmessage = (event) => {
+      const data: MetricsData = JSON.parse(event.data);
+      setWsStatus('connected');
+      setLatestData(data);
+      setCpuHistory(prev => [...prev.slice(-MAX_DATA_POINTS + 1), data.cpu]);
+      setMemHistory(prev => [...prev.slice(-MAX_DATA_POINTS + 1), data.memPercent]);
+
+      clearTimeout(staleTimer.current);
+      clearTimeout(disconnectTimer.current);
+
+      staleTimer.current = setTimeout(() => setWsStatus('stale'), 5000);
+      disconnectTimer.current = setTimeout(() => setWsStatus('disconnected'), 10000);
+    };
+
+    ws.current.onclose = () => {
+      setWsStatus('disconnected');
+      clearTimeout(staleTimer.current);
+      clearTimeout(disconnectTimer.current);
+      if (!reconnectTimer.current) {
+         reconnectTimer.current = setTimeout(connect, 3000);
+      }
+    };
+
+    ws.current.onerror = () => {
+      ws.current?.close(); // This will trigger onclose and the reconnect logic
+    };
+  };
+
+  useEffect(() => {
+    connect();
+    return () => {
+      clearTimeout(staleTimer.current);
+      clearTimeout(disconnectTimer.current);
+      clearTimeout(reconnectTimer.current);
+      ws.current?.close();
+    };
+  }, []);
+
+  const statusDot = () => {
+    switch (wsStatus) {
+      case 'connected':
+        return <StatusCircle className="h-3 w-3 text-green-500 animate-pulse" />;
+      case 'stale':
+        return <StatusCircle className="h-3 w-3 text-yellow-500" />;
+      case 'disconnected':
+      case 'connecting':
+        return (
+          <div className="flex items-center gap-2">
+            <StatusCircle className="h-3 w-3 text-red-500" />
+            <span className="text-xs text-red-500/80">conn lost</span>
+          </div>
+        );
+    }
+  };
+  // --- End of WebSocket Logic ---
 
   return (
     <div
       role="status"
       aria-live="polite"
-      aria-label={`System ${status}. ${activeCount} tasks active. Today's cost: ${dailyCost.toFixed(2)} euros. CPU: ${cpu}%, Memory: ${memory}%`}
-      className="flex items-center gap-6 border-b border-border bg-card px-6 py-3"
+      className="sticky top-0 z-50 flex h-12 items-center gap-4 border-b border-border bg-card/80 px-4 text-sm backdrop-blur-sm"
     >
+      {/* WS Connection Status */}
+      <div className="flex h-full w-28 items-center justify-center border-r border-border pr-4">
+        {statusDot()}
+      </div>
+
       {/* System Status */}
       <div className="flex items-center gap-2">
         <AgentStatusDot
@@ -48,8 +220,7 @@ export function StatusBar({
         </span>
       </div>
 
-      {/* Separator */}
-      <div className="h-4 w-px bg-border" aria-hidden="true" />
+      <div className="h-4 w-px bg-border" />
 
       {/* Active Count */}
       <div className="flex items-center gap-2">
@@ -57,8 +228,7 @@ export function StatusBar({
         <span className="text-sm text-muted-foreground">active</span>
       </div>
 
-      {/* Separator */}
-      <div className="h-4 w-px bg-border" aria-hidden="true" />
+      <div className="h-4 w-px bg-border" />
 
       {/* Daily Cost */}
       <div className="flex items-center gap-2">
@@ -66,23 +236,26 @@ export function StatusBar({
         <span className="text-sm text-muted-foreground">today</span>
       </div>
 
-      {/* Separator */}
-      <div className="h-4 w-px bg-border" aria-hidden="true" />
+      {/* Spacer to push metrics and toggle to the right */}
+      <div className="flex-grow" />
 
       {/* System Resources */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <span className="text-foreground font-medium">{cpu.toFixed(1)}%</span>
-          <span>CPU</span>
+      {latestData && (
+        <div className="flex items-center gap-6 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Sparkline data={cpuHistory} lastValue={latestData.cpu}/>
+              <span className="w-16 text-right font-mono">CPU {latestData.cpu.toFixed(0)}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+               <Sparkline data={memHistory} lastValue={latestData.memPercent}/>
+               <span className="w-28 text-right font-mono">
+                RAM {formatBytes(latestData.memUsed)}
+              </span>
+            </div>
         </div>
-        <div className="flex items-center gap-1">
-          <span className="text-foreground font-medium">{memory}%</span>
-          <span>Mem</span>
-        </div>
-      </div>
+      )}
 
-      {/* Separator */}
-      <div className="h-4 w-px bg-border" aria-hidden="true" />
+      <div className="h-4 w-px bg-border" />
 
       {/* Research Toggle */}
       <ResearchToggle />

@@ -1,7 +1,5 @@
-
 "use client"
 
-import { StatusBar } from "./desktop/status-bar"
 import { UnifiedTeamBoard } from "./desktop/unified-team-board"
 import { PipelineStrip } from "./desktop/pipeline-strip"
 import { ActivityTimeline } from "./desktop/activity-timeline"
@@ -16,18 +14,6 @@ export function DesktopOverview() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Status Bar - Always visible */}
-      {overviewData && (
-        <StatusBar
-          status={overviewData.system.status}
-          uptime={overviewData.system.uptime}
-          cpu={overviewData.system.cpu}
-          memory={overviewData.system.memory}
-          activeCount={liveWork?.count || overviewData.liveWork.count}
-          dailyCost={overviewData.dailyCost}
-        />
-      )}
-
       {/* Main Layout */}
       <div className="p-6 space-y-6">
         {/* Zombie Alert */}
