@@ -228,12 +228,15 @@ const renderAgentPicker = () => {
         <SheetHeader className="mb-4">
           <SheetTitle className="sr-only">Task Details</SheetTitle>
           <SheetDescription id="task-detail-desc" className="sr-only">View and edit task details</SheetDescription>
-          <Input 
-            value={title} 
-            onChange={(e) => setTitle(e.target.value)} 
-            onBlur={() => updateField('title', title)}
-            className="text-lg font-semibold text-foreground truncate pr-6 bg-transparent border-0 focus:ring-0 focus:border-0"
-          />
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-muted-foreground/60 shrink-0">#{item.id}</span>
+            <Input 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)} 
+              onBlur={() => updateField('title', title)}
+              className="text-lg font-semibold text-foreground truncate pr-6 bg-transparent border-0 focus:ring-0 focus:border-0"
+            />
+          </div>
           <div className="flex items-center gap-4 text-xs pt-1">
             <div className="flex items-center gap-1.5">
               <Select value={project} onValueChange={(p) => { setProject(p); updateField('project', p); }}>
