@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const body = await request.json()
-    const { action, agentId, result } = body
+    const { action, agentId, result, reviewerId, reviewFeedback } = body
 
     switch (action) {
         case "assign":
@@ -46,10 +46,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             )
             break
         case "review":
-            await pool.query(
-                `UPDATE ops.task_queue SET status = 'review' WHERE id = $1`,
-                [id]
-            )
+            {
+                const { reviewerId, reviewFeedback } = body
+                await pool.query(
+                    `UPDATE ops.task_queue SET status = 'review', review_count = review_count + 1, reviewer_id = $2, review_feedback = $3 WHERE id = $1`,
+                    [id, reviewerId, reviewFeedback]
+                )
+            }
             break
         case "human":
             await pool.query(
@@ -62,6 +65,21 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 `UPDATE ops.task_queue SET status = 'queued', agent_id = NULL, started_at = NULL, completed_at = NULL WHERE id = $1`,
                 [id]
             )
+            break
+        case "approve":
+            await pool.query(
+                `UPDATE ops.task_queue SET status = 'human_todo' WHERE id = $1`,
+                [id]
+            )
+            break
+        case "reject":
+            {
+                const { reviewFeedback } = body
+                await pool.query(
+                    `UPDATE ops.task_queue SET status = 'running', review_feedback = $2 WHERE id = $1`,
+                    [id, reviewFeedback]
+                )
+            }
             break
         default:
             return NextResponse.json({ error: "invalid action" }, { status: 400 })

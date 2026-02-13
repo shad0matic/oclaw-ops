@@ -31,6 +31,9 @@ interface QueueTask {
   created_at?: string;
   started_at?: string | null;
   completed_at?: string | null;
+  review_count: number;
+  reviewer_id: string | null;
+  review_feedback: string | null;
 }
 
 // Priority color mapping: P1 (red/urgent) → P9 (grey/low)
@@ -64,20 +67,29 @@ async function fetchQueue(): Promise<QueueTask[]> {
   return res.json();
 }
 
-async function transitionTask({ id, to }: { id: number; to: string }) {
-  const res = await fetch(`/api/tasks/queue/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: to }),
-  });
-  if (!res.ok) throw new Error("Failed to update task");
-  return res.json();
-}
-
 function TaskCard({ task, projects }: { task: QueueTask; projects: Project[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const pc = getPriorityColor(task.priority);
+  const qc = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async ({ id, action, payload }: { id: number; action: string; payload?: any }) => {
+      const res = await fetch(`/api/tasks/queue/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ...payload }),
+      });
+      if (!res.ok) throw new Error("Failed to update task");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["task-queue"] });
+      setFeedback(""); // Clear feedback on success
+    },
+  });
+
 
   const [{ isDragging }, drag] = useDrag(
     () => ({
@@ -93,6 +105,13 @@ function TaskCard({ task, projects }: { task: QueueTask; projects: Project[] }) 
   const proj = projects.find(p => p.id === (task.project || "other"));
   const projectIcon = proj?.icon || "📦";
   const projectColor = proj?.color || "border-l-zinc-500";
+  
+  const handleFeedbackSubmit = () => {
+    if (feedback.trim()) {
+      mutation.mutate({ id: task.id, action: "reject", payload: { reviewFeedback: feedback } });
+    }
+  };
+
 
   return (
     <motion.div
@@ -109,9 +128,14 @@ function TaskCard({ task, projects }: { task: QueueTask; projects: Project[] }) 
         className="cursor-pointer"
         onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
       >
-<div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground leading-snug flex-1">{task.title}</h3>
           <div className="flex items-center gap-1">
+             {task.status === 'review' && task.review_count >= 2 && (
+              <span className="text-[10px] font-mono shrink-0 text-purple-400 bg-purple-500/10 rounded px-1.5 py-0.5">
+                🔄 x{task.review_count}
+              </span>
+            )}
             <span className={`flex items-center gap-1 text-[10px] font-mono shrink-0 ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
               <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />
               P{task.priority}
@@ -142,7 +166,23 @@ function TaskCard({ task, projects }: { task: QueueTask; projects: Project[] }) 
             )}
           </div>
         </div>
+        
+        {task.status === 'review' && (
+          <div className="mt-2 text-[11px] space-y-1">
+            {task.reviewer_id && (
+              <p className="text-muted-foreground/80">
+                Review by: <span className="font-semibold">{task.reviewer_id}</span>
+              </p>
+            )}
+            {task.review_feedback && (
+              <p className="text-muted-foreground italic">
+                &ldquo;{task.review_feedback.substring(0, 60)}{task.review_feedback.length > 60 ? '...' : ''}&rdquo;
+              </p>
+            )}
+          </div>
+        )}
       </div>
+      
       {expanded && (
         <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
           {task.description && (
@@ -154,6 +194,57 @@ function TaskCard({ task, projects }: { task: QueueTask; projects: Project[] }) 
           </div>
         </div>
       )}
+
+      {/* --- Action Buttons --- */}
+      <div className="mt-2 pt-2 border-t border-border/50">
+        {task.status === 'review' && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => mutation.mutate({ id: task.id, action: "approve" })}
+                className="flex-1 text-xs bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded px-2 py-1 transition-colors"
+              >
+                ✅ Approve
+              </button>
+              <button 
+                onClick={() => setFeedback(prev => prev ? "" : " ")} // Toggle feedback input
+                className="text-xs bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 rounded px-2 py-1 transition-colors"
+              >
+                🔄 Return
+              </button>
+            </div>
+            {feedback && (
+               <div className="flex items-center gap-1.5">
+                 <input
+                   type="text"
+                   value={feedback}
+                   onChange={(e) => setFeedback(e.target.value)}
+                   placeholder="Add feedback..."
+                   className="flex-1 text-xs bg-background border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                 />
+                 <button onClick={handleFeedbackSubmit} className="text-xs bg-amber-500/20 text-amber-400 rounded px-2 py-1">Send</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {task.status === 'human_todo' && (
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => mutation.mutate({ id: task.id, action: "complete" })}
+              className="flex-1 text-xs bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded px-2 py-1 transition-colors"
+            >
+              ✅ Done
+            </button>
+            <button 
+              onClick={() => mutation.mutate({ id: task.id, action: "reject" })}
+              className="flex-1 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded px-2 py-1 transition-colors"
+            >
+              ❌ Reject
+            </button>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -176,7 +267,15 @@ function Column({
   const [isCollapsed, setIsCollapsed] = useState(isInitiallyCollapsed);
   const qc = useQueryClient();
   const mutation = useMutation({
-    mutationFn: transitionTask,
+    mutationFn: async ({ id, to }: { id: number; to: string }) => {
+        const res = await fetch(`/api/tasks/queue/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: to }),
+        });
+        if (!res.ok) throw new Error("Failed to update task");
+        return res.json();
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["task-queue"] }),
   });
 
@@ -317,7 +416,7 @@ export default function TasksPage() {
                 onClick={() => queryClient.invalidateQueries({ queryKey: ["task-queue"] })}
                 className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                 aria-label="Refresh tasks"
-              >
+                >
                 <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
               </button>
             </div>
