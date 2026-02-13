@@ -21,20 +21,25 @@ interface TaskTree {
 }
 
 export async function GET() {
+  const t0 = Date.now()
   const session = await auth()
+  const tAuth = Date.now()
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   try {
-    // System stats
+    // System stats — use timeout to prevent hangs
     let cpuLoad = 0, memStats = { active: 0, total: 0 }, uptime = 0
     try {
-      const [load, mem, time] = await Promise.all([
+      const siPromise = Promise.all([
         si.currentLoad(), si.mem(), si.time()
       ])
+      const siTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('si timeout')), 5000))
+      const [load, mem, time] = await Promise.race([siPromise, siTimeout]) as any
       cpuLoad = load.currentLoad
       memStats = mem
       uptime = time.uptime
     } catch {}
+    const tSi = Date.now()
 
     const now = new Date()
     const todayStart = new Date(now)
@@ -257,6 +262,9 @@ export async function GET() {
       tokensUsed: e.tokens_used || 0,
       createdAt: e.created_at?.toISOString() || now.toISOString()
     }))
+
+    const tEnd = Date.now()
+    console.log(`Overview API timing: auth=${tAuth-t0}ms si=${tSi-tAuth}ms queries+logic=${tEnd-tSi}ms total=${tEnd-t0}ms`)
 
     return NextResponse.json({
       system: {
