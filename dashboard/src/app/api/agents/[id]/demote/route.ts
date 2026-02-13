@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function POST(
     req: Request,
@@ -18,16 +18,15 @@ export async function POST(
         const body = await req.json()
         const { feedback } = body
 
-        // Get current agent
-        const agentResult = await prisma.$queryRawUnsafe(`
-            SELECT * FROM ops.agent_profiles WHERE agent_id = '${id}';
-        `);
+        const agentResult = await pool.query(`
+            SELECT * FROM ops.agent_profiles WHERE agent_id = $1;
+        `, [id]);
 
-        if (!agentResult || !Array.isArray(agentResult) || agentResult.length === 0) {
+        if (!agentResult || !agentResult.rows || agentResult.rows.length === 0) {
             return NextResponse.json({ error: "Agent not found" }, { status: 404 })
         }
 
-        const agent = agentResult[0];
+        const agent = agentResult.rows[0];
         const currentLevel = agent.level || 1
         if (currentLevel <= 1) {
             return NextResponse.json(
@@ -39,24 +38,25 @@ export async function POST(
         const newLevel = currentLevel - 1
 
         // Update agent level and create review with raw SQL
-        const updateAgent = await prisma.$executeRawUnsafe(`
+        await pool.query(`
             UPDATE ops.agent_profiles
-            SET level = ${newLevel}, updated_at = NOW()
-            WHERE agent_id = '${id}';
-        `);
+            SET level = $1, updated_at = NOW()
+            WHERE agent_id = $2;
+        `, [newLevel, id]);
 
-        const createReview = await prisma.$executeRawUnsafe(`
+        await pool.query(`
             INSERT INTO ops.performance_reviews (agent_id, reviewer, rating, level_before, level_after, feedback, output_summary)
-            VALUES ('${id}', '${session.user?.email || "system"}', 2, ${currentLevel}, ${newLevel}, '${feedback || `Demoted from level ${currentLevel} to ${newLevel}`}', 'Level demotion');
-        `);
+            VALUES ($1, $2, 2, $3, $4, $5, 'Level demotion');
+        `, [id, session.user?.email || "system", currentLevel, newLevel, feedback || `Demoted from level ${currentLevel} to ${newLevel}`]);
+
 
         // Fetch updated agent data for response
-        const updatedAgentResult = await prisma.$queryRawUnsafe(`
-            SELECT * FROM ops.agent_profiles WHERE agent_id = '${id}';
-        `);
+        const updatedAgentResult = await pool.query(`
+            SELECT * FROM ops.agent_profiles WHERE agent_id = $1;
+        `, [id]);
 
         // Handle the result as an array
-        const updatedAgent = Array.isArray(updatedAgentResult) && updatedAgentResult.length > 0 ? updatedAgentResult[0] : {};
+        const updatedAgent = updatedAgentResult.rows[0] || {};
 
         return NextResponse.json({
             agent: updatedAgent,

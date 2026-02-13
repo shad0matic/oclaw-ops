@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function POST(
     req: Request,
@@ -27,26 +27,32 @@ export async function POST(
         }
 
         // Get current agent
-        const agent = await prisma.agent_profiles.findUnique({
-            where: { agent_id: id }
-        })
+        const agentResult = await pool.query(
+            `SELECT * FROM memory.agent_profiles WHERE agent_id = $1`,
+            [id]
+        )
+        const agent = agentResult.rows[0]
 
         if (!agent) {
             return NextResponse.json({ error: "Agent not found" }, { status: 404 })
         }
 
         // Create review
-        const review = await prisma.performance_reviews.create({
-            data: {
-                agent_id: id,
-                reviewer: session.user?.email || "unknown",
+        const reviewResult = await pool.query(
+            `INSERT INTO memory.performance_reviews (agent_id, reviewer, rating, feedback, output_summary, level_before, level_after)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             RETURNING *`,
+            [
+                id,
+                session.user?.email || "unknown",
                 rating,
                 feedback,
                 output_summary,
-                level_before: agent.level,
-                level_after: agent.level
-            }
-        })
+                agent.level,
+                agent.level
+            ]
+        )
+        const review = reviewResult.rows[0]
 
         return NextResponse.json(review)
     } catch (error) {

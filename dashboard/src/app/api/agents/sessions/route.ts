@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
@@ -19,13 +19,12 @@ export async function GET() {
         const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000)
 
         // Find all task_start events in the last 24h
-        const taskStarts = await prisma.agent_events.findMany({
-            where: {
-                event_type: "task_start",
-                created_at: { gte: twentyFourHoursAgo },
-            },
-            orderBy: { created_at: "desc" },
-        })
+        const taskStartsResult = await pool.query(`
+            SELECT * FROM ops.agent_events
+            WHERE event_type = 'task_start' AND created_at >= $1
+            ORDER BY created_at DESC
+        `, [twentyFourHoursAgo])
+        const taskStarts = taskStartsResult.rows
 
         const runs: SubAgentRun[] = []
 

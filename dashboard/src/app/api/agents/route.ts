@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function GET(req: Request) {
     const session = await auth()
@@ -10,43 +10,39 @@ export async function GET(req: Request) {
     }
 
     try {
-        const agents = await prisma.agent_profiles.findMany({
-            orderBy: { agent_id: 'asc' }
-        })
+        const agentsResult = await pool.query(`SELECT * FROM memory.agent_profiles ORDER BY agent_id ASC`)
+        const agents = agentsResult.rows
 
         // Enrich with status
         // For each agent, check if they have active steps
         const enrichedAgents = await Promise.all(agents.map(async (agent: any) => {
-            const activeStep = await prisma.steps.findFirst({
-                where: {
-                    agent_id: agent.agent_id,
-                    status: "running"
-                }
-            })
+            const activeStepResult = await pool.query(
+                `SELECT * FROM ops.steps WHERE agent_id = $1 AND status = 'running' LIMIT 1`,
+                [agent.agent_id]
+            )
+            const activeStep = activeStepResult.rows[0]
 
-            const lastActive = await prisma.agent_events.findFirst({
-                where: { agent_id: agent.agent_id },
-                orderBy: { created_at: 'desc' }
-            })
+            const lastActiveResult = await pool.query(
+                `SELECT * FROM ops.agent_events WHERE agent_id = $1 ORDER BY created_at DESC LIMIT 1`,
+                [agent.agent_id]
+            )
+            const lastActive = lastActiveResult.rows[0]
 
             const todayStart = new Date()
             todayStart.setHours(0, 0, 0, 0)
 
-            const [todayTotal, todayCompleted] = await Promise.all([
-                prisma.agent_events.count({
-                    where: {
-                        agent_id: agent.agent_id,
-                        created_at: { gte: todayStart },
-                    }
-                }),
-                prisma.agent_events.count({
-                    where: {
-                        agent_id: agent.agent_id,
-                        created_at: { gte: todayStart },
-                        event_type: { in: ['task_complete', 'step_complete', 'phase_complete', 'run_completed'] }
-                    }
-                }),
+            const [todayTotalResult, todayCompletedResult] = await Promise.all([
+                pool.query(
+                    `SELECT COUNT(*)::int as count FROM ops.agent_events WHERE agent_id = $1 AND created_at >= $2`,
+                    [agent.agent_id, todayStart]
+                ),
+                pool.query(
+                    `SELECT COUNT(*)::int as count FROM ops.agent_events WHERE agent_id = $1 AND created_at >= $2 AND event_type IN ('task_complete', 'step_complete', 'phase_complete', 'run_completed')`,
+                    [agent.agent_id, todayStart]
+                )
             ])
+            const todayTotal = todayTotalResult.rows[0].count
+            const todayCompleted = todayCompletedResult.rows[0].count
 
             return {
                 ...agent,
