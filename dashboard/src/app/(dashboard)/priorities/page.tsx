@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle } from "lucide-react"
@@ -10,18 +10,13 @@ export default async function PrioritiesPage() {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const priorities = await prisma.priorities.findMany({
-        where: { resolved_at: null },
-        orderBy: [
-            { priority: 'asc' },
-            { created_at: 'desc' }
-        ],
-        include: {
-            cross_signals: {
-                take: 3
-            }
-        }
-    })
+    const prioritiesResult = await pool.query(`
+        SELECT * 
+        FROM ops.priorities 
+        WHERE resolved_at IS NULL 
+        ORDER BY priority ASC, created_at DESC
+    `)
+    const priorities = prioritiesResult.rows
 
     const getPriorityColor = (p: number) => {
         if (p <= 2) return "text-red-500 bg-red-500/10 border-red-500/20"

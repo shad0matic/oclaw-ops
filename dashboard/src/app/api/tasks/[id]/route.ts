@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic"
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { pool } from '@/lib/db';
 
 export async function GET(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -13,11 +13,7 @@ export async function GET(
   }
 
   try {
-    // Note: The spec mentions tables that might not exist yet (e.g. ops.agent_signals).
-    // The query will be adapted once the database schema is confirmed.
-    // For now, we'll build a query that joins runs, agent_events and other existing tables.
-
-    const taskDetails: any[] = await prisma.$queryRaw`
+    const taskDetailsResult = await pool.query(`
       SELECT
         r.id,
         r.title,
@@ -32,16 +28,16 @@ export async function GET(
       FROM
         ops.runs r
       LEFT JOIN
-        ops.agents a ON r.agent_id = a.id
+        memory.agent_profiles a ON r.agent_id = a.agent_id
       WHERE
-        r.id = ${id}::uuid;
-    `;
+        r.id = $1;
+    `, [id]);
 
-    if (!taskDetails || taskDetails.length === 0) {
+    if (taskDetailsResult.rowCount === 0) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    const timelineEvents = await prisma.$queryRaw`
+    const timelineEventsResult = await pool.query(`
         SELECT
             'status_change' as type,
             created_at as timestamp,
@@ -49,13 +45,14 @@ export async function GET(
         FROM
             ops.agent_events
         WHERE
-            run_id = ${id}::uuid
+            run_id = $1
         ORDER BY
             created_at ASC;
-    `;
+    `, [id]);
 
-    const task = taskDetails[0];
-    task.timeline = timelineEvents;
+    const task = taskDetailsResult.rows[0];
+    task.id = task.id.toString();
+    task.timeline = timelineEventsResult.rows;
 
     return NextResponse.json({ task });
   } catch (error) {

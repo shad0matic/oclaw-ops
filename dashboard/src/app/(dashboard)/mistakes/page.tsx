@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle } from "lucide-react"
@@ -10,14 +10,14 @@ export default async function MistakesPage() {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const mistakes = await prisma.mistakes.findMany({
-        where: { resolved: false },
-        orderBy: [
-            { severity: 'desc' },
-            { last_occurred_at: 'desc' }
-        ],
-        take: 50
-    })
+    const mistakesResult = await pool.query(`
+        SELECT * 
+        FROM memory.mistakes 
+        WHERE resolved = false 
+        ORDER BY severity DESC, last_occurred_at DESC 
+        LIMIT 50
+    `)
+    const mistakes = mistakesResult.rows
 
     const getSeverityColor = (s: number) => {
         if (s >= 4) return "text-red-500 bg-red-500/10 border-red-500/20"

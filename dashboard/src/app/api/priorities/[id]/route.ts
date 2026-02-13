@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function PATCH(
     req: Request,
@@ -18,16 +18,31 @@ export async function PATCH(
         const body = await req.json()
         const { priority, resolved } = body
 
-        const data: any = {}
-        if (priority !== undefined) data.priority = priority
+        const updates: string[] = []
+        const values: any[] = [id]
+
+        if (priority !== undefined) {
+            updates.push(`priority = $${values.length + 1}`)
+            values.push(priority)
+        }
         if (resolved !== undefined) {
-            data.resolved_at = resolved ? new Date() : null
+            updates.push(`resolved_at = $${values.length + 1}`)
+            values.push(resolved ? new Date() : null)
         }
 
-        const updated = await prisma.priorities.update({
-            where: { id: BigInt(id) },
-            data
-        })
+        if (updates.length === 0) {
+            return NextResponse.json({ error: "No fields to update" }, { status: 400 })
+        }
+
+        const query = `
+            UPDATE ops.priorities
+            SET ${updates.join(", ")}
+            WHERE id = $1
+            RETURNING *
+        `
+
+        const updatedResult = await pool.query(query, values)
+        const updated = updatedResult.rows[0]
 
         return NextResponse.json({
             ...updated,

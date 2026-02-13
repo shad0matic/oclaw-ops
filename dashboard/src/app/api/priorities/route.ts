@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function GET(req: Request) {
     const session = await auth()
@@ -13,25 +13,21 @@ export async function GET(req: Request) {
     const includeResolved = searchParams.get("include_resolved") === "true"
 
     try {
-        const where = includeResolved ? {} : { resolved_at: null }
+        let query = `
+            SELECT p.*, (SELECT COUNT(*) FROM ops.cross_signals cs WHERE cs.priority_id = p.id) as signal_count
+            FROM ops.priorities p
+        `
+        if (!includeResolved) {
+            query += ` WHERE p.resolved_at IS NULL`
+        }
+        query += ` ORDER BY p.priority ASC, p.created_at DESC`
         
-        const priorities = await prisma.priorities.findMany({
-            where,
-            orderBy: [
-                { priority: 'asc' },
-                { created_at: 'desc' }
-            ],
-            include: {
-                _count: {
-                    select: { cross_signals: true }
-                }
-            }
-        })
+        const prioritiesResult = await pool.query(query)
 
-        return NextResponse.json(priorities.map(p => ({
+        return NextResponse.json(prioritiesResult.rows.map(p => ({
             ...p,
             id: p.id.toString(),
-            signal_count: p._count.cross_signals
+            signal_count: parseInt(p.signal_count, 10)
         })))
     } catch (error) {
         console.error("Failed to fetch priorities", error)
@@ -56,17 +52,19 @@ export async function POST(req: Request) {
             )
         }
 
-        const newPriority = await prisma.priorities.create({
-            data: {
-                entity,
-                entity_type: entity_type || "topic",
-                priority: priority || 5,
-                context,
-                reported_by,
-                confirmed_by: [reported_by],
-                signal_count: 1
-            }
-        })
+        const newPriorityResult = await pool.query(`
+            INSERT INTO ops.priorities (entity, entity_type, priority, context, reported_by, confirmed_by, signal_count)
+            VALUES ($1, $2, $3, $4, $5, $6, 1)
+            RETURNING *
+        `, [
+            entity,
+            entity_type || "topic",
+            priority || 5,
+            context,
+            reported_by,
+            [reported_by]
+        ])
+        const newPriority = newPriorityResult.rows[0]
 
         return NextResponse.json({
             ...newPriority,

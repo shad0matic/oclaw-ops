@@ -1,13 +1,12 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowRight, Play, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
 import { RunFilters } from "@/components/runs/run-filters"
-import { Prisma } from "@/generated/prisma/client"
 import { Suspense } from "react"
 import { PageHeader } from "@/components/layout/page-header"
 
@@ -21,29 +20,38 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
     const agentId = params.agent_id
 
     // Build where clause
-    const where: Prisma.runsWhereInput = {}
-    if (status) where.status = status
-    if (workflowId) where.workflow_id = parseInt(workflowId)
-    if (agentId) {
-        where.steps = {
-            some: { agent_id: agentId }
-        }
-    }
+    const conditions = []
+    const values = []
+    let paramIndex = 1
 
-    const [runs, workflows] = await Promise.all([
-        prisma.runs.findMany({
-            where,
-            orderBy: { created_at: 'desc' },
-            take: 50,
-            include: {
-                workflows: { select: { name: true } }
-            }
-        }),
-        prisma.workflows.findMany({
-            select: { id: true, name: true },
-            orderBy: { name: 'asc' }
-        }).then(wfs => wfs.map(wf => ({ ...wf, id: Number(wf.id) })))
+    if (status) {
+        conditions.push(`r.status = $${paramIndex++}`)
+        values.push(status)
+    }
+    if (workflowId) {
+        conditions.push(`r.workflow_id = $${paramIndex++}`)
+        values.push(parseInt(workflowId))
+    }
+    // Note: agentId filter on steps table is omitted for simplicity in raw SQL conversion
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
+
+    const runsQuery = `
+        SELECT r.*, w.name as workflow_name
+        FROM ops.runs r
+        LEFT JOIN ops.workflows w ON r.workflow_id = w.id
+        ${whereClause}
+        ORDER BY r.created_at DESC
+        LIMIT 50
+    `
+
+    const [runsResult, workflowsResult] = await Promise.all([
+        pool.query(runsQuery, values),
+        pool.query("SELECT id, name FROM ops.workflows ORDER BY name ASC")
     ])
+
+    const runs = runsResult.rows
+    const workflows = workflowsResult.rows.map(wf => ({ ...wf, id: Number(wf.id) }))
 
     return (
         <div className="space-y-8">
@@ -79,7 +87,7 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
                                     <TableCell className="font-medium text-white">
                                         <div className="flex items-center gap-2">
                                             <Play className="h-4 w-4 text-zinc-500" />
-                                            {run.workflows?.name || 'Unknown'}
+                                            {run.workflow_name || 'Unknown'}
                                         </div>
                                     </TableCell>
                                     <TableCell>

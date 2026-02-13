@@ -36,14 +36,13 @@ export async function GET() {
             if (!isSubAgent) continue
 
             // Look for completion event
-            const completion = await prisma.agent_events.findFirst({
-                where: {
-                    agent_id: start.agent_id,
-                    event_type: { in: ["task_complete", "task_fail", "error"] },
-                    created_at: { gte: start.created_at! },
-                },
-                orderBy: { created_at: "asc" },
-            })
+            const completionResult = await pool.query(`
+                SELECT * FROM ops.agent_events
+                WHERE agent_id = $1 AND event_type IN ('task_complete', 'task_fail', 'error') AND created_at >= $2
+                ORDER BY created_at ASC
+                LIMIT 1
+            `, [start.agent_id, start.created_at])
+            const completion = completionResult.rows[0]
 
             const task = detail?.task || detail?.description || "Unknown task"
             const spawned_by = detail?.spawned_by || "Kevin"

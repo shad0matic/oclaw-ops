@@ -1,11 +1,11 @@
 export const dynamic = "force-dynamic"
 
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { pool } from '@/lib/db';
 import { exec } from 'child_process';
 
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   const { sessionId } = await params;
@@ -13,17 +13,17 @@ export async function POST(
 
   try {
     // End the run
-    await prisma.$executeRawUnsafe(`
+    await pool.query(`
       UPDATE ops.runs
       SET ended_at = NOW(), status = 'failed', zombie_status = 'killed'
-      WHERE session_key = '${sessionId}';
-    `);
+      WHERE session_key = $1;
+    `, [sessionId]);
 
     // Log the kill event
-    await prisma.$executeRawUnsafe(`
+    await pool.query(`
       INSERT INTO ops.agent_events (session_id, event_type, details)
-      VALUES ('${sessionId}', 'zombie_kill', jsonb_build_object('reason', '${reason}'));
-    `);
+      VALUES ($1, 'zombie_kill', jsonb_build_object('reason', $2));
+    `, [sessionId, reason]);
 
     // NOTE: The actual process killing logic is not implemented here.
     // This would depend on the process management system (e.g., Docker, systemd).

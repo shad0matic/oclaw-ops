@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function POST(req: Request) {
     const session = await auth()
@@ -20,47 +20,37 @@ export async function POST(req: Request) {
             )
         }
 
-        // For now, implement text search. Vector search requires embedding generation
-        // which would need an external API call. We'll do simple text search for V1.
         if (type === "memories") {
-            const results = await prisma.memories.findMany({
-                where: {
-                    OR: [
-                        { content: { contains: query, mode: 'insensitive' } },
-                        { tags: { hasSome: [query.toLowerCase()] } }
-                    ]
-                },
-                orderBy: [
-                    { importance: 'desc' },
-                    { created_at: 'desc' }
-                ],
-                take: limit
-            })
+            const results = await pool.query(`
+                SELECT * FROM memory.memories
+                WHERE content ILIKE $1 OR tags @> ARRAY[$2]
+                ORDER BY importance DESC, created_at DESC
+                LIMIT $3
+            `, [`%${query}%`, query.toLowerCase(), limit])
 
             return NextResponse.json({
-                results: results.map(r => ({
+                results: results.rows.map(r => ({
                     ...r,
                     id: r.id.toString()
                 })),
                 query,
-                count: results.length
+                count: results.rowCount
             })
         } else if (type === "daily_notes") {
-            const results = await prisma.daily_notes.findMany({
-                where: {
-                    content: { contains: query, mode: 'insensitive' }
-                },
-                orderBy: { note_date: 'desc' },
-                take: limit
-            })
+            const results = await pool.query(`
+                SELECT * FROM memory.daily_notes
+                WHERE content ILIKE $1
+                ORDER BY note_date DESC
+                LIMIT $2
+            `, [`%${query}%`, limit])
 
             return NextResponse.json({
-                results: results.map(r => ({
+                results: results.rows.map(r => ({
                     ...r,
                     id: r.id.toString()
                 })),
                 query,
-                count: results.length
+                count: results.rowCount
             })
         } else {
             return NextResponse.json(

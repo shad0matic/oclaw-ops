@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function POST(
     req: Request,
@@ -18,14 +18,11 @@ export async function POST(
         const body = await req.json()
         const { task, context } = body
 
-        // Validate workflow exists
-        const workflow = await prisma.workflows.findUnique({
-            where: { id: parseInt(id) }
-        })
-
-        if (!workflow) {
+        const workflowResult = await pool.query(`SELECT * FROM ops.workflows WHERE id = $1`, [id])
+        if (workflowResult.rowCount === 0) {
             return NextResponse.json({ error: "Workflow not found" }, { status: 404 })
         }
+        const workflow = workflowResult.rows[0]
 
         if (!workflow.enabled) {
             return NextResponse.json(
@@ -34,18 +31,20 @@ export async function POST(
             )
         }
 
-        // Create a new run
-        const run = await prisma.runs.create({
-            data: {
-                workflow_id: workflow.id,
-                workflow_name: workflow.name,
-                task: task || "Manual trigger from dashboard",
-                status: "pending",
-                triggered_by: session.user?.email || "manual",
-                context: context || {},
-                result: {}
-            }
-        })
+        const runResult = await pool.query(`
+            INSERT INTO ops.runs (workflow_id, workflow_name, task, status, triggered_by, context, result)
+            VALUES ($1, $2, $3, 'pending', $4, $5, '{}')
+            RETURNING *
+        `, [
+            workflow.id,
+            workflow.name,
+            task || "Manual trigger from dashboard",
+            session.user?.email || "manual",
+            context || {}
+        ])
+        const run = runResult.rows[0]
+        run.id = run.id.toString()
+        run.workflow_id = run.workflow_id.toString()
 
         return NextResponse.json(run)
     } catch (error) {

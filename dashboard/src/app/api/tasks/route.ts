@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { NextResponse } from "next/server"
 import { NextRequest } from "next/server"
 
@@ -8,10 +8,21 @@ export async function GET(request: NextRequest) {
     const status = request.nextUrl.searchParams.get("status")
 
     try {
-        const tasks = await prisma.tasks.findMany({
-            where: status ? { status } : {},
-            orderBy: { created_at: 'desc' },
-        })
+        let query = `SELECT * FROM ops.tasks`
+        const values = []
+
+        if (status) {
+            query += ` WHERE status = $1`
+            values.push(status)
+        }
+
+        query += ` ORDER BY created_at DESC`
+
+        const tasksResult = await pool.query(query, values)
+        const tasks = tasksResult.rows.map(task => ({
+            ...task,
+            id: task.id.toString()
+        }))
 
         return NextResponse.json(tasks)
     } catch (error: any) {

@@ -1,13 +1,12 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { DataRefresh } from "@/components/data-refresh"
 import { EventFilters } from "@/components/events/event-filters"
-import { Prisma } from "@/generated/prisma/client"
 import { PageHeader } from "@/components/layout/page-header"
 
-export default async function EventsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
+export default async function EventsPage({ searchParams }: { searchParams: Promise<{ [key:string]: string | undefined }> }) {
     const session = await auth()
     if (!session) redirect("/login")
 
@@ -17,26 +16,45 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
     const dateFrom = params.date_from
 
     // Build where clause
-    const where: Prisma.agent_eventsWhereInput = {}
-    if (agentId) where.agent_id = agentId
-    if (eventType) where.event_type = { contains: eventType, mode: 'insensitive' }
+    const conditions = []
+    const values = []
+    let paramIndex = 1
+
+    if (agentId) {
+        conditions.push(`agent_id = $${paramIndex++}`)
+        values.push(agentId)
+    }
+    if (eventType) {
+        conditions.push(`event_type ILIKE $${paramIndex++}`)
+        values.push(`%${eventType}%`)
+    }
     if (dateFrom) {
-        where.created_at = {
-            gte: new Date(dateFrom)
-        }
+        conditions.push(`created_at >= $${paramIndex++}`)
+        values.push(dateFrom)
     }
 
-    const [events, agents] = await Promise.all([
-        prisma.agent_events.findMany({
-            where,
-            orderBy: { created_at: 'desc' },
-            take: 100
-        }),
-        prisma.agent_profiles.findMany({
-            select: { agent_id: true, name: true },
-            orderBy: { name: 'asc' }
-        })
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
+
+    const eventsQuery = `
+        SELECT * FROM ops.agent_events 
+        ${whereClause} 
+        ORDER BY created_at DESC 
+        LIMIT 100
+    `
+    
+    const agentsQuery = `
+        SELECT agent_id, name 
+        FROM memory.agent_profiles 
+        ORDER BY name ASC
+    `
+
+    const [eventsResult, agentsResult] = await Promise.all([
+        pool.query(eventsQuery, values),
+        pool.query(agentsQuery)
     ])
+
+    const events = eventsResult.rows
+    const agents = agentsResult.rows
 
     const serializedEvents = events.map((e: any) => ({
         ...e,

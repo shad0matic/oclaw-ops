@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function GET(req: Request) {
     const session = await auth()
@@ -11,44 +11,30 @@ export async function GET(req: Request) {
 
     try {
         const [
-            totalMemories,
-            totalDailyNotes,
-            memoryByAgent,
-            recentMemories,
-            averageImportance
+            totalMemoriesResult,
+            totalDailyNotesResult,
+            memoryByAgentResult,
+            recentMemoriesResult,
+            averageImportanceResult,
+            tagsResult
         ] = await Promise.all([
-            prisma.memories.count(),
-            prisma.daily_notes.count(),
-            prisma.memories.groupBy({
-                by: ['agent_id'],
-                _count: true
-            }),
-            prisma.memories.findMany({
-                orderBy: { created_at: 'desc' },
-                take: 5,
-                select: {
-                    id: true,
-                    content: true,
-                    importance: true,
-                    created_at: true,
-                    agent_id: true
-                }
-            }),
-            prisma.memories.aggregate({
-                _avg: {
-                    importance: true
-                }
-            })
+            pool.query(`SELECT COUNT(*) FROM memory.memories`),
+            pool.query(`SELECT COUNT(*) FROM memory.daily_notes`),
+            pool.query(`SELECT agent_id, COUNT(*) as count FROM memory.memories GROUP BY agent_id`),
+            pool.query(`SELECT id, content, importance, created_at, agent_id FROM memory.memories ORDER BY created_at DESC LIMIT 5`),
+            pool.query(`SELECT AVG(importance) as avg_importance FROM memory.memories`),
+            pool.query(`SELECT tags FROM memory.memories`)
         ])
 
-        // Get tag distribution
-        const allMemories = await prisma.memories.findMany({
-            select: { tags: true }
-        })
-        
+        const totalMemories = parseInt(totalMemoriesResult.rows[0].count, 10)
+        const totalDailyNotes = parseInt(totalDailyNotesResult.rows[0].count, 10)
+        const memoryByAgent = memoryByAgentResult.rows
+        const recentMemories = recentMemoriesResult.rows.map(m => ({ ...m, id: m.id.toString() }))
+        const averageImportance = parseFloat(averageImportanceResult.rows[0].avg_importance) || 0
+
         const tagCounts: Record<string, number> = {}
-        allMemories.forEach(m => {
-            m.tags.forEach(tag => {
+        tagsResult.rows.forEach(m => {
+            m.tags.forEach((tag: string) => {
                 tagCounts[tag] = (tagCounts[tag] || 0) + 1
             })
         })
@@ -61,16 +47,10 @@ export async function GET(req: Request) {
         return NextResponse.json({
             total_memories: totalMemories,
             total_daily_notes: totalDailyNotes,
-            average_importance: averageImportance._avg.importance || 0,
-            by_agent: memoryByAgent.map(m => ({
-                agent_id: m.agent_id,
-                count: m._count
-            })),
+            average_importance: averageImportance,
+            by_agent: memoryByAgent,
             top_tags: topTags,
-            recent_memories: recentMemories.map(m => ({
-                ...m,
-                id: m.id.toString()
-            }))
+            recent_memories: recentMemories
         })
     } catch (error) {
         console.error("Failed to fetch memory stats", error)

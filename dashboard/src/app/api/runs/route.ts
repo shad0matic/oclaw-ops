@@ -1,8 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
-import { Prisma } from "@/generated/prisma/client"
+import { pool } from "@/lib/db"
 
 export async function GET(req: Request) {
     const session = await auth()
@@ -16,20 +15,39 @@ export async function GET(req: Request) {
     const workflowId = searchParams.get("workflow_id")
 
     try {
-        const where: Prisma.runsWhereInput = {}
-        if (status) where.status = status
-        if (workflowId) where.workflow_id = parseInt(workflowId)
+        let query = `
+            SELECT r.*, w.name as workflow_name
+            FROM ops.runs r
+            LEFT JOIN ops.workflows w ON r.workflow_id = w.id
+        `
+        const values = []
+        const whereClauses = []
 
-        const runs = await prisma.runs.findMany({
-            where,
-            orderBy: { created_at: 'desc' },
-            take: limit,
-            include: {
-                workflows: {
-                    select: { name: true }
-                }
+        if (status) {
+            whereClauses.push(`r.status = $${values.length + 1}`)
+            values.push(status)
+        }
+        if (workflowId) {
+            whereClauses.push(`r.workflow_id = $${values.length + 1}`)
+            values.push(parseInt(workflowId))
+        }
+
+        if (whereClauses.length > 0) {
+            query += ` WHERE ${whereClauses.join(" AND ")}`
+        }
+        
+        query += ` ORDER BY r.created_at DESC LIMIT $${values.length + 1}`
+        values.push(limit)
+
+        const runsResult = await pool.query(query, values)
+        const runs = runsResult.rows.map(run => ({
+            ...run,
+            id: run.id.toString(),
+            workflow_id: run.workflow_id.toString(),
+            workflows: {
+                name: run.workflow_name
             }
-        })
+        }))
 
         return NextResponse.json(runs)
     } catch (error) {

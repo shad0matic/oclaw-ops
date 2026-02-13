@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Layers } from "lucide-react"
@@ -10,10 +10,8 @@ export default async function CompoundsPage() {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const compounds = await prisma.compounds.findMany({
-        orderBy: { period_start: 'desc' },
-        take: 20
-    })
+    const compoundsResult = await pool.query("SELECT * FROM memory.compounds ORDER BY period_start DESC LIMIT 20")
+    const compounds = compoundsResult.rows
 
     return (
         <div className="space-y-8">

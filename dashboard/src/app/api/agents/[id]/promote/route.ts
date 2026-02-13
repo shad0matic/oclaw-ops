@@ -1,10 +1,10 @@
 export const dynamic = "force-dynamic"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { pool } from "@/lib/db"
 
 export async function POST(
-    req: Request,
+    req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     const session = await auth()

@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function PATCH(
     req: Request,
@@ -16,11 +16,19 @@ export async function PATCH(
 
     try {
         const body = await req.json()
+        
+        const updates = Object.keys(body).map((key, i) => `${key} = $${i + 2}`)
+        const values = [id, ...Object.values(body)]
 
-        const updated = await prisma.reactions.update({
-            where: { id: parseInt(id) },
-            data: body
-        })
+        const query = `
+            UPDATE ops.reactions
+            SET ${updates.join(", ")}
+            WHERE id = $1
+            RETURNING *
+        `
+
+        const updatedResult = await pool.query(query, values)
+        const updated = updatedResult.rows[0]
 
         return NextResponse.json(updated)
     } catch (error) {
@@ -41,9 +49,7 @@ export async function DELETE(
     const { id } = await params
 
     try {
-        await prisma.reactions.delete({
-            where: { id: parseInt(id) }
-        })
+        await pool.query(`DELETE FROM ops.reactions WHERE id = $1`, [id])
 
         return NextResponse.json({ success: true })
     } catch (error) {

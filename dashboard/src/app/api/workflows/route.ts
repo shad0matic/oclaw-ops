@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function GET(req: Request) {
     const session = await auth()
@@ -10,35 +10,31 @@ export async function GET(req: Request) {
     }
 
     try {
-        const workflows = await prisma.workflows.findMany({
-            orderBy: { name: 'asc' },
-            include: {
-                _count: {
-                    select: { runs: true }
-                }
-            }
-        })
+        const workflowsResult = await pool.query(`
+            SELECT 
+                w.*,
+                (SELECT COUNT(*) FROM ops.runs r WHERE r.workflow_id = w.id) as total_runs,
+                lr.status as last_run_status,
+                lr.created_at as last_run_at
+            FROM 
+                ops.workflows w
+            LEFT JOIN LATERAL (
+                SELECT status, created_at
+                FROM ops.runs r
+                WHERE r.workflow_id = w.id
+                ORDER BY r.created_at DESC
+                LIMIT 1
+            ) lr ON true
+            ORDER BY w.name ASC;
+        `)
 
-        // Enrich with latest run info
-        const enrichedWorkflows = await Promise.all(workflows.map(async (wf) => {
-            const latestRun = await prisma.runs.findFirst({
-                where: { workflow_id: wf.id },
-                orderBy: { created_at: 'desc' },
-                select: {
-                    status: true,
-                    created_at: true
-                }
-            })
-
-            return {
-                ...wf,
-                total_runs: wf._count.runs,
-                last_run_status: latestRun?.status,
-                last_run_at: latestRun?.created_at
-            }
+        const workflows = workflowsResult.rows.map(wf => ({
+            ...wf,
+            id: wf.id.toString(),
+            total_runs: parseInt(wf.total_runs, 10)
         }))
 
-        return NextResponse.json(enrichedWorkflows)
+        return NextResponse.json(workflows)
     } catch (error) {
         console.error("Failed to fetch workflows", error)
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })

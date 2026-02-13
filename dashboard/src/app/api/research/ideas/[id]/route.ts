@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic"
-import prisma from '@/lib/db';
+import { pool } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function PATCH(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -13,9 +13,11 @@ export async function PATCH(
     return NextResponse.json({ error: 'Status is required' }, { status: 400 });
   }
 
-  const updatedIdea = await prisma.$executeRawUnsafe(
-    `UPDATE ops.research_ideas SET status = '${status}', updated_at = NOW() WHERE id = ${id}`
+  const updatedIdeaResult = await pool.query(
+    `UPDATE ops.research_ideas SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+    [status, id]
   );
+  const updatedIdea = updatedIdeaResult.rows[0]
 
   return NextResponse.json(updatedIdea);
 }

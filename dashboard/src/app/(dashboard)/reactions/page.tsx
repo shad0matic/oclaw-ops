@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Zap, ArrowRight } from "lucide-react"
@@ -10,9 +10,8 @@ export default async function ReactionsPage() {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const reactions = await prisma.reactions.findMany({
-        orderBy: { created_at: 'desc' }
-    })
+    const reactionsResult = await pool.query("SELECT * FROM ops.reactions ORDER BY created_at DESC")
+    const reactions = reactionsResult.rows
 
     return (
         <div className="space-y-8">

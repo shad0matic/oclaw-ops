@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function GET(req: Request) {
     const session = await auth()
@@ -16,17 +16,18 @@ export async function GET(req: Request) {
         const since = new Date()
         since.setDate(since.getDate() - days)
 
-        const snapshots = await prisma.cost_snapshots.findMany({
-            where: {
-                snapshot_hour: { gte: since }
-            },
-            orderBy: { snapshot_hour: 'desc' },
-            take: days * 24
-        })
+        const snapshotsResult = await pool.query(`
+            SELECT * FROM ops.cost_snapshots
+            WHERE snapshot_hour >= $1
+            ORDER BY snapshot_hour DESC
+            LIMIT $2
+        `, [since, days * 24])
+        const snapshots = snapshotsResult.rows
 
         return NextResponse.json(snapshots.map(s => ({
             ...s,
-            id: s.id.toString()
+            id: s.id.toString(),
+            cost_usd: Number(s.cost_usd)
         })))
     } catch (error) {
         console.error("Failed to fetch cost snapshots", error)

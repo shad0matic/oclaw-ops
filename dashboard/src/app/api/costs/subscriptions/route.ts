@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { z } from "zod"
 
 const subscriptionSchema = z.object({
@@ -22,11 +22,10 @@ export async function GET(req: Request) {
     }
 
     try {
-        const subscriptions = await prisma.subscriptions.findMany({
-            orderBy: { name: 'asc' }
-        })
-
-        return NextResponse.json(subscriptions)
+        const subscriptionsResult = await pool.query(`
+            SELECT *, monthly_price::float, renewal_day::int FROM ops.subscriptions ORDER BY name ASC
+        `)
+        return NextResponse.json(subscriptionsResult.rows)
     } catch (error) {
         console.error("Failed to fetch subscriptions", error)
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
@@ -43,11 +42,22 @@ export async function POST(req: Request) {
         const body = await req.json()
         const parsedData = subscriptionSchema.parse(body)
 
-        const subscription = await prisma.subscriptions.create({
-            data: parsedData
-        })
+        const subscriptionResult = await pool.query(`
+            INSERT INTO ops.subscriptions (name, provider, monthly_price, currency, renewal_day, used_in_openclaw, notes, active)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *, monthly_price::float, renewal_day::int
+        `, [
+            parsedData.name,
+            parsedData.provider,
+            parsedData.monthly_price,
+            parsedData.currency,
+            parsedData.renewal_day,
+            parsedData.used_in_openclaw,
+            parsedData.notes,
+            parsedData.active
+        ])
 
-        return NextResponse.json(subscription)
+        return NextResponse.json(subscriptionResult.rows[0])
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({ error: error.issues }, { status: 400 })
@@ -74,12 +84,13 @@ export async function PATCH(req: Request) {
         const body = await req.json()
         const parsedData = subscriptionSchema.partial().parse(body)
 
-        const subscription = await prisma.subscriptions.update({
-            where: { id: parseInt(id) },
-            data: parsedData
-        })
+        const setClauses = Object.keys(parsedData).map((key, i) => `${key} = $${i + 2}`).join(', ')
+        const values = [id, ...Object.values(parsedData)]
+        const query = `UPDATE ops.subscriptions SET ${setClauses} WHERE id = $1 RETURNING *, monthly_price::float, renewal_day::int`
 
-        return NextResponse.json(subscription)
+        const subscriptionResult = await pool.query(query, values)
+
+        return NextResponse.json(subscriptionResult.rows[0])
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({ error: error.issues }, { status: 400 })
@@ -103,12 +114,11 @@ export async function DELETE(req: Request) {
     }
 
     try {
-        const subscription = await prisma.subscriptions.update({
-            where: { id: parseInt(id) },
-            data: { active: false }
-        })
+        const subscriptionResult = await pool.query(`
+            UPDATE ops.subscriptions SET active = false WHERE id = $1 RETURNING *, monthly_price::float, renewal_day::int
+        `, [id])
 
-        return NextResponse.json(subscription)
+        return NextResponse.json(subscriptionResult.rows[0])
     } catch (error) {
         console.error("Failed to delete subscription", error)
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })

@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -14,30 +14,21 @@ export default async function MemoryPage() {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const [memories, dailyNotes, totalMemories, totalNotes] = await Promise.all([
-        prisma.memories.findMany({
-            orderBy: { created_at: 'desc' },
-            take: 20
-        }),
-        prisma.daily_notes.findMany({
-            orderBy: { note_date: 'desc' },
-            take: 10
-        }),
-        prisma.memories.count(),
-        prisma.daily_notes.count()
+    const [memoriesResult, dailyNotesResult, totalMemoriesResult, totalNotesResult, avgImportanceResult, taggedCountResult] = await Promise.all([
+        pool.query("SELECT * FROM memory.memories ORDER BY created_at DESC LIMIT 20"),
+        pool.query("SELECT * FROM memory.daily_notes ORDER BY note_date DESC LIMIT 10"),
+        pool.query("SELECT COUNT(*) FROM memory.memories"),
+        pool.query("SELECT COUNT(*) FROM memory.daily_notes"),
+        pool.query("SELECT AVG(importance) as avg_importance FROM memory.memories"),
+        pool.query("SELECT COUNT(*) FROM memory.memories WHERE tags IS NOT NULL AND array_length(tags, 1) > 0")
     ])
 
-    // Get additional stats for Stats tab
-    const [avgImportance, taggedCount] = await Promise.all([
-        prisma.memories.aggregate({
-            _avg: { importance: true }
-        }),
-        prisma.memories.count({
-            where: {
-                tags: { isEmpty: false }
-            }
-        })
-    ])
+    const memories = memoriesResult.rows
+    const dailyNotes = dailyNotesResult.rows
+    const totalMemories = Number(totalMemoriesResult.rows[0].count)
+    const totalNotes = Number(totalNotesResult.rows[0].count)
+    const avgImportance = Number(avgImportanceResult.rows[0].avg_importance)
+    const taggedCount = Number(taggedCountResult.rows[0].count)
 
     return (
         <div className="space-y-8">
@@ -137,7 +128,7 @@ export default async function MemoryPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-white">
-                                    {avgImportance._avg.importance?.toFixed(1) || '0'}
+                                    {avgImportance.toFixed(1) || '0'}
                                 </div>
                             </CardContent>
                         </Card>

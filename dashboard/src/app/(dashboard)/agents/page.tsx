@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from '@/lib/db'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AgentAvatar } from "@/components/ui/agent-avatar"
 import { Badge } from "@/components/ui/badge"
@@ -18,34 +18,36 @@ export default async function AgentsPage() {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const agents = await prisma.agent_profiles.findMany({
-        orderBy: { agent_id: 'asc' }
-    })
+    const agentsResult = await pool.query(`
+        SELECT 
+            p.*, 
+            r.session_key, 
+            r.zombie_status,
+            e.last_active
+        FROM memory.agent_profiles p
+        LEFT JOIN (
+            SELECT agent_id, session_key, zombie_status 
+            FROM ops.runs 
+            WHERE status = 'running'
+        ) r ON p.agent_id = r.agent_id
+        LEFT JOIN (
+            SELECT agent_id, MAX(created_at) as last_active 
+            FROM ops.agent_events 
+            GROUP BY agent_id
+        ) e ON p.agent_id = e.agent_id
+        ORDER BY p.agent_id ASC
+    `);
 
-    // Enrich agents
-    const enrichedAgents = await Promise.all(agents.map(async (agent: any) => {
-        const activeRun = await prisma.runs.findFirst({
-            where: { agent_id: agent.agent_id, status: "running" }
-        })
+    const agents = agentsResult.rows.map((agent: any) => ({
+        ...agent,
+        status: agent.session_key ? "running" : "idle",
+        last_active: agent.last_active || agent.updated_at,
+        trust_percent: (Number(agent.trust_score) || 0) * 100
+    }));
 
-        const lastEvent = await prisma.agent_events.findFirst({
-            where: { agent_id: agent.agent_id },
-            orderBy: { created_at: 'desc' }
-        })
-
-        return {
-            ...agent,
-            status: activeRun ? "running" : "idle",
-            zombie_status: activeRun?.zombie_status,
-            session_key: activeRun?.session_key,
-            last_active: lastEvent?.created_at || agent.updated_at,
-            trust_percent: (Number(agent.trust_score) || 0) * 100
-        }
-    }))
-
-    const totalTasks = enrichedAgents.reduce((acc: any, curr: any) => acc + (curr.total_tasks || 0), 0)
-    const avgTrust = enrichedAgents.length > 0
-        ? enrichedAgents.reduce((acc: any, curr: any) => acc + curr.trust_percent, 0) / enrichedAgents.length
+    const totalTasks = agents.reduce((acc: any, curr: any) => acc + (curr.total_tasks || 0), 0)
+    const avgTrust = agents.length > 0
+        ? agents.reduce((acc: any, curr: any) => acc + curr.trust_percent, 0) / agents.length
         : 0
 
     return (
@@ -88,7 +90,7 @@ export default async function AgentsPage() {
 
             {/* Agents — Mobile Cards */}
             <div className="grid gap-3 md:hidden">
-                {enrichedAgents.map((agent: any) => (
+                {agents.map((agent: any) => (
                     <Link key={agent.id} href={`/agents/${agent.agent_id}`}>
                         <Card className="bg-card/50 border-border hover:bg-muted/50 transition-colors">
                             <CardContent className="p-4">
@@ -144,7 +146,7 @@ export default async function AgentsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {enrichedAgents.map((agent: any) => (
+                        {agents.map((agent: any) => (
                             <TableRow key={agent.id} className="border-border hover:bg-muted/50">
                                 <TableCell className="font-medium text-foreground">
                                     <div className="flex items-center gap-3">

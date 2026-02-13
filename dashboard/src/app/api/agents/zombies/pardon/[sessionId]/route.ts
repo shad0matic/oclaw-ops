@@ -1,27 +1,27 @@
 export const dynamic = "force-dynamic"
 
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { pool } from '@/lib/db';
 
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   const { sessionId } = await params;
 
   try {
     // Update the agent's session status to 'none'
-    await prisma.$executeRawUnsafe(`
+    await pool.query(`
       UPDATE ops.runs
       SET zombie_status = 'pardoned'
-      WHERE session_key = '${sessionId}';
-    `);
+      WHERE session_key = $1;
+    `, [sessionId]);
 
     // Log the pardon event
-    await prisma.$executeRawUnsafe(`
+    await pool.query(`
       INSERT INTO ops.agent_events (session_id, event_type, details)
-      VALUES ('${sessionId}', 'zombie_pardon', jsonb_build_object('reason', 'manual_pardon'));
-    `);
+      VALUES ($1, 'zombie_pardon', jsonb_build_object('reason', 'manual_pardon'));
+    `, [sessionId]);
 
     return NextResponse.json({
       success: true,

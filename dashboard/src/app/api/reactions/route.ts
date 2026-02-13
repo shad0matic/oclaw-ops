@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function GET(req: Request) {
     const session = await auth()
@@ -10,11 +10,10 @@ export async function GET(req: Request) {
     }
 
     try {
-        const reactions = await prisma.reactions.findMany({
-            orderBy: { created_at: 'desc' }
-        })
-
-        return NextResponse.json(reactions)
+        const reactionsResult = await pool.query(`
+            SELECT * FROM ops.reactions ORDER BY created_at DESC
+        `)
+        return NextResponse.json(reactionsResult.rows)
     } catch (error) {
         console.error("Failed to fetch reactions", error)
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
@@ -38,18 +37,21 @@ export async function POST(req: Request) {
             )
         }
 
-        const reaction = await prisma.reactions.create({
-            data: {
-                trigger_agent,
-                trigger_event,
-                trigger_filter: trigger_filter || {},
-                responder_agent,
-                action,
-                action_params: action_params || {},
-                probability: probability || 1.0,
-                enabled: enabled !== false
-            }
-        })
+        const reactionResult = await pool.query(`
+            INSERT INTO ops.reactions (trigger_agent, trigger_event, trigger_filter, responder_agent, action, action_params, probability, enabled)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *
+        `, [
+            trigger_agent,
+            trigger_event,
+            trigger_filter || {},
+            responder_agent,
+            action,
+            action_params || {},
+            probability || 1.0,
+            enabled !== false
+        ])
+        const reaction = reactionResult.rows[0]
 
         return NextResponse.json(reaction)
     } catch (error) {

@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,17 +13,19 @@ export default async function WorkflowsPage() {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const workflows = await prisma.workflows.findMany({
-        orderBy: { name: 'asc' },
-        include: {
-            _count: {
-                select: { runs: true }
-            }
-        }
-    })
-
-    // Mock stats for now as aggregation might be heavy or need raw query
-    // In real app, we'd aggregate success rate etc.
+    const workflowsResult = await pool.query(`
+        SELECT 
+            w.*,
+            COUNT(r.id) as runs_count
+        FROM ops.workflows w
+        LEFT JOIN ops.runs r ON w.id = r.workflow_id
+        GROUP BY w.id
+        ORDER BY w.name ASC
+    `)
+    const workflows = workflowsResult.rows.map(w => ({
+        ...w,
+        _count: { runs: Number(w.runs_count) }
+    }))
 
     return (
         <div className="space-y-8">

@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Network } from "lucide-react"
@@ -10,10 +10,8 @@ export default async function KnowledgePage() {
     const session = await auth()
     if (!session) redirect("/login")
 
-    const entities = await prisma.entities.findMany({
-        orderBy: { created_at: 'desc' },
-        take: 50
-    })
+    const entitiesResult = await pool.query("SELECT * FROM memory.entities ORDER BY created_at DESC LIMIT 50")
+    const entities = entitiesResult.rows
 
     const entityTypes = Array.from(new Set(entities.map(e => e.entity_type)))
 

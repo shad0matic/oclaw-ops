@@ -1,11 +1,11 @@
 export const dynamic = "force-dynamic"
 
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/db';
+import { pool } from '@/lib/db';
 
 export async function GET() {
   try {
-    const zombies = await prisma.$queryRawUnsafe(`
+    const zombiesResult = await pool.query(`
       WITH last_event AS (
           SELECT
               session_id,
@@ -33,10 +33,11 @@ export async function GET() {
       FROM last_event le
       JOIN last_heartbeat lh ON le.session_id = lh.session_id
       JOIN ops.runs r ON r.session_key = le.session_id
-      JOIN ops.agent_profiles a ON r.agent_id = a.id
+      JOIN memory.agent_profiles a ON r.agent_id = a.agent_id
       WHERE lh.last_heartbeat_time > le.last_event_time + INTERVAL '5 minutes'
       AND r.ended_at IS NULL;
     `);
+    const zombies = zombiesResult.rows;
 
     return NextResponse.json({ zombies });
   } catch (error) {

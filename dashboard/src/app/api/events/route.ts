@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function GET(req: Request) {
     const session = await auth()
@@ -14,13 +14,24 @@ export async function GET(req: Request) {
     const agentId = searchParams.get("agent_id")
 
     try {
-        const where = agentId ? { agent_id: agentId } : {}
+        let query = `
+            SELECT * FROM ops.agent_events
+        `
+        const values = []
 
-        const events = await prisma.agent_events.findMany({
-            where,
-            orderBy: { created_at: 'desc' },
-            take: limit,
-        })
+        if (agentId) {
+            query += ` WHERE agent_id = $1`
+            values.push(agentId)
+        }
+
+        query += ` ORDER BY created_at DESC LIMIT $${values.length + 1}`
+        values.push(limit)
+
+        const eventsResult = await pool.query(query, values)
+        const events = eventsResult.rows.map(event => ({
+            ...event,
+            id: Number(event.id)
+        }))
 
         return NextResponse.json(events)
     } catch (error) {

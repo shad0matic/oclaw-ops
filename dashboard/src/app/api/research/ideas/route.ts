@@ -1,19 +1,26 @@
 export const dynamic = "force-dynamic"
-import prisma from '@/lib/db';
+import { pool } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status');
 
-  let whereClause = '';
+  let query = `SELECT * FROM ops.research_ideas`;
+  const values = [];
+
   if (status) {
-    whereClause = `WHERE status = '${status}'`;
+    query += ` WHERE status = $1`;
+    values.push(status);
   }
 
-  const ideas = await prisma.$queryRawUnsafe(
-    `SELECT * FROM ops.research_ideas ${whereClause} ORDER BY created_at DESC`
-  );
+  query += ` ORDER BY created_at DESC`;
+
+  const ideasResult = await pool.query(query, values);
+  const ideas = ideasResult.rows.map(idea => ({
+    ...idea,
+    id: idea.id.toString()
+  }))
 
   return NextResponse.json(ideas);
 }

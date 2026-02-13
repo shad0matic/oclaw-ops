@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,17 +16,30 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
 
     const { id } = await params
 
-    const run = await prisma.runs.findUnique({
-        where: { id: Number(id) },
-        include: {
-            steps: {
-                orderBy: { step_order: 'asc' }
-            },
-            workflows: true
-        }
-    })
+    const runQuery = `
+        SELECT r.*, w.name as workflow_name
+        FROM ops.runs r
+        LEFT JOIN ops.workflows w ON r.workflow_id = w.id
+        WHERE r.id = $1
+    `
+    const stepsQuery = `
+        SELECT *
+        FROM ops.steps
+        WHERE run_id = $1
+        ORDER BY step_order ASC
+    `
+
+    const [runResult, stepsResult] = await Promise.all([
+        pool.query(runQuery, [id]),
+        pool.query(stepsQuery, [id])
+    ])
+
+    const run = runResult.rows[0]
 
     if (!run) return <div className="p-8 text-white">Run not found</div>
+
+    run.steps = stepsResult.rows
+    run.workflows = { name: run.workflow_name }
 
     const duration = run.completed_at && run.started_at
         ? Math.round((new Date(run.completed_at).getTime() - new Date(run.started_at).getTime()) / 1000) + 's'
@@ -54,8 +67,8 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
                     </div>
                 </div>
                 <div className="ml-auto">
-                    <RunActions 
-                        runId={String(run.id)} 
+                    <RunActions
+                        runId={String(run.id)}
                         workflowId={run.workflow_id}
                         status={run.status || 'unknown'}
                         task={run.task}

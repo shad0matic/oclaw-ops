@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 
 export async function GET(req: Request) {
     const session = await auth()
@@ -10,10 +10,12 @@ export async function GET(req: Request) {
     }
 
     try {
-        const compounds = await prisma.compounds.findMany({
-            orderBy: { period_start: 'desc' },
-            take: 50
-        })
+        const compoundsResult = await pool.query(`
+            SELECT * FROM memory.compounds
+            ORDER BY period_start DESC
+            LIMIT 50
+        `)
+        const compounds = compoundsResult.rows
 
         return NextResponse.json(compounds.map(c => ({
             ...c,
