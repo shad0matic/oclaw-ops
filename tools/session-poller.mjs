@@ -14,7 +14,7 @@ const require = createRequire(import.meta.url);
 const pg = require('/home/shad/projects/oclaw-ops/dashboard/node_modules/pg');
 
 const AGENTS_DIR = '/home/shad/.openclaw/agents';
-const ACTIVE_MINUTES = 15; // consider sessions active if updated in last 15 min
+const ACTIVE_MINUTES = 5; // consider sessions active if updated in last 15 min
 
 const pool = new pg.Pool({
   connectionString: 'postgresql://shad@localhost:5432/openclaw_db?host=/var/run/postgresql',
