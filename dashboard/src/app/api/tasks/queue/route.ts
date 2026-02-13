@@ -34,15 +34,21 @@ export async function GET(request: NextRequest) {
 // POST /api/tasks/queue — create a new task
 export async function POST(request: NextRequest) {
     const body = await request.json()
-    const { title, description, project = "infra", agentId, priority = 5 } = body
+    const { title, description, project = "infra", agentId, priority = 5, status: requestedStatus } = body
 
     if (!title) return NextResponse.json({ error: "title required" }, { status: 400 })
+
+    // Determine status: use requested status if valid, otherwise infer from agentId
+    const validStatuses = ['queued', 'planned', 'assigned', 'running', 'review', 'human_todo', 'done']
+    const finalStatus = requestedStatus && validStatuses.includes(requestedStatus)
+      ? requestedStatus
+      : agentId ? 'assigned' : 'queued'
 
     const { rows } = await pool.query(`
         INSERT INTO ops.task_queue (title, description, project, agent_id, priority, status)
         VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
-    `, [title, description || null, project, agentId || null, priority, agentId ? 'assigned' : 'queued'])
+    `, [title, description || null, project, agentId || null, priority, finalStatus])
 
     return NextResponse.json({ ...rows[0], id: Number(rows[0].id) }, { status: 201 })
 }
