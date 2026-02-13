@@ -2,8 +2,7 @@
 "use client"
 
 import { StatusBar } from "./desktop/status-bar"
-import { LiveWorkPanel } from "./desktop/live-work-panel"
-import { TeamRoster } from "./desktop/team-roster"
+import { UnifiedTeamBoard } from "./desktop/unified-team-board"
 import { PipelineStrip } from "./desktop/pipeline-strip"
 import { ActivityTimeline } from "./desktop/activity-timeline"
 import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData"
@@ -36,25 +35,12 @@ export function DesktopOverview() {
           <ZombieAlertBanner zombies={overviewData.zombies} />
         )}
 
-        {/* Top Section: Live Work + Team */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Live Work Panel */}
-          <div className="lg:col-span-1">
-            <LiveWorkPanel
-              tasks={liveWork?.tasks || overviewData?.liveWork.tasks || []}
-              count={liveWork?.count || overviewData?.liveWork.count || 0}
-              isLoading={liveWorkLoading && !liveWork}
-            />
-          </div>
-
-          {/* Team Roster */}
-          <div className="lg:col-span-1">
-            <TeamRoster
-              agents={overviewData?.team || []}
-              isLoading={isLoading}
-            />
-          </div>
-        </div>
+        {/* Unified Team Board */}
+        <UnifiedTeamBoard
+          agents={overviewData?.team || []}
+          liveWork={liveWork || overviewData?.liveWork}
+          isLoading={isLoading || (liveWorkLoading && !liveWork)}
+        />
 
         {/* Pipeline Strip */}
         {overviewData && (

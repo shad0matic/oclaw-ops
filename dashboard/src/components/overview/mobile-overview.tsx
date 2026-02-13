@@ -1,15 +1,17 @@
+
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { HealthPulse } from "./mobile/health-pulse"
 import { AlertBanner, type Alert } from "./mobile/alert-banner"
-import { LiveCardMobile } from "./mobile/live-card-mobile"
-import { TeamStrip } from "./mobile/team-strip"
 import { AgentBottomSheet } from "./mobile/agent-bottom-sheet"
 import { TodaySummary } from "./mobile/today-summary"
 import { ActivityCollapsed } from "./mobile/activity-collapsed"
 import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData"
-import type { AgentData, TaskTree } from "@/hooks/useOverviewData"
+import { AgentCard } from "./desktop/agent-card" // Reusing the desktop card
+import type { AgentProfile } from "@prisma/client"
+import type { AgentData, TaskTree, LiveWorkData } from "@/hooks/useOverviewData"
+
 
 function generateAlerts(
   tasks: TaskTree[],
@@ -46,14 +48,40 @@ function generateAlerts(
   return alerts
 }
 
+
 export function MobileOverview() {
   const { data: overviewData } = useOverviewData(30000)
   const { liveWork } = useLiveWork(10000)
-  const [selectedAgent, setSelectedAgent] = useState<AgentData | null>(null)
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
 
-  const tasks = liveWork?.tasks || overviewData?.liveWork.tasks || []
   const agents = overviewData?.team || []
-  const alerts = overviewData ? generateAlerts(tasks, agents) : []
+  const alerts = overviewData ? generateAlerts(liveWork?.tasks || [], agents) : []
+
+  const sortedAgents = useMemo(() => {
+    if (!agents) return []
+    return [...agents].sort((a, b) => {
+      const aIsWorking = liveWork?.tasks?.some(t => t.agentId === a.id)
+      const bIsWorking = liveWork?.tasks?.some(t => t.agentId === b.id)
+      const aIsZombie = a.status === "zombie"
+      const bIsZombie = b.status === "zombie"
+
+      if (aIsWorking && !bIsWorking) return -1
+      if (!aIsWorking && bIsWorking) return 1
+
+      if (aIsWorking && bIsWorking) {
+        const aTask = liveWork.tasks.find(t => t.agentId === a.id)
+        const bTask = liveWork.tasks.find(t => t.agentId === b.id)
+        return (bTask?.elapsedSeconds || 0) - (aTask?.elapsedSeconds || 0)
+      }
+
+      if (aIsZombie && !bIsZombie) return -1
+      if (!aIsZombie && bIsZombie) return 1
+
+      return a.name.localeCompare(b.name)
+    })
+  }, [agents, liveWork])
+  
+  const selectedAgent = agents.find(a => a.id === selectedAgentId)
 
   if (!overviewData) {
     return (
@@ -78,34 +106,41 @@ export function MobileOverview() {
       {/* Alert Banner */}
       {alerts.length > 0 && <AlertBanner alerts={alerts} />}
 
-      {/* Live Work */}
-      <section className="p-4 space-y-3" aria-labelledby="live-work-heading-mobile">
+      {/* Unified Team Section */}
+      <section className="p-4 space-y-3" aria-labelledby="team-heading-mobile">
         <div className="flex items-center justify-between">
-          <h2 id="live-work-heading-mobile" className="text-sm font-medium text-foreground">
-            LIVE NOW
+          <h2 id="team-heading-mobile" className="text-sm font-medium text-foreground">
+            THE TEAM
           </h2>
           <span className="text-xs font-medium text-foreground px-2 py-0.5 rounded-full bg-muted">
-            {tasks.length}
+            {agents.length} agents · {liveWork?.count || 0} working
           </span>
         </div>
 
-        {tasks.length === 0 ? (
+        {sortedAgents.length === 0 ? (
           <div className="text-center py-12 space-y-2">
-            <p className="text-4xl" aria-hidden="true">😴</p>
-            <p className="text-sm font-medium text-foreground">All agents idle</p>
-            <p className="text-xs text-muted-foreground">No tasks running</p>
+            <p className="text-4xl" aria-hidden="true">🤖</p>
+            <p className="text-sm font-medium text-foreground">No agents found</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {tasks.map((task) => (
-              <LiveCardMobile key={task.id} task={task} />
-            ))}
+            {sortedAgents.map(agent => {
+              const task = liveWork?.tasks?.find(t => t.agentId === agent.id)
+              return (
+                <div key={agent.id} onClick={() => setSelectedAgentId(agent.id)}>
+                  <AgentCard
+                    agent={agent}
+                    taskName={task?.task}
+                    elapsedSeconds={task?.elapsedSeconds}
+                    model={task?.model}
+                    isWorking={!!task}
+                  />
+                </div>
+              )
+            })}
           </div>
         )}
       </section>
-
-      {/* Team Strip */}
-      <TeamStrip agents={agents} onAgentClick={setSelectedAgent} />
 
       {/* Today Summary */}
       <TodaySummary
@@ -119,7 +154,7 @@ export function MobileOverview() {
       {/* Agent Bottom Sheet */}
       <AgentBottomSheet
         agent={selectedAgent}
-        onClose={() => setSelectedAgent(null)}
+        onClose={() => setSelectedAgentId(null)}
       />
     </div>
   )
