@@ -81,6 +81,8 @@ interface MetricsData {
   memUsed: number;
   memTotal: number;
   memPercent: number;
+  load: number[];
+  cores: number;
 }
 
 const MAX_DATA_POINTS = 150; // 5 minutes of data at 2s interval
@@ -125,6 +127,7 @@ export function StatusBar({
   const [latestData, setLatestData] = useState<MetricsData | null>(null);
   const [cpuHistory, setCpuHistory] = useState<number[]>([]);
   const [memHistory, setMemHistory] = useState<number[]>([]);
+  const [loadHistory, setLoadHistory] = useState<number[]>([]);
   const ws = useRef<WebSocket | null>(null);
   const staleTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   const disconnectTimer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -149,6 +152,7 @@ export function StatusBar({
       setLatestData(data);
       setCpuHistory(prev => [...prev.slice(-MAX_DATA_POINTS + 1), data.cpu]);
       setMemHistory(prev => [...prev.slice(-MAX_DATA_POINTS + 1), data.memPercent]);
+      setLoadHistory(prev => [...prev.slice(-MAX_DATA_POINTS + 1), (data.load[0] / data.cores) * 100]);
 
       clearTimeout(staleTimer.current);
       clearTimeout(disconnectTimer.current);
@@ -240,8 +244,8 @@ export function StatusBar({
       {latestData && (
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <MiniGauge value={latestData.cpu} label="CPU" size={44} />
-              <Sparkline data={cpuHistory} lastValue={latestData.cpu} width={100} height={20}/>
+              <MiniGauge value={latestData.load[0]} label="Load" size={44} type="raw" max={latestData.cores} />
+              <Sparkline data={loadHistory} lastValue={(latestData.load[0] / latestData.cores) * 100} width={100} height={20}/>
             </div>
             <div className="flex items-center gap-1.5">
               <MiniGauge

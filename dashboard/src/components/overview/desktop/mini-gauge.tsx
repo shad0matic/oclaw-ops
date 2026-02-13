@@ -3,15 +3,19 @@
 import { cn } from "@/lib/utils"
 
 interface MiniGaugeProps {
-  value: number       // 0-100
+  value: number       // 0-100 for percentage, raw value otherwise
   label: string       // "CPU" or "RAM"
   detail?: string     // e.g. "3.2/22GB"
   size?: number       // diameter in px
   className?: string
+  type?: 'percentage' | 'raw'
+  max?: number        // max value for raw type
 }
 
-export function MiniGauge({ value, label, detail, size = 48, className }: MiniGaugeProps) {
-  const clamped = Math.min(100, Math.max(0, value))
+export function MiniGauge({ value, label, detail, size = 48, className, type = 'percentage', max = 1 }: MiniGaugeProps) {
+  const displayValue = type === 'percentage' ? `${Math.round(value)}%` : value.toFixed(2)
+  const percentage = type === 'percentage' ? value : (value / max) * 100
+  const clamped = Math.min(100, Math.max(0, percentage))
   // Semi-circle arc from 180° to 0° (left to right, bottom half)
   const radius = (size - 6) / 2
   const cx = size / 2
@@ -71,7 +75,7 @@ export function MiniGauge({ value, label, detail, size = 48, className }: MiniGa
           className="fill-foreground text-[10px] font-bold"
           style={{ fontSize: '10px' }}
         >
-          {Math.round(clamped)}%
+          {displayValue}
         </text>
       </svg>
       <span className="text-[9px] text-muted-foreground -mt-1 leading-none">{label}</span>
