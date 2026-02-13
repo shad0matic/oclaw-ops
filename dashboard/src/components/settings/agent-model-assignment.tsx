@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface AgentProfile {
   agent_id: string;
@@ -43,7 +43,7 @@ const allModels = [
 export function AgentModelAssignment() {
   const [agents, setAgents] = useState<AgentProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  
 
   useEffect(() => {
     async function fetchAgents() {
@@ -56,11 +56,7 @@ export function AgentModelAssignment() {
         setAgents(data);
       } catch (error) {
         console.error(error);
-        toast({
-          title: "Error",
-          description: "Could not fetch agent profiles.",
-          variant: "destructive",
-        });
+        toast.error("Could not fetch agent profiles.");
       } finally {
         setLoading(false);
       }
@@ -86,18 +82,11 @@ export function AgentModelAssignment() {
         throw new Error("Failed to update model");
       }
 
-      toast({
-        title: "Success",
-        description: `Model for agent ${agentId} updated to ${model}.`,
-      });
+      toast.success(`Model for agent ${agentId} updated to ${model}.`);
     } catch (error) {
       console.error(error);
       setAgents(originalAgents);
-      toast({
-        title: "Error",
-        description: "Failed to update model. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to update model. Please try again.");
     }
   };
 

@@ -17,22 +17,37 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { Eye, EyeOff, Search, Wrench, Clipboard, Check, Loader2 } from "lucide-react"
+import { Search, Wrench, Clipboard, Check, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 type Status = "valid" | "expired" | "missing"
 
+function parseCookies(raw: string): { auth_token: string; ct0: string } {
+  const authMatch = raw.match(/auth_token=([^;\s]+)/)
+  const ct0Match = raw.match(/ct0=([^;\s]+)/)
+  return {
+    auth_token: authMatch?.[1] || "",
+    ct0: ct0Match?.[1] || "",
+  }
+}
+
 export function XTwitterSettings() {
+  const [rawCookie, setRawCookie] = useState("")
   const [authToken, setAuthToken] = useState("")
   const [ct0, setCt0] = useState("")
-  const [showAuthToken, setShowAuthToken] = useState(false)
-  const [showCt0, setShowCt0] = useState(false)
   const [isGuideOpen, setIsGuideOpen] = useState(true)
   const [status, setStatus] = useState<Status>("missing")
   const [lastTested, setLastTested] = useState<string | null>(null)
   const [username, setUsername] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
+  
+  const handlePaste = (value: string) => {
+    setRawCookie(value)
+    const parsed = parseCookies(value)
+    if (parsed.auth_token) setAuthToken(parsed.auth_token)
+    if (parsed.ct0) setCt0(parsed.ct0)
+  }
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -106,9 +121,6 @@ export function XTwitterSettings() {
     }
   };
 
-  const handleToggleAuthToken = () => setShowAuthToken(!showAuthToken)
-  const handleToggleCt0 = () => setShowCt0(!showCt0)
-
   const StatusIndicator = () => {
     switch (status) {
       case "valid":
@@ -169,9 +181,9 @@ export function XTwitterSettings() {
             <div className="flex items-start space-x-4 p-4 border rounded-md">
               <Check className="h-5 w-5 mt-1" />
               <div>
-                <p className="font-semibold">Step 4: Copy Values</p>
+                <p className="font-semibold">Step 4: Copy the whole cookie value</p>
                 <p className="text-sm text-muted-foreground">
-                  Find `auth_token=xxx` and `ct0=xxx` values, copy them below.
+                  Copy the entire <code className="bg-muted px-1 rounded">cookie:</code> header value and paste it below. We'll extract what we need automatically.
                 </p>
               </div>
             </div>
@@ -179,45 +191,27 @@ export function XTwitterSettings() {
         </Collapsible>
 
         <div className="space-y-2">
-          <Label htmlFor="auth_token">Auth Token</Label>
-          <div className="relative">
-            <Input
-              id="auth_token"
-              type={showAuthToken ? "text" : "password"}
-              value={authToken}
-              onChange={(e) => setAuthToken(e.target.value)}
-              placeholder="Your auth_token value"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-0 right-0 h-full"
-              onClick={handleToggleAuthToken}
-            >
-              {showAuthToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="ct0">ct0</Label>
-          <div className="relative">
-            <Input
-              id="ct0"
-              type={showCt0 ? "text" : "password"}
-              value={ct0}
-              onChange={(e) => setCt0(e.target.value)}
-              placeholder="Your ct0 value"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-0 right-0 h-full"
-              onClick={handleToggleCt0}
-            >
-              {showCt0 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
-          </div>
+          <Label htmlFor="raw-cookie">Paste cookie header</Label>
+          <textarea
+            id="raw-cookie"
+            value={rawCookie}
+            onChange={(e) => handlePaste(e.target.value)}
+            placeholder='Paste the full cookie: header value here (e.g. "des_opt_in=Y; auth_token=abc123; ct0=xyz789; ...")'
+            className="w-full min-h-[80px] text-xs font-mono bg-muted border rounded-md p-3 text-foreground placeholder:text-muted-foreground resize-y"
+          />
+          {(authToken || ct0) && (
+            <div className="text-xs space-y-1 p-3 bg-muted/50 rounded-md border">
+              <p className="font-semibold text-foreground mb-1">Parsed values:</p>
+              <p>
+                <span className="text-muted-foreground">auth_token:</span>{" "}
+                {authToken ? <span className="text-green-500">✅ {authToken.slice(0, 8)}...{authToken.slice(-4)}</span> : <span className="text-red-500">❌ not found</span>}
+              </p>
+              <p>
+                <span className="text-muted-foreground">ct0:</span>{" "}
+                {ct0 ? <span className="text-green-500">✅ {ct0.slice(0, 8)}...{ct0.slice(-4)}</span> : <span className="text-red-500">❌ not found</span>}
+              </p>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center space-x-2">
