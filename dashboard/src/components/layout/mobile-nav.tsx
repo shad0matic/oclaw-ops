@@ -17,8 +17,8 @@ import {
 const topItems = [
     { href: "/", label: "Overview", icon: LayoutDashboard },
     { href: "/lab", label: "Lab", icon: FlaskConical },
-    { href: "/costs", label: "Costs", icon: DollarSign },
     { href: "/tasks", label: "Kanban", icon: ListTodo },
+    { href: "/costs", label: "Costs", icon: DollarSign },
 ]
 
 const overflowItems = [
