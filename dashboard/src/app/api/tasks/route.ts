@@ -1,32 +1,19 @@
 export const dynamic = "force-dynamic"
-import { pool } from "@/lib/db"
-import { NextResponse } from "next/server"
-import { NextRequest } from "next/server"
+import { db } from "@/lib/drizzle"
+import { tasksInOps } from "@/lib/schema"
+import { desc, eq } from "drizzle-orm"
+import { NextRequest, NextResponse } from "next/server"
 
-// GET /api/tasks?status=in_progress
 export async function GET(request: NextRequest) {
-    const status = request.nextUrl.searchParams.get("status")
+  const status = request.nextUrl.searchParams.get("status")
 
-    try {
-        let query = `SELECT * FROM ops.tasks`
-        const values = []
-
-        if (status) {
-            query += ` WHERE status = $1`
-            values.push(status)
-        }
-
-        query += ` ORDER BY created_at DESC`
-
-        const tasksResult = await pool.query(query, values)
-        const tasks = tasksResult.rows.map(task => ({
-            ...task,
-            id: task.id.toString()
-        }))
-
-        return NextResponse.json(tasks)
-    } catch (error: any) {
-        console.error("Failed to fetch tasks", error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+  try {
+    let query = db.select().from(tasksInOps).$dynamic()
+    if (status) query = query.where(eq(tasksInOps.status, status))
+    const tasks = await query.orderBy(desc(tasksInOps.createdAt))
+    return NextResponse.json(tasks.map(t => ({ ...t, id: String(t.id) })))
+  } catch (error: any) {
+    console.error("Failed to fetch tasks", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }

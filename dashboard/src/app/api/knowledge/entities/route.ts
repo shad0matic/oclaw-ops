@@ -1,71 +1,42 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
-import { pool } from "@/lib/db"
+import { db } from "@/lib/drizzle"
+import { entitiesInMemory } from "@/lib/schema"
+import { desc, eq } from "drizzle-orm"
 
 export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const entityType = searchParams.get("entity_type")
 
-    const { searchParams } = new URL(req.url)
-    const entityType = searchParams.get("entity_type")
-
-    try {
-        let query = `SELECT * FROM memory.entities`
-        const values: any[] = []
-
-        if (entityType) {
-            query += ` WHERE entity_type = $1`
-            values.push(entityType)
-        }
-
-        query += ` ORDER BY created_at DESC LIMIT $${values.length + 1}`
-        values.push(100)
-        
-        const entitiesResult = await pool.query(query, values)
-
-        const entities = entitiesResult.rows.map(e => ({
-            ...e,
-            id: e.id.toString()
-        }))
-
-        return NextResponse.json(entities)
-    } catch (error) {
-        console.error("Failed to fetch entities", error)
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
-    }
+  try {
+    let query = db.select().from(entitiesInMemory).$dynamic()
+    if (entityType) query = query.where(eq(entitiesInMemory.entityType, entityType))
+    const entities = await query.orderBy(desc(entitiesInMemory.createdAt)).limit(100)
+    return NextResponse.json(entities.map(e => ({ ...e, id: String(e.id) })))
+  } catch (error) {
+    console.error("Failed to fetch entities", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  }
 }
 
 export async function POST(req: Request) {
+  try {
+    const body = await req.json()
+    const { name, entity_type, aliases, properties, first_seen_by } = body
 
-    try {
-        const body = await req.json()
-        const { name, entity_type, aliases, properties, first_seen_by } = body
+    if (!name) return NextResponse.json({ error: "name is required" }, { status: 400 })
 
-        if (!name) {
-            return NextResponse.json(
-                { error: "name is required" },
-                { status: 400 }
-            )
-        }
+    const [entity] = await db.insert(entitiesInMemory).values({
+      name,
+      entityType: entity_type || "unknown",
+      aliases: aliases || [],
+      properties: properties || {},
+      firstSeenBy: first_seen_by,
+    }).returning()
 
-        const entityResult = await pool.query(`
-            INSERT INTO memory.entities (name, entity_type, aliases, properties, first_seen_by)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING *
-        `, [
-            name,
-            entity_type || "unknown",
-            aliases || [],
-            properties || {},
-            first_seen_by
-        ])
-
-        const entity = entityResult.rows[0]
-
-        return NextResponse.json({
-            ...entity,
-            id: entity.id.toString()
-        })
-    } catch (error) {
-        console.error("Failed to create entity", error)
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
-    }
+    return NextResponse.json({ ...entity, id: String(entity.id) })
+  } catch (error) {
+    console.error("Failed to create entity", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  }
 }

@@ -1,53 +1,37 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
-import { pool } from "@/lib/db"
+import { db } from "@/lib/drizzle"
+import { mistakesInMemory } from "@/lib/schema"
+import { eq } from "drizzle-orm"
 import { parseNumericId } from "@/lib/validate"
 
 export async function PATCH(
-    req: Request,
-    { params }: { params: Promise<{ id: string }> }
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: rawId } = await params
+  const [id, idErr] = parseNumericId(rawId)
+  if (idErr) return idErr
 
-    const { id: rawId } = await params
-    const [id, idErr] = parseNumericId(rawId)
-    if (idErr) return idErr
+  try {
+    const body = await req.json()
+    const values: Partial<typeof mistakesInMemory.$inferInsert> = {}
 
-    try {
-        const body = await req.json()
-        const { resolved, lesson_learned } = body
+    if (body.resolved !== undefined) values.resolved = body.resolved
+    if (body.lesson_learned) values.lessonLearned = body.lesson_learned
 
-        const updates = []
-        const values = [id]
-
-        if (resolved !== undefined) {
-            updates.push(`resolved = $${values.length + 1}`)
-            values.push(resolved)
-        }
-        if (lesson_learned) {
-            updates.push(`lesson_learned = $${values.length + 1}`)
-            values.push(lesson_learned)
-        }
-
-        if (updates.length === 0) {
-            return NextResponse.json({ error: "No fields to update" }, { status: 400 })
-        }
-
-        const query = `
-            UPDATE ops.mistakes
-            SET ${updates.join(", ")}
-            WHERE id = $1
-            RETURNING *
-        `
-
-        const updatedResult = await pool.query(query, values)
-        const updated = updatedResult.rows[0]
-
-        return NextResponse.json({
-            ...updated,
-            id: updated.id.toString()
-        })
-    } catch (error) {
-        console.error("Failed to update mistake", error)
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+    if (Object.keys(values).length === 0) {
+      return NextResponse.json({ error: "No fields to update" }, { status: 400 })
     }
+
+    const [updated] = await db.update(mistakesInMemory)
+      .set(values)
+      .where(eq(mistakesInMemory.id, BigInt(id!)))
+      .returning()
+
+    return NextResponse.json({ ...updated, id: String(updated.id) })
+  } catch (error) {
+    console.error("Failed to update mistake", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  }
 }

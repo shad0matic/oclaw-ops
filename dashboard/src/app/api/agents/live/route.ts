@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic"
 
-import { pool } from "@/lib/db"
+import { pool } from "@/lib/drizzle"
 import { NextResponse } from "next/server"
 
 // GET /api/agents/live — returns live session data per agent from ops.live_sessions

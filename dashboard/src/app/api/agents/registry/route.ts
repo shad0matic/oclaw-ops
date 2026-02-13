@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
-import { pool } from "@/lib/db"
+import { pool } from "@/lib/drizzle"
 import { AgentEntity } from "@/entities/agent"
 import fs from "fs"
 import path from "path"

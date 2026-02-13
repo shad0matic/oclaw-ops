@@ -1,23 +1,17 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
-import { pool } from "@/lib/db"
+import { db } from "@/lib/drizzle"
+import { compoundsInMemory } from "@/lib/schema"
+import { desc } from "drizzle-orm"
 
-export async function GET(req: Request) {
-
-    try {
-        const compoundsResult = await pool.query(`
-            SELECT * FROM memory.compounds
-            ORDER BY period_start DESC
-            LIMIT 50
-        `)
-        const compounds = compoundsResult.rows
-
-        return NextResponse.json(compounds.map(c => ({
-            ...c,
-            id: c.id.toString()
-        })))
-    } catch (error) {
-        console.error("Failed to fetch compounds", error)
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
-    }
+export async function GET() {
+  try {
+    const compounds = await db.select().from(compoundsInMemory)
+      .orderBy(desc(compoundsInMemory.periodStart))
+      .limit(50)
+    return NextResponse.json(compounds.map(c => ({ ...c, id: String(c.id) })))
+  } catch (error) {
+    console.error("Failed to fetch compounds", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  }
 }

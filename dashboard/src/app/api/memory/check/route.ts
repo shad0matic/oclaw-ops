@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic"
-import { pool } from "@/lib/db"
+import { pool } from "@/lib/drizzle"
 import { NextResponse } from "next/server"
 import { readFileSync, existsSync, readdirSync } from "fs"
 import { join } from "path"

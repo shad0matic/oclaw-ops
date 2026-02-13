@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import { NextResponse } from "next/server"
-import { pool } from "@/lib/db"
+import { pool } from "@/lib/drizzle"
 import { getCpuLoad, getMemStats, getUptime, getDashboardUptime, getLoadAvg, getCoreCount } from "@/lib/system-stats"
 
 interface TaskTree {

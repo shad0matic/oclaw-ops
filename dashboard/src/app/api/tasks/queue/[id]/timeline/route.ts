@@ -1,21 +1,25 @@
 export const dynamic = "force-dynamic"
-import { pool } from "@/lib/db"
+import { db } from "@/lib/drizzle"
+import { agentEventsInOps } from "@/lib/schema"
+import { eq, asc } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 
-// GET /api/tasks/queue/[id]/timeline — get activity timeline for a task
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params
-    const numId = Number(id)
-    if (!Number.isInteger(numId) || numId <= 0) {
-        return NextResponse.json({ error: "Invalid task ID" }, { status: 400 })
-    }
+  const { id } = await params
+  const numId = Number(id)
+  if (!Number.isInteger(numId) || numId <= 0) {
+    return NextResponse.json({ error: "Invalid task ID" }, { status: 400 })
+  }
 
-    const { rows } = await pool.query(`
-        SELECT event_type, agent_id, detail, created_at
-        FROM ops.agent_events
-        WHERE task_id = $1
-        ORDER BY created_at ASC
-    `, [numId])
+  const rows = await db.select({
+    eventType: agentEventsInOps.eventType,
+    agentId: agentEventsInOps.agentId,
+    detail: agentEventsInOps.detail,
+    createdAt: agentEventsInOps.createdAt,
+  })
+    .from(agentEventsInOps)
+    .where(eq(agentEventsInOps.taskId, numId))
+    .orderBy(asc(agentEventsInOps.createdAt))
 
-    return NextResponse.json(rows)
+  return NextResponse.json(rows)
 }

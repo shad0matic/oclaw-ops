@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from "next/server"
-import { pool } from "@/lib/db"
+import { pool } from "@/lib/drizzle"
 import { parseNumericId } from "@/lib/validate"
 
 export async function GET(

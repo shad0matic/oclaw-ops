@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { getCpuLoad, getMemStats, getUptime } from "@/lib/system-stats"
 import { readFileSync } from "fs"
-import { pool } from "@/lib/db"
+import { pool } from "@/lib/drizzle"
 
 function getDiskStats() {
     try {

@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic"
-import { pool } from "@/lib/db"
+import { pool } from "@/lib/drizzle"
 import { NextRequest, NextResponse } from "next/server"
 
 // GET /api/costs?days=30

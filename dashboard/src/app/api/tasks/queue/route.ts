@@ -1,54 +1,59 @@
 export const dynamic = "force-dynamic"
-import { pool } from "@/lib/db"
+import { db } from "@/lib/drizzle"
+import { taskQueueInOps, agentProfilesInMemory } from "@/lib/schema"
+import { eq, and, asc, sql, SQL } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 
-// GET /api/tasks/queue?project=infra&status=queued
 export async function GET(request: NextRequest) {
-    const project = request.nextUrl.searchParams.get("project")
-    const status = request.nextUrl.searchParams.get("status")
+  const project = request.nextUrl.searchParams.get("project")
+  const status = request.nextUrl.searchParams.get("status")
 
-    let where = "WHERE 1=1"
-    const params: any[] = []
-    if (project) { params.push(project); where += ` AND q.project = $${params.length}` }
-    if (status) { params.push(status); where += ` AND q.status = $${params.length}` }
+  const conditions: SQL[] = []
+  if (project) conditions.push(eq(taskQueueInOps.project, project))
+  if (status) conditions.push(eq(taskQueueInOps.status, status))
 
-    const { rows } = await pool.query(`
-        SELECT q.*, p.name as agent_name
-        FROM ops.task_queue q
-        LEFT JOIN memory.agent_profiles p ON p.agent_id = q.agent_id
-        ${where}
-        ORDER BY 
-            CASE q.status WHEN 'running' THEN 0 WHEN 'assigned' THEN 1 WHEN 'planned' THEN 2 WHEN 'queued' THEN 3 ELSE 4 END,
-            q.priority ASC, q.created_at ASC
-    `, params)
+  const rows = await db.select({
+    task: taskQueueInOps,
+    agentName: agentProfilesInMemory.name,
+  })
+    .from(taskQueueInOps)
+    .leftJoin(agentProfilesInMemory, eq(agentProfilesInMemory.agentId, taskQueueInOps.agentId))
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(
+      sql`CASE ${taskQueueInOps.status} WHEN 'running' THEN 0 WHEN 'assigned' THEN 1 WHEN 'planned' THEN 2 WHEN 'queued' THEN 3 ELSE 4 END`,
+      asc(taskQueueInOps.priority),
+      asc(taskQueueInOps.createdAt),
+    )
 
-    const tasks = rows.map((r: any) => ({
-        ...r,
-        id: Number(r.id),
-        priority: Number(r.priority),
-    }))
+  const tasks = rows.map(({ task, agentName }) => ({
+    ...task,
+    id: Number(task.id),
+    priority: Number(task.priority),
+    agent_name: agentName,
+  }))
 
-    return NextResponse.json(tasks)
+  return NextResponse.json(tasks)
 }
 
-// POST /api/tasks/queue — create a new task
 export async function POST(request: NextRequest) {
-    const body = await request.json()
-    const { title, description, project = "infra", agentId, priority = 5, status: requestedStatus } = body
+  const body = await request.json()
+  const { title, description, project = "infra", agentId, priority = 5, status: requestedStatus } = body
 
-    if (!title) return NextResponse.json({ error: "title required" }, { status: 400 })
+  if (!title) return NextResponse.json({ error: "title required" }, { status: 400 })
 
-    // Determine status: use requested status if valid, otherwise infer from agentId
-    const validStatuses = ['queued', 'planned', 'assigned', 'running', 'review', 'human_todo', 'done']
-    const finalStatus = requestedStatus && validStatuses.includes(requestedStatus)
-      ? requestedStatus
-      : agentId ? 'assigned' : 'queued'
+  const validStatuses = ['queued', 'planned', 'assigned', 'running', 'review', 'human_todo', 'done']
+  const finalStatus = requestedStatus && validStatuses.includes(requestedStatus)
+    ? requestedStatus
+    : agentId ? 'assigned' : 'queued'
 
-    const { rows } = await pool.query(`
-        INSERT INTO ops.task_queue (title, description, project, agent_id, priority, status)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING *
-    `, [title, description || null, project, agentId || null, priority, finalStatus])
+  const [row] = await db.insert(taskQueueInOps).values({
+    title,
+    description: description || null,
+    project,
+    agentId: agentId || null,
+    priority,
+    status: finalStatus,
+  }).returning()
 
-    return NextResponse.json({ ...rows[0], id: Number(rows[0].id) }, { status: 201 })
+  return NextResponse.json({ ...row, id: Number(row.id) }, { status: 201 })
 }

@@ -1,36 +1,23 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
-import { pool } from "@/lib/db"
+import { db } from "@/lib/drizzle"
+import { agentEventsInOps } from "@/lib/schema"
+import { desc, eq } from "drizzle-orm"
 
 export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const limit = parseInt(searchParams.get("limit") || "20")
+  const agentId = searchParams.get("agent_id")
 
-    const { searchParams } = new URL(req.url)
-    const limit = parseInt(searchParams.get("limit") || "20")
-    const agentId = searchParams.get("agent_id")
-
-    try {
-        let query = `
-            SELECT * FROM ops.agent_events
-        `
-        const values = []
-
-        if (agentId) {
-            query += ` WHERE agent_id = $1`
-            values.push(agentId)
-        }
-
-        query += ` ORDER BY created_at DESC LIMIT $${values.length + 1}`
-        values.push(limit)
-
-        const eventsResult = await pool.query(query, values)
-        const events = eventsResult.rows.map(event => ({
-            ...event,
-            id: Number(event.id)
-        }))
-
-        return NextResponse.json(events)
-    } catch (error) {
-        console.error("Failed to fetch events", error)
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  try {
+    let query = db.select().from(agentEventsInOps).$dynamic()
+    if (agentId) {
+      query = query.where(eq(agentEventsInOps.agentId, agentId))
     }
+    const events = await query.orderBy(desc(agentEventsInOps.createdAt)).limit(limit)
+    return NextResponse.json(events.map(e => ({ ...e, id: Number(e.id) })))
+  } catch (error) {
+    console.error("Failed to fetch events", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  }
 }

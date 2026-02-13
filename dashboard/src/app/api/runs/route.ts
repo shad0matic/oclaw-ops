@@ -1,52 +1,40 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
-import { pool } from "@/lib/db"
+import { db } from "@/lib/drizzle"
+import { runsInOps, workflowsInOps } from "@/lib/schema"
+import { desc, eq, and, SQL } from "drizzle-orm"
 
 export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const limit = parseInt(searchParams.get("limit") || "20")
+  const status = searchParams.get("status")
+  const workflowId = searchParams.get("workflow_id")
 
-    const { searchParams } = new URL(req.url)
-    const limit = parseInt(searchParams.get("limit") || "20")
-    const status = searchParams.get("status")
-    const workflowId = searchParams.get("workflow_id")
+  try {
+    const conditions: SQL[] = []
+    if (status) conditions.push(eq(runsInOps.status, status))
+    if (workflowId) conditions.push(eq(runsInOps.workflowId, parseInt(workflowId)))
 
-    try {
-        let query = `
-            SELECT r.*, w.name as workflow_name
-            FROM ops.runs r
-            LEFT JOIN ops.workflows w ON r.workflow_id = w.id
-        `
-        const values = []
-        const whereClauses = []
+    const rows = await db.select({
+      run: runsInOps,
+      workflowName: workflowsInOps.name,
+    })
+      .from(runsInOps)
+      .leftJoin(workflowsInOps, eq(runsInOps.workflowId, workflowsInOps.id))
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(desc(runsInOps.createdAt))
+      .limit(limit)
 
-        if (status) {
-            whereClauses.push(`r.status = $${values.length + 1}`)
-            values.push(status)
-        }
-        if (workflowId) {
-            whereClauses.push(`r.workflow_id = $${values.length + 1}`)
-            values.push(parseInt(workflowId))
-        }
+    const runs = rows.map(({ run, workflowName }) => ({
+      ...run,
+      id: String(run.id),
+      workflow_id: String(run.workflowId),
+      workflows: { name: workflowName },
+    }))
 
-        if (whereClauses.length > 0) {
-            query += ` WHERE ${whereClauses.join(" AND ")}`
-        }
-        
-        query += ` ORDER BY r.created_at DESC LIMIT $${values.length + 1}`
-        values.push(limit)
-
-        const runsResult = await pool.query(query, values)
-        const runs = runsResult.rows.map(run => ({
-            ...run,
-            id: run.id.toString(),
-            workflow_id: run.workflow_id.toString(),
-            workflows: {
-                name: run.workflow_name
-            }
-        }))
-
-        return NextResponse.json(runs)
-    } catch (error) {
-        console.error("Failed to fetch runs", error)
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
-    }
+    return NextResponse.json(runs)
+  } catch (error) {
+    console.error("Failed to fetch runs", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  }
 }
