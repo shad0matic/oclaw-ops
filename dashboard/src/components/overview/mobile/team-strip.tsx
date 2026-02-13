@@ -79,7 +79,7 @@ export function TeamStrip({ agents, onAgentClick }: TeamStripProps) {
                     agent.status === 'zombie' && "ring-red-500 motion-safe:animate-pulse"
                   )}
                 >
-                  <AvatarImage src={`/assets/minion-avatars/${agent.id}.webp`} alt={agent.name} />
+                  <AvatarImage src={`/assets/minion-avatars/${agent.id}.webp`} alt={agent.name} onError={(e) => { (e.target as HTMLImageElement).src = "/assets/minion-avatars/default.webp" }} />
                   <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                     {initials}
                   </AvatarFallback>

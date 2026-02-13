@@ -45,7 +45,7 @@ export function LiveCardMobile({ task }: LiveCardMobileProps) {
       >
         <div className="flex items-start gap-3">
           <Avatar className="h-10 w-10 border-2 border-background shrink-0">
-            <AvatarImage src={`/assets/minion-avatars/${task.agentId}.webp`} alt={task.agentName} />
+            <AvatarImage src={`/assets/minion-avatars/${task.agentId}.webp`} alt={task.agentName} onError={(e) => { (e.target as HTMLImageElement).src = "/assets/minion-avatars/default.webp" }} />
             <AvatarFallback className="bg-muted text-muted-foreground text-xs">
               {initials}
             </AvatarFallback>
