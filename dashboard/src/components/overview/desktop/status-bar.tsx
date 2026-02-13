@@ -5,6 +5,7 @@ import { AgentStatusDot } from "../shared/agent-status-dot"
 import { CostDisplay } from "../shared/cost-display"
 import { ResearchToggle } from "./research-toggle"
 import { cn } from "@/lib/utils"
+import { MiniGauge } from "./mini-gauge"
 
 // --- Merged from LiveMetricsBar ---
 
@@ -239,18 +240,21 @@ export function StatusBar({
       {/* Spacer to push metrics and toggle to the right */}
       <div className="flex-grow" />
 
-      {/* System Resources */}
+      {/* System Resources — Gauges + Sparklines */}
       {latestData && (
-        <div className="flex items-center gap-6 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Sparkline data={cpuHistory} lastValue={latestData.cpu}/>
-              <span className="w-16 text-right font-mono">CPU {latestData.cpu.toFixed(0)}%</span>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <MiniGauge value={latestData.cpu} label="CPU" size={44} />
+              <Sparkline data={cpuHistory} lastValue={latestData.cpu} width={100} height={20}/>
             </div>
-            <div className="flex items-center gap-2">
-               <Sparkline data={memHistory} lastValue={latestData.memPercent}/>
-               <span className="w-28 text-right font-mono">
-                RAM {formatBytes(latestData.memUsed)}
-              </span>
+            <div className="flex items-center gap-1.5">
+              <MiniGauge
+                value={latestData.memPercent}
+                label="RAM"
+                detail={`${formatBytes(latestData.memUsed)}/${formatBytes(latestData.memTotal)}`}
+                size={44}
+              />
+              <Sparkline data={memHistory} lastValue={latestData.memPercent} width={100} height={20}/>
             </div>
         </div>
       )}
