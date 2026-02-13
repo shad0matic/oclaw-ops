@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import si from "systeminformation"
 
 interface TaskTree {
@@ -43,49 +43,45 @@ export async function GET() {
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
     // Parallel DB queries
-    const [agents, runningRuns, pipelineRaw, recentEvents, dailyCostRaw, zombieEvents, suspectedZombies] = await Promise.all([
+    const [
+      { rows: agents },
+      { rows: runningRuns },
+      { rows: pipelineRaw },
+      { rows: recentEvents },
+      { rows: dailyCostRows },
+      { rows: zombieEvents },
+      { rows: suspectedZombies },
+    ] = await Promise.all([
       // All agents with profiles
-      prisma.agent_profiles.findMany({ orderBy: { agent_id: 'asc' } }),
+      pool.query("SELECT * FROM memory.agent_profiles ORDER BY agent_id ASC"),
 
       // Currently running tasks
-      prisma.runs.findMany({
-        where: { status: 'running' },
-        orderBy: { started_at: 'desc' }
-      }),
+      pool.query("SELECT * FROM ops.runs WHERE status = 'running' ORDER BY started_at DESC"),
 
       // Pipeline stats (last 24h)
-      prisma.agent_events.groupBy({
-        by: ['event_type'],
-        where: {
-          event_type: { in: ['task_start', 'task_complete', 'task_fail'] },
-          created_at: { gte: last24h }
-        },
-        _count: true
-      }),
+      pool.query(`
+        SELECT event_type, COUNT(*)::int as count
+        FROM ops.agent_events
+        WHERE event_type IN ('task_start', 'task_complete', 'task_fail')
+          AND created_at >= $1
+        GROUP BY event_type
+      `, [last24h]),
 
       // Recent events (last 50)
-      prisma.agent_events.findMany({
-        orderBy: { created_at: 'desc' },
-        take: 50,
-        where: { created_at: { gte: last24h } }
-      }),
+      pool.query('SELECT * FROM ops.agent_events WHERE created_at >= $1 ORDER BY created_at DESC LIMIT 50', [last24h]),
 
       // Today's cost
-      prisma.agent_events.aggregate({
-        where: { created_at: { gte: todayStart }, cost_usd: { not: null } },
-        _sum: { cost_usd: true }
-      }),
+      pool.query('SELECT SUM(cost_usd) as cost_usd FROM ops.agent_events WHERE created_at >= $1 AND cost_usd IS NOT NULL', [todayStart]),
 
       // Recent zombie kills (last 15 min for avatar overlay)
-      prisma.agent_events.findMany({
-        where: {
-          event_type: 'zombie_killed',
-          created_at: { gte: new Date(now.getTime() - 15 * 60 * 1000) }
-        }
-      }),
+      pool.query(`
+        SELECT * FROM ops.agent_events
+        WHERE event_type = 'zombie_killed'
+          AND created_at >= $1
+      `, [new Date(now.getTime() - 15 * 60 * 1000)]),
       
       // Suspected Zombies
-      prisma.$queryRawUnsafe(`
+      pool.query(`
         WITH last_event AS (
             SELECT
                 session_id,
@@ -113,11 +109,13 @@ export async function GET() {
         FROM last_event le
         JOIN last_heartbeat lh ON le.session_id = lh.session_id
         JOIN ops.runs r ON r.session_key = le.session_id
-        JOIN ops.agent_profiles a ON r.agent_id = a.id
+        JOIN memory.agent_profiles a ON r.agent_id = a.agent_id
         WHERE lh.last_heartbeat_time > le.last_event_time + INTERVAL '5 minutes'
         AND r.ended_at IS NULL;
       `)
     ])
+    
+    const dailyCost = dailyCostRows[0]?.cost_usd || 0
 
     // Build task trees from running runs
     const nowMs = now.getTime()
@@ -137,13 +135,12 @@ export async function GET() {
     }))
 
     // Enrich with spawn relationships from agent_events
-    const recentStarts = await prisma.agent_events.findMany({
-      where: {
-        event_type: 'task_start',
-        created_at: { gte: oneHourAgo }
-      },
-      orderBy: { created_at: 'desc' }
-    })
+    const { rows: recentStarts } = await pool.query(`
+      SELECT * FROM ops.agent_events
+      WHERE event_type = 'task_start'
+        AND created_at >= $1
+      ORDER BY created_at DESC
+    `, [oneHourAgo])
 
     for (const task of flatTasks) {
       const startEvent = recentStarts.find((e: any) =>
@@ -208,7 +205,7 @@ export async function GET() {
           e.agent_id === agent.agent_id &&
           ['task_complete', 'task_fail'].includes(e.event_type) &&
           e.created_at && lastStart.created_at &&
-          e.created_at >= lastStart.created_at
+          new Date(e.created_at) >= new Date(lastStart.created_at)
         )
         if (!hasCompletion) {
           status = 'active'
@@ -231,7 +228,7 @@ export async function GET() {
     })
 
     // Pipeline stats
-    const pipelineMap = Object.fromEntries(pipelineRaw.map((p: any) => [p.event_type, p._count]))
+    const pipelineMap = Object.fromEntries(pipelineRaw.map((p: any) => [p.event_type, p.count]))
     const completed = pipelineMap['task_complete'] || 0
     const failed = pipelineMap['task_fail'] || 0
     const started = pipelineMap['task_start'] || 0
@@ -271,7 +268,7 @@ export async function GET() {
       },
       team: enrichedAgents,
       pipeline,
-      dailyCost: Number(dailyCostRaw._sum.cost_usd) || 0,
+      dailyCost: Number(dailyCost) || 0,
       recentEvents: serializedEvents,
       zombies: suspectedZombies
     })
