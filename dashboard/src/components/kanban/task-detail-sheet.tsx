@@ -88,12 +88,15 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: Detail
   const renderStatusTransitions = (task: QueueTask) => {
     const buttons = [];
     switch (task.status) {
+        case 'queued':
         case 'backlog':
-            buttons.push({ action: 'plan', label: 'Plan' });
+            buttons.push({ action: 'plan', label: '📋 Plan' });
+            buttons.push({ action: 'run', label: '▶️ Run Now' });
             break;
         case 'planned':
-            buttons.push({ action: 'run', label: 'Run' });
-            buttons.push({ action: 'requeue', label: 'Back to Backlog' });
+        case 'assigned':
+            buttons.push({ action: 'run', label: '▶️ Run' });
+            buttons.push({ action: 'requeue', label: '↩️ Back to Backlog' });
             break;
         case 'running':
             buttons.push({ action: 'review', label: 'Finish for Review' });
