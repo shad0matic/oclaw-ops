@@ -14,8 +14,8 @@ sleep 2
 pkill -f "next start -p 3100" 2>/dev/null || true
 sleep 1
 
-echo "Building..."
-rm -rf .next/lock
+echo "Building (clean)..."
+rm -rf .next
 npx next build
 
 echo "Starting dashboard..."
