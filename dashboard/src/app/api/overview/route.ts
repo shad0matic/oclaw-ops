@@ -84,22 +84,22 @@ export async function GET() {
       pool.query(`
         WITH last_event AS (
             SELECT
-                session_id,
+                session_key,
                 MAX(created_at) AS last_event_time
             FROM ops.agent_events
             WHERE event_type <> 'heartbeat'
-            GROUP BY session_id
+            GROUP BY session_key
         ),
         last_heartbeat AS (
             SELECT
-                session_id,
+                session_key,
                 MAX(created_at) AS last_heartbeat_time
             FROM ops.agent_events
             WHERE event_type = 'heartbeat'
-            GROUP BY session_id
+            GROUP BY session_key
         )
         SELECT
-            le.session_id AS "sessionId",
+            le.session_key AS "sessionId",
             a.id as "agentId",
             a.name as "agentName",
             'suspected' as "status",
@@ -107,8 +107,8 @@ export async function GET() {
             'no_activity' AS "heuristic",
             json_build_object('last_event_time', le.last_event_time, 'last_heartbeat_time', lh.last_heartbeat_time) AS "details"
         FROM last_event le
-        JOIN last_heartbeat lh ON le.session_id = lh.session_id
-        JOIN ops.runs r ON r.session_key = le.session_id
+        JOIN last_heartbeat lh ON le.session_key = lh.session_key
+        JOIN ops.runs r ON r.session_key = le.session_key
         JOIN memory.agent_profiles a ON r.agent_id = a.agent_id
         WHERE lh.last_heartbeat_time > le.last_event_time + INTERVAL '5 minutes'
         AND r.ended_at IS NULL;
