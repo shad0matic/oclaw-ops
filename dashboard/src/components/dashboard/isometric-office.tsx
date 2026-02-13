@@ -1,6 +1,7 @@
 "use client"
 
 import React from 'react'
+import useSWR from 'swr'
 
 // --- Types ---
 type AgentStatus = 'idle' | 'active' | 'zombie' | 'dead'
@@ -18,37 +19,58 @@ interface Agent {
   status: AgentStatus
   currentTask?: string
   subSpawns?: SubSpawn[]
+  trustScore?: number
 }
 
-// --- Mock Data ---
-const mockAgents: Agent[] = [
-  { id: 'kevin', name: 'Kevin', emoji: '🍌', status: 'active', currentTask: 'Planning feature pack', subSpawns: [
-    { id: 'sub-1', name: 'Cost Audit', status: 'active' }
-  ]},
-  { id: 'nefario', name: 'Dr. Nefario', emoji: '🔬', status: 'active', currentTask: 'Researching cost estimation' },
-  { id: 'bob', name: 'Bob', emoji: '🎨', status: 'idle' },
-  { id: 'xreader', name: 'X Reader', emoji: '📰', status: 'zombie' },
-]
+type AgentRegistryItem = {
+  id: string
+  name: string
+  status: 'active' | 'idle' | 'zombie'
+  currentTask?: string
+  level?: number
+  trustScore?: number
+  avatarUrl?: string
+}
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+const AGENT_EMOJI: Record<string, string> = {
+  main: '🍌',
+  bob: '🎨',
+  nefario: '🔬',
+  phil: '🐊',
+  mel: '🚔',
+  dave: '💰',
+  stuart: '🔒',
+  xreader: '📰',
+}
 
 // --- Room definitions (isometric diamond shapes) ---
 const ROOMS = {
-  lounge:   { cx: 150, cy: 380, w: 200, h: 120, label: '🛋️ Idle Lounge', color: '#3f3f46' },
-  active:   { cx: 400, cy: 250, w: 280, h: 160, label: '💻 Active Room', color: '#854d0e' },
-  warRoom:  { cx: 650, cy: 120, w: 180, h: 110, label: '⚔️ War Room', color: '#991b1b' },
-  graveyard:{ cx: 650, cy: 400, w: 120, h: 80, label: '🪦 Graveyard', color: '#27272a' },
+  lounge: { cx: 150, cy: 380, w: 200, h: 120, label: '🛋️ Idle Lounge', color: '#3f3f46' },
+  active: { cx: 400, cy: 250, w: 280, h: 160, label: '💻 Active Room', color: '#854d0e' },
+  warRoom: { cx: 650, cy: 120, w: 180, h: 110, label: '⚔️ War Room', color: '#991b1b' },
+  graveyard: { cx: 650, cy: 400, w: 120, h: 80, label: '🪦 Graveyard', color: '#27272a' },
 }
 
-// Map status to room
-const STATUS_ROOM: Record<AgentStatus, keyof typeof ROOMS> = {
-  idle: 'lounge',
-  active: 'active',
-  zombie: 'active', // zombies are in active room with alarm
-  dead: 'graveyard',
+function getRoomForAgent(agent: Agent): keyof typeof ROOMS {
+  if (typeof agent.trustScore === 'number' && agent.trustScore < 0.3) return 'warRoom'
+
+  switch (agent.status) {
+    case 'active':
+      return 'active'
+    case 'idle':
+      return 'lounge'
+    case 'zombie':
+    case 'dead':
+    default:
+      return 'graveyard'
+  }
 }
 
 // Isometric diamond path from center point
 function diamondPath(cx: number, cy: number, w: number, h: number) {
-  return `M ${cx} ${cy - h/2} L ${cx + w/2} ${cy} L ${cx} ${cy + h/2} L ${cx - w/2} ${cy} Z`
+  return `M ${cx} ${cy - h / 2} L ${cx + w / 2} ${cy} L ${cx} ${cy + h / 2} L ${cx - w / 2} ${cy} Z`
 }
 
 // Position agents within a room, spread evenly
@@ -73,7 +95,7 @@ function Room({ roomKey }: { roomKey: keyof typeof ROOMS }) {
         strokeWidth={1.5}
         strokeOpacity={0.6}
       />
-      <text x={r.cx} y={r.cy - r.h/2 + 18} fill="#a1a1aa" fontSize={11} textAnchor="middle" fontWeight="bold">
+      <text x={r.cx} y={r.cy - r.h / 2 + 18} fill="#a1a1aa" fontSize={11} textAnchor="middle" fontWeight="bold">
         {r.label}
       </text>
     </g>
@@ -102,8 +124,14 @@ function AgentSprite({ agent, x, y }: { agent: Agent; x: number; y: number }) {
       )}
 
       {/* Agent emoji */}
-      <text x={x} y={y} fontSize={28} textAnchor="middle" dominantBaseline="central"
-        style={{ filter: isZombie ? 'saturate(0.3) brightness(0.6)' : 'none' }}>
+      <text
+        x={x}
+        y={y}
+        fontSize={28}
+        textAnchor="middle"
+        dominantBaseline="central"
+        style={{ filter: isZombie ? 'saturate(0.3) brightness(0.6)' : 'none' }}
+      >
         {agent.emoji}
       </text>
 
@@ -130,8 +158,15 @@ function AgentSprite({ agent, x, y }: { agent: Agent; x: number; y: number }) {
       {agent.subSpawns?.map((sub, i) => (
         <g key={sub.id}>
           {/* Dotted line to parent */}
-          <line x1={x + 20} y1={y} x2={x + 40 + i * 30} y2={y - 15}
-            stroke="#71717a" strokeWidth={1} strokeDasharray="3,3" />
+          <line
+            x1={x + 20}
+            y1={y}
+            x2={x + 40 + i * 30}
+            y2={y - 15}
+            stroke="#71717a"
+            strokeWidth={1}
+            strokeDasharray="3,3"
+          />
           {/* Mini bubble */}
           <circle cx={x + 40 + i * 30} cy={y - 15} r={12} fill="#27272a" stroke="#3f3f46" strokeWidth={1} />
           <text x={x + 40 + i * 30} y={y - 15} fontSize={10} textAnchor="middle" dominantBaseline="central">
@@ -151,25 +186,51 @@ function IsoGrid() {
   const lines = []
   for (let i = 0; i < 10; i++) {
     const y = 50 + i * 45
-    lines.push(
-      <line key={`h${i}`} x1={50} y1={y} x2={750} y2={y} stroke="#27272a" strokeWidth={0.5} />
-    )
+    lines.push(<line key={`h${i}`} x1={50} y1={y} x2={750} y2={y} stroke="#27272a" strokeWidth={0.5} />)
   }
   for (let i = 0; i < 12; i++) {
     const x = 50 + i * 65
-    lines.push(
-      <line key={`v${i}`} x1={x} y1={50} x2={x} y2={460} stroke="#27272a" strokeWidth={0.5} />
-    )
+    lines.push(<line key={`v${i}`} x1={x} y1={50} x2={x} y2={460} stroke="#27272a" strokeWidth={0.5} />)
   }
   return <g opacity={0.4}>{lines}</g>
+}
+
+function IsometricOfficeSkeleton() {
+  return (
+    <div className="w-full bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="relative w-full" style={{ minHeight: 400 }}>
+        <div className="absolute inset-0 bg-zinc-950" />
+        <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
+          <div className="shimmer" />
+        </div>
+      </div>
+      <style jsx>{`
+        .shimmer {
+          width: 200%;
+          height: 100%;
+          background: linear-gradient(90deg, rgba(24, 24, 27, 0) 0%, rgba(63, 63, 70, 0.35) 50%, rgba(24, 24, 27, 0) 100%);
+          transform: translateX(-50%);
+          animation: shimmer 1.25s infinite;
+        }
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-60%);
+          }
+          100% {
+            transform: translateX(10%);
+          }
+        }
+      `}</style>
+    </div>
+  )
 }
 
 // --- Main Component ---
 export function IsometricOffice({ agents }: { agents: Agent[] }) {
   // Group agents by their target room
   const agentsByRoom: Record<string, Agent[]> = {}
-  agents.forEach(a => {
-    const room = STATUS_ROOM[a.status]
+  agents.forEach((a) => {
+    const room = getRoomForAgent(a)
     if (!agentsByRoom[room]) agentsByRoom[room] = []
     agentsByRoom[room].push(a)
   })
@@ -184,15 +245,15 @@ export function IsometricOffice({ agents }: { agents: Agent[] }) {
         <IsoGrid />
 
         {/* Rooms */}
-        {(Object.keys(ROOMS) as (keyof typeof ROOMS)[]).map(key => (
+        {(Object.keys(ROOMS) as (keyof typeof ROOMS)[]).map((key) => (
           <Room key={key} roomKey={key} />
         ))}
 
         {/* Agents */}
-        {agents.map(agent => {
-          const room = STATUS_ROOM[agent.status]
+        {agents.map((agent) => {
+          const room = getRoomForAgent(agent)
           const roomAgents = agentsByRoom[room] || []
-          const index = roomAgents.findIndex(a => a.id === agent.id)
+          const index = roomAgents.findIndex((a) => a.id === agent.id)
           const pos = getAgentPos(room, index, roomAgents.length)
           return <AgentSprite key={agent.id} agent={agent} x={pos.x} y={pos.y} />
         })}
@@ -207,5 +268,28 @@ export function IsometricOffice({ agents }: { agents: Agent[] }) {
 }
 
 export function IsometricOfficeWrapper() {
-  return <IsometricOffice agents={mockAgents} />
+  const { data, error, isLoading } = useSWR<AgentRegistryItem[]>('/api/agents/registry', fetcher, {
+    refreshInterval: 10000,
+  })
+
+  if (isLoading && !data) return <IsometricOfficeSkeleton />
+
+  if (error) {
+    return (
+      <div className="w-full bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden" style={{ minHeight: 400 }}>
+        <div className="p-4 text-sm text-red-400">Failed to load agents.</div>
+      </div>
+    )
+  }
+
+  const agents: Agent[] = (data || []).map((a) => ({
+    id: a.id,
+    name: a.name,
+    emoji: AGENT_EMOJI[a.id] || '👤',
+    status: a.status,
+    currentTask: a.currentTask,
+    trustScore: a.trustScore,
+  }))
+
+  return <IsometricOffice agents={agents} />
 }
