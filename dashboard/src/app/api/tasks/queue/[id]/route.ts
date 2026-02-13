@@ -16,10 +16,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             )
             break
         case "run":
-            await pool.query(
-                `UPDATE ops.task_queue SET status = 'running', started_at = now() WHERE id = $1`,
-                [id]
-            )
+            if (agentId) {
+                await pool.query(
+                    `UPDATE ops.task_queue SET status = 'running', agent_id = $2, started_at = now() WHERE id = $1`,
+                    [id, agentId]
+                )
+            } else {
+                await pool.query(
+                    `UPDATE ops.task_queue SET status = 'running', started_at = now() WHERE id = $1`,
+                    [id]
+                )
+            }
             break
         case "complete":
             await pool.query(
@@ -79,6 +86,24 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                     `UPDATE ops.task_queue SET status = 'running', review_feedback = $2 WHERE id = $1`,
                     [id, reviewFeedback]
                 )
+            }
+            break
+        case "update":
+            {
+                const { fields } = body
+                if (!fields || typeof fields !== 'object') return NextResponse.json({ error: "fields required" }, { status: 400 })
+                const allowed = ['title', 'description', 'priority', 'project', 'agent_id']
+                const sets: string[] = []
+                const vals: any[] = []
+                for (const [k, v] of Object.entries(fields)) {
+                    if (allowed.includes(k)) {
+                        vals.push(v)
+                        sets.push(`${k} = $${vals.length + 1}`)
+                    }
+                }
+                if (sets.length === 0) return NextResponse.json({ error: "no valid fields" }, { status: 400 })
+                vals.unshift(id)
+                await pool.query(`UPDATE ops.task_queue SET ${sets.join(', ')} WHERE id = $1`, vals)
             }
             break
         default:

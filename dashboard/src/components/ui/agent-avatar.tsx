@@ -8,13 +8,14 @@ interface AgentAvatarProps {
     agentId: string
     fallbackText?: string
     className?: string
+    size?: number
 }
 
-export function AgentAvatar({ agentId, fallbackText, className }: AgentAvatarProps) {
+export function AgentAvatar({ agentId, fallbackText, className, size }: AgentAvatarProps) {
     const [src, setSrc] = useState(`/assets/minion-avatars/${agentId}.webp`)
 
     return (
-        <Avatar className={cn("border border-border", className)}>
+        <Avatar className={cn("border border-border", className)} style={size ? { width: size, height: size } : undefined}>
             <AvatarImage
                 src={src}
                 onError={() => setSrc("/assets/minion-avatars/default.webp")}

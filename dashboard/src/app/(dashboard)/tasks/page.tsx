@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Filter, RefreshCw } from "lucide-react";
+import { Filter, RefreshCw, Plus } from "lucide-react";
 import { KanbanColumn } from "@/components/kanban/column";
 import { TaskDetailSheet } from "@/components/kanban/task-detail-sheet";
+import { NewTaskSheet } from "@/components/kanban/new-task-sheet";
 import { Project, QueueTask, FeatureRequest } from "@/components/kanban/types";
 
 // --- Data Fetching ---
@@ -49,6 +50,7 @@ export default function TasksPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [activeColumn, setActiveColumn] = useState<string>("backlog");
   const [selectedItem, setSelectedItem] = useState<QueueTask | FeatureRequest | null>(null);
+  const [isNewTaskSheetOpen, setIsNewTaskSheetOpen] = useState(false);
 
   const { data: queueData, isLoading: isQueueLoading, error: queueError, isFetching: isQueueFetching } = useQuery({
     queryKey: ["task-queue"],
@@ -102,6 +104,13 @@ export default function TasksPage() {
             <p className="text-xs text-muted-foreground/70 mt-1">Drag cards between columns to change their status.</p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+                onClick={() => setIsNewTaskSheetOpen(true)}
+                className="flex items-center gap-1.5 text-xs text-foreground hover:text-foreground/80 bg-primary/10 hover:bg-primary/20 rounded-lg px-3 py-1.5 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                New Task
+            </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground bg-muted rounded-lg px-3 py-1.5 transition-colors"
@@ -206,6 +215,11 @@ export default function TasksPage() {
         isOpen={!!selectedItem}
         onOpenChange={handleSheetOpenChange}
         item={selectedItem}
+        projects={projects}
+      />
+      <NewTaskSheet
+        isOpen={isNewTaskSheetOpen}
+        onOpenChange={setIsNewTaskSheetOpen}
         projects={projects}
       />
     </DndProvider>

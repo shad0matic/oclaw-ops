@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
         LEFT JOIN memory.agent_profiles p ON p.agent_id = q.agent_id
         ${where}
         ORDER BY 
-            CASE q.status WHEN 'running' THEN 0 WHEN 'assigned' THEN 1 WHEN 'queued' THEN 2 ELSE 3 END,
-            q.priority DESC, q.created_at ASC
+            CASE q.status WHEN 'running' THEN 0 WHEN 'assigned' THEN 1 WHEN 'planned' THEN 2 WHEN 'queued' THEN 3 ELSE 4 END,
+            q.priority ASC, q.created_at ASC
     `, params)
 
     const tasks = rows.map((r: any) => ({
