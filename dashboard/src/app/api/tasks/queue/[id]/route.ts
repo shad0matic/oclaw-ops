@@ -89,7 +89,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (!fields || typeof fields !== 'object') return NextResponse.json({ error: "fields required" }, { status: 400 })
       const allowed: Record<string, keyof typeof taskQueueInOps.$inferInsert> = {
         title: 'title', description: 'description', priority: 'priority',
-        project: 'project', agent_id: 'agentId', spec_url: 'specUrl',
+        project: 'project', agent_id: 'agentId', spec_url: 'specUrl', speced: 'speced',
       }
       const values: Partial<typeof taskQueueInOps.$inferInsert> = {}
       for (const [k, v] of Object.entries(fields)) {

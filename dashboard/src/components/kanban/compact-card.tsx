@@ -45,7 +45,10 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h3 className="text-xs font-semibold text-foreground truncate">{task.title}</h3>
+          <h3 className="text-xs font-semibold text-foreground truncate">
+            {task.speced && <span title="Speced & ready to build" className="inline-block mr-1 text-[10px] bg-emerald-500/20 text-emerald-400 rounded px-1">✓ speced</span>}
+            {task.title}
+          </h3>
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
             <span>{projectIcon}</span>
             <span className="truncate">{proj?.label || task.project}</span>

@@ -363,8 +363,16 @@ function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange
                 />
             </div>
             
-            <div className="space-y-1">
-                <h4 className="font-semibold text-foreground">Spec / Docs</h4>
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-foreground">Spec / Docs</h4>
+                    <button
+                        onClick={() => onFieldChange('speced', !task.speced)}
+                        className={`text-[11px] px-2 py-0.5 rounded transition-colors ${task.speced ? 'bg-emerald-500/20 text-emerald-400' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+                    >
+                        {task.speced ? '✓ Speced' : 'Mark as speced'}
+                    </button>
+                </div>
                 {task.spec_url ? (
                     <a href={task.spec_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline text-xs break-all">
                         📄 {task.spec_url.replace(/.*github\.com\/[^/]+\/[^/]+\/blob\/main\//, '')}

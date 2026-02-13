@@ -25,6 +25,7 @@ export interface QueueTask {
   review_feedback: string | null;
   depends_on?: string | null;
   spec_url?: string | null;
+  speced?: boolean;
 }
 
 export interface FeatureRequest {
