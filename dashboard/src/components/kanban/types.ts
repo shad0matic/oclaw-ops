@@ -26,6 +26,7 @@ export interface QueueTask {
   depends_on?: string | null;
   spec_url?: string | null;
   speced?: boolean;
+  epic?: string | null;
 }
 
 export interface FeatureRequest {

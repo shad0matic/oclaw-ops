@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client"
 
 import { useState } from "react"
@@ -7,29 +6,63 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Brain, RefreshCw, AlertTriangle, CheckCircle2 } from "lucide-react"
 
+type MemoryCheckStatus = {
+    healthy: boolean
+    diff: string[]
+    syncAge?: {
+        hours: number
+        stale: boolean
+    }
+    db?: {
+        totalMemories?: number
+        fromMemoryMd?: number
+        fromDaily?: number
+        withEmbeddings?: number
+        lastSynced?: string | null
+        entities?: number
+    }
+    files?: {
+        memoryMdSections?: number
+        dailyNotes?: number
+        latestNote?: string | null
+    }
+}
+
+type MemorySyncResponse =
+    | { ok: true; syncOutput: string; totalMemories: number; lastSynced: string | null }
+    | { ok: false; error: string }
+
 export function MemoryCheck() {
-    const [status, setStatus] = useState(null)
+    const [status, setStatus] = useState<MemoryCheckStatus | null>(null)
     const [syncing, setSyncing] = useState(false)
     const [checking, setChecking] = useState(false)
 
-    const checkMemory = async () => {
+    const checkMemory = async (): Promise<void> => {
         setChecking(true)
         try {
             const res = await fetch("/api/memory/check")
-            if (res.ok) setStatus(await res.json())
-        } catch {} finally { setChecking(false) }
+            if (res.ok) setStatus((await res.json()) as MemoryCheckStatus)
+        } catch {
+            // ignore
+        } finally {
+            setChecking(false)
+        }
     }
 
-    const syncMemory = async () => {
+    const syncMemory = async (): Promise<void> => {
         setSyncing(true)
         try {
             const res = await fetch("/api/memory/check", { method: "POST" })
-            const data = await res.json()
+            const data = (await res.json()) as MemorySyncResponse
             if (data.ok) {
                 // Refresh status after sync
                 await checkMemory()
             }
-        } catch {} finally { setSyncing(false) }
+        } catch {
+            // ignore
+        } finally {
+            setSyncing(false)
+        }
     }
 
     return (
@@ -40,14 +73,28 @@ export function MemoryCheck() {
                         <Brain className="h-4 w-4" /> Memory Health Check
                     </CardTitle>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={checkMemory} disabled={checking}
-                            className="border-zinc-700 text-zinc-400 hover:text-white">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={checkMemory}
+                            disabled={checking}
+                            className="border-zinc-700 text-zinc-400 hover:text-white"
+                        >
                             {checking ? <RefreshCw className="h-3 w-3 animate-spin mr-1" /> : null}
                             Check
                         </Button>
-                        <Button variant="outline" size="sm" onClick={syncMemory} disabled={syncing}
-                            className="border-blue-700 text-blue-400 hover:text-blue-300">
-                            {syncing ? <RefreshCw className="h-3 w-3 animate-spin mr-1" /> : <RefreshCw className="h-3 w-3 mr-1" />}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={syncMemory}
+                            disabled={syncing}
+                            className="border-blue-700 text-blue-400 hover:text-blue-300"
+                        >
+                            {syncing ? (
+                                <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                            ) : (
+                                <RefreshCw className="h-3 w-3 mr-1" />
+                            )}
                             Sync Now
                         </Button>
                     </div>
@@ -65,9 +112,7 @@ export function MemoryCheck() {
                                 <AlertTriangle className="h-3 w-3 mr-1" /> Needs Attention
                             </Badge>
                         )}
-                        <span className="text-xs text-zinc-500">
-                            Last sync: {status.syncAge?.hours}h ago
-                        </span>
+                        <span className="text-xs text-zinc-500">Last sync: {status.syncAge?.hours}h ago</span>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

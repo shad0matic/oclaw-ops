@@ -269,6 +269,9 @@ const renderAgentPicker = () => {
           <>
             <DbTaskDetails task={item as QueueTask} onFieldChange={updateField} />
             {timeline && <TaskTimeline timeline={timeline} />}
+
+            {/* Rich detail view (stats, detailed timeline, spawns) */}
+            {typeof (item as any).id === "number" && <TaskDetailView taskId={(item as any).id} />}
           </>
         ) : (
           <FrDetails fr={item as FeatureRequest} />
