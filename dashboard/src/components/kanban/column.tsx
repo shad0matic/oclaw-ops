@@ -113,12 +113,28 @@ export function KanbanColumn({
       </div>
       <div className="space-y-2">
         <AnimatePresence>
-          {featureRequests?.map(fr => <CompactFrCard key={fr.id} fr={fr} projects={projects} onClick={() => onCardClick(fr)} />)}
-          {tasks
-            .sort((a, b) => a.priority - b.priority)
-            .map((t) => (
-              <CompactTaskCard key={t.id} task={t} projects={projects} onClick={() => onCardClick(t)} />
-            ))}
+          {(() => {
+            // Merge FRs and DB tasks into a single sorted list for backlog
+            const priorityMap: Record<string, number> = { high: 2, medium: 5, low: 8 };
+            const allItems: Array<{ type: 'fr' | 'task'; priority: number; item: any }> = [
+              ...(featureRequests || []).map(fr => ({
+                type: 'fr' as const,
+                priority: priorityMap[fr.priority] || 8,
+                item: fr,
+              })),
+              ...tasks.map(t => ({
+                type: 'task' as const,
+                priority: t.priority,
+                item: t,
+              })),
+            ];
+            allItems.sort((a, b) => a.priority - b.priority);
+            return allItems.map(({ type, item }) =>
+              type === 'fr'
+                ? <CompactFrCard key={item.id} fr={item} projects={projects} onClick={() => onCardClick(item)} />
+                : <CompactTaskCard key={item.id} task={item} projects={projects} onClick={() => onCardClick(item)} />
+            );
+          })()}
         </AnimatePresence>
       </div>
     </div>
