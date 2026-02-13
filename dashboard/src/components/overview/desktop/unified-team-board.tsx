@@ -5,8 +5,9 @@ import { useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { AgentCard } from "./agent-card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { OverviewData, LiveWorkData } from "@/hooks/useOverviewData"
-import { AgentProfile } from "@prisma/client"
+import { OverviewData, TaskTree } from "@/hooks/useOverviewData"
+type LiveWorkData = { count: number; tasks: TaskTree[] }
+interface AgentProfile { id: string; name: string; description: string; level: number; trustScore: number; status: 'active' | 'idle' | 'error' | 'zombie' | 'warning'; currentTask: string | null; }
 
 interface UnifiedTeamBoardProps {
   agents: AgentProfile[]
@@ -77,7 +78,7 @@ export function UnifiedTeamBoard({
                       agent={agent}
                       taskName={task?.task}
                       elapsedSeconds={task?.elapsedSeconds}
-                      model={task?.model}
+                      model={task?.model ?? undefined}
                       isWorking={!!task}
                     />
                   </motion.div>

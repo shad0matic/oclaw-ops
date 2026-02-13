@@ -126,18 +126,18 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: Detail
         </SheetHeader>
 
         {isDbTask ? (
-          <DbTaskDetails task={item} />
+          <DbTaskDetails task={item as QueueTask} />
         ) : (
-          <FrDetails fr={item} />
+          <FrDetails fr={item as FeatureRequest} />
         )}
         
         <SheetFooter className="mt-6 pt-4 border-t border-border/50">
            {isDbTask ? (
                 <div className="flex items-center gap-2 flex-wrap">
-                    {renderStatusTransitions(item)}
+                    {renderStatusTransitions(item as QueueTask)}
                 </div>
             ) : (
-                 <button onClick={() => frToTaskMutation.mutate(item)}
+                 <button onClick={() => frToTaskMutation.mutate(item as FeatureRequest)}
                     className="text-sm w-full bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 rounded px-4 py-2 transition-colors">
                     Queue as Task
                 </button>

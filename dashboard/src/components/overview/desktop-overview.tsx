@@ -38,7 +38,7 @@ export function DesktopOverview() {
         {/* Unified Team Board */}
         <UnifiedTeamBoard
           agents={overviewData?.team || []}
-          liveWork={liveWork || overviewData?.liveWork}
+          liveWork={liveWork || overviewData?.liveWork || { count: 0, tasks: [] }}
           isLoading={isLoading || (liveWorkLoading && !liveWork)}
         />
 

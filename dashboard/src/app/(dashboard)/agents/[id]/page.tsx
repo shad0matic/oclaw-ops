@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import prisma from "@/lib/db"
+import { pool } from "@/lib/db"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AgentAvatar } from "@/components/ui/agent-avatar"
@@ -21,9 +21,8 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
 
     const { id } = await params
 
-    const agent = await prisma.agent_profiles.findUnique({
-        where: { agent_id: id }
-    })
+    const agentResult = await pool.query('SELECT * FROM memory.agent_profiles WHERE agent_id = $1', [id])
+    const agent = agentResult.rows[0]
 
     if (!agent) {
         return <div className="p-8 text-foreground">Agent not found</div>
@@ -32,20 +31,15 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
     const todayStart = new Date()
     todayStart.setHours(0, 0, 0, 0)
 
-    const [events, reviews, todayEvents] = await Promise.all([
-        prisma.agent_events.findMany({
-            where: { agent_id: id },
-            orderBy: { created_at: 'desc' },
-            take: 50
-        }),
-        prisma.performance_reviews.findMany({
-            where: { agent_id: id },
-            orderBy: { created_at: 'desc' },
-        }),
-        prisma.agent_events.count({
-            where: { agent_id: id, created_at: { gte: todayStart } }
-        }),
+    const [eventsResult, reviewsResult, todayEventsResult] = await Promise.all([
+        pool.query('SELECT * FROM ops.agent_events WHERE agent_id = $1 ORDER BY created_at DESC LIMIT 50', [id]),
+        pool.query('SELECT * FROM ops.performance_reviews WHERE agent_id = $1 ORDER BY created_at DESC', [id]),
+        pool.query('SELECT COUNT(*)::int as count FROM ops.agent_events WHERE agent_id = $1 AND created_at >= $2', [id, todayStart])
     ])
+
+    const events = eventsResult.rows
+    const reviews = reviewsResult.rows
+    const todayEvents = todayEventsResult.rows[0].count
 
     const serializedEvents = events.map((e: any) => ({
         ...e,

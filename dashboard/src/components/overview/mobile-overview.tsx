@@ -9,8 +9,9 @@ import { TodaySummary } from "./mobile/today-summary"
 import { ActivityCollapsed } from "./mobile/activity-collapsed"
 import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData"
 import { AgentCard } from "./desktop/agent-card" // Reusing the desktop card
-import type { AgentProfile } from "@prisma/client"
-import type { AgentData, TaskTree, LiveWorkData } from "@/hooks/useOverviewData"
+interface AgentProfile { id: string; name: string; description: string; level: number; trustScore: number; status: string; currentTask: string | null; }
+import type { AgentData, TaskTree } from "@/hooks/useOverviewData"
+type LiveWorkData = { count: number; tasks: TaskTree[] }
 
 
 function generateAlerts(
@@ -69,8 +70,8 @@ export function MobileOverview() {
       if (!aIsWorking && bIsWorking) return 1
 
       if (aIsWorking && bIsWorking) {
-        const aTask = liveWork.tasks.find(t => t.agentId === a.id)
-        const bTask = liveWork.tasks.find(t => t.agentId === b.id)
+        const aTask = liveWork?.tasks?.find(t => t.agentId === a.id)
+        const bTask = liveWork?.tasks?.find(t => t.agentId === b.id)
         return (bTask?.elapsedSeconds || 0) - (aTask?.elapsedSeconds || 0)
       }
 
@@ -132,7 +133,7 @@ export function MobileOverview() {
                     agent={agent}
                     taskName={task?.task}
                     elapsedSeconds={task?.elapsedSeconds}
-                    model={task?.model}
+                    model={task?.model ?? undefined}
                     isWorking={!!task}
                   />
                 </div>
@@ -153,7 +154,7 @@ export function MobileOverview() {
 
       {/* Agent Bottom Sheet */}
       <AgentBottomSheet
-        agent={selectedAgent}
+        agent={selectedAgent ?? null}
         onClose={() => setSelectedAgentId(null)}
       />
     </div>

@@ -2,8 +2,20 @@
 "use client"
 
 import Link from "next/link"
-import { AgentProfile } from "@prisma/client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+interface AgentProfile {
+  id: string
+  name: string
+  description: string
+  level: number
+  trustScore: number
+  status: 'active' | 'idle' | 'error' | 'zombie' | 'warning'
+  currentTask: string | null
+  recentZombieKill?: boolean
+  currentModel?: string | null
+  activeSessions?: number
+}
 import { AgentStatusDot } from "../shared/agent-status-dot"
 import { ModelBadge } from "../shared/model-badge"
 import { cn } from "@/lib/utils"
