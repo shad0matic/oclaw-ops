@@ -80,38 +80,15 @@ export async function GET() {
           AND created_at >= $1
       `, [new Date(now.getTime() - 15 * 60 * 1000)]),
       
-      // Suspected Zombies
+      // Suspected Zombies — simple: running tasks with no heartbeat for 15+ min
       pool.query(`
-        WITH last_event AS (
-            SELECT
-                session_key,
-                MAX(created_at) AS last_event_time
-            FROM ops.agent_events
-            WHERE event_type <> 'heartbeat'
-            GROUP BY session_key
-        ),
-        last_heartbeat AS (
-            SELECT
-                session_key,
-                MAX(created_at) AS last_heartbeat_time
-            FROM ops.agent_events
-            WHERE event_type = 'heartbeat'
-            GROUP BY session_key
-        )
-        SELECT
-            le.session_key AS "sessionId",
-            a.id as "agentId",
-            a.name as "agentName",
-            'suspected' as "status",
-            lh.last_heartbeat_time as "detectedAt",
-            'no_activity' AS "heuristic",
-            json_build_object('last_event_time', le.last_event_time, 'last_heartbeat_time', lh.last_heartbeat_time) AS "details"
-        FROM last_event le
-        JOIN last_heartbeat lh ON le.session_key = lh.session_key
-        JOIN ops.runs r ON r.session_key = le.session_key
-        JOIN memory.agent_profiles a ON r.agent_id = a.agent_id
-        WHERE lh.last_heartbeat_time > le.last_event_time + INTERVAL '5 minutes'
-        AND r.ended_at IS NULL;
+        SELECT r.id, r.agent_id AS "agentId", a.name AS "agentName",
+               r.session_key AS "sessionId", r.last_heartbeat AS "detectedAt"
+        FROM ops.runs r
+        LEFT JOIN memory.agent_profiles a ON r.agent_id = a.agent_id
+        WHERE r.status = 'running'
+          AND r.last_heartbeat IS NOT NULL
+          AND r.last_heartbeat < NOW() - INTERVAL '15 minutes'
       `)
     ])
     
