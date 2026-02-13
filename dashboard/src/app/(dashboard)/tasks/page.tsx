@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useRef, useState } from "react";
-import { Filter, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { Filter, ChevronDown, ChevronUp, Plus, RefreshCw } from "lucide-react";
 
 const ItemTypes = { CARD: "card" } as const;
 
@@ -109,29 +109,38 @@ function TaskCard({ task, projects }: { task: QueueTask; projects: Project[] }) 
         className="cursor-pointer"
         onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
       >
-        <div className="flex items-start justify-between gap-2">
+<div className="flex items-start justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground leading-snug flex-1">{task.title}</h3>
-          <span className={`flex items-center gap-1 text-[10px] font-mono shrink-0 ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
-            <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />
-            P{task.priority}
-          </span>
+          <div className="flex items-center gap-1">
+            <span className={`flex items-center gap-1 text-[10px] font-mono shrink-0 ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
+              <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />
+              P{task.priority}
+            </span>
+          </div>
         </div>
         <div className="mt-1.5 flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5">
             <span>{projectIcon}</span>
             <span className="font-medium text-foreground/80">{proj?.label || task.project}</span>
           </div>
-          {task.agent_id && (
-            <div className="flex items-center gap-1.5">
-              <img
-                src={`/assets/minion-avatars/${task.agent_id}.webp`}
-                alt={task.agent_name || task.agent_id}
-                className="w-4 h-4 rounded-full"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-              />
-              <span className="text-muted-foreground">{task.agent_name || task.agent_id}</span>
-            </div>
-          )}
+          <div className="flex items-center">
+            {task.agent_id && (
+              <div className="flex items-center gap-1.5 mr-2">
+                <img
+                  src={`/assets/minion-avatars/${task.agent_id}.webp`}
+                  alt={task.agent_name || task.agent_id}
+                  className="w-4 h-4 rounded-full"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+                <span className="text-muted-foreground">{task.agent_name || task.agent_id}</span>
+              </div>
+            )}
+            {task.description && (
+              <button className="text-muted-foreground/50 hover:text-muted-foreground">
+                {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+            )}
+          </div>
         </div>
       </div>
       {expanded && (
@@ -155,13 +164,16 @@ function Column({
   tasks,
   actionMap,
   projects,
+  isInitiallyCollapsed,
 }: {
   title: string;
   status: string;
   tasks: QueueTask[];
   actionMap: Record<string, string>;
   projects: Project[];
+  isInitiallyCollapsed?: boolean;
 }) {
+  const [isCollapsed, setIsCollapsed] = useState(isInitiallyCollapsed);
   const qc = useQueryClient();
   const mutation = useMutation({
     mutationFn: transitionTask,
@@ -196,32 +208,38 @@ function Column({
   return (
     <div
       ref={ref}
-      className={`rounded-xl border p-3 bg-card/30 border-border min-h-[50vh] transition-colors ${
+      className={`rounded-xl border p-3 bg-card/30 border-border min-h-[50vh] transition-all duration-300 ${
         isOver ? "bg-card/60 border-zinc-600" : ""
-      }`}
+      } ${isCollapsed ? "min-h-0" : "min-h-[50vh]"}`}
     >
-      <div className="mb-3 flex items-center justify-between">
+      <div
+        className="mb-3 flex items-center justify-between cursor-pointer"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+      >
         <h2 className={`text-sm font-medium ${headerColors[status] || "text-foreground/80"}`}>{title}</h2>
         <span className="text-xs text-muted-foreground/70 bg-muted rounded-full px-2 py-0.5">{tasks.length}</span>
       </div>
-      <div className="space-y-2">
-        <AnimatePresence>
-          {tasks
-            .sort((a, b) => a.priority - b.priority)
-            .map((t) => (
-              <TaskCard key={t.id} task={t} projects={projects} />
-            ))}
-        </AnimatePresence>
-      </div>
+      {!isCollapsed && (
+        <div className="space-y-2">
+          <AnimatePresence>
+            {tasks
+              .sort((a, b) => a.priority - b.priority)
+              .map((t) => (
+                <TaskCard key={t.id} task={t} projects={projects} />
+              ))}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function TasksPage() {
+  const queryClient = useQueryClient();
   const [projectFilter, setProjectFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, isFetching } = useQuery({
     queryKey: ["task-queue"],
     queryFn: fetchQueue,
     refetchInterval: 10_000,
@@ -293,7 +311,16 @@ export default function TasksPage() {
               <Filter className="w-3.5 h-3.5" />
               Filter
             </button>
-            <p className="text-xs text-muted-foreground/50">Auto-refresh: 10s</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground/50">Auto-refresh: 10s</p>
+              <button
+                onClick={() => queryClient.invalidateQueries({ queryKey: ["task-queue"] })}
+                className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                aria-label="Refresh tasks"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -340,6 +367,7 @@ export default function TasksPage() {
                 tasks={filteredTasks.filter((t) => t.status === c.status)}
                 actionMap={actionMap}
                 projects={projects}
+                isInitiallyCollapsed={c.status === 'done' && !tasks.some(t => t.status === 'running')}
               />
             ))}
           </div>
