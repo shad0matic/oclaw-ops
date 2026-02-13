@@ -311,8 +311,8 @@ const renderAgentPicker = () => {
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteMutation.mutate((item as QueueTask).id)}>
+                      <AlertDialogCancel className="min-h-11 sm:min-h-9">Cancel</AlertDialogCancel>
+                      <AlertDialogAction className="min-h-11 sm:min-h-9" onClick={() => deleteMutation.mutate((item as QueueTask).id)}>
                         Continue
                       </AlertDialogAction>
                     </AlertDialogFooter>
