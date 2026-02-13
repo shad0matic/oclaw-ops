@@ -1,35 +1,80 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from 'next/server';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
+import matter from 'gray-matter';
+
+// Helper function to extract the first heading
+const getTitle = (content: string, fallback: string) => {
+  const match = content.match(/^#\s+(.*)/m);
+  return match ? match[1] : fallback;
+};
+
+// Priority mapping
+const priorityOrder: { [key: string]: number } = { high: 0, medium: 1, low: 2 };
+const projectOrder: { [key: string]: number } = { 'oclaw-ops': 0, 'taskbee': 1, 'openpeople': 2 };
 
 export async function GET() {
-  const dirPath = path.join(process.cwd(), '..', 'planning', 'feature-requests');
-  const tasks: any[] = [];
+  const dirPath = '/home/shad/.openclaw/workspace/planning/feature-requests/';
+  const items: any[] = [];
 
   try {
-    if (fs.existsSync(dirPath)) {
-      const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.md'));
-      for (const file of files) {
-        const content = fs.readFileSync(path.join(dirPath, file), 'utf-8');
-        const title = file.replace('.md', '');
-        const priority = content.match(/Priority:\s*(P[1-9])/i)?.[1] || 'P9';
-        const project = content.match(/Project:\s*(.+)/i)?.[1]?.trim() || 'Other';
-        tasks.push({
-          id: `backlog-${title}`,
-          title,
-          priority,
-          project,
-          description: content.slice(0, 500),
-          stage: 'backlog',
-        });
+    const files = await fs.readdir(dirPath);
+
+    for (const file of files) {
+      if (file === 'TEMPLATE.md' || !file.endsWith('.md')) {
+        continue;
       }
+
+      const filePath = path.join(dirPath, file);
+      const stat = await fs.stat(filePath);
+      if (stat.isDirectory()) {
+        continue;
+      }
+      
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const { data, content } = matter(fileContent);
+
+      if (data.status !== 'backlog') {
+        continue;
+      }
+      
+      const filenameWithoutExt = path.basename(file, path.extname(file));
+
+      items.push({
+        id: `backlog-${filenameWithoutExt}`,
+        filename: file,
+        title: getTitle(content, filenameWithoutExt.replace(/-/g, ' ')),
+        project: data.project || 'other',
+        priority: data.priority || 'low',
+        status: data.status,
+        assigned: data.assigned || null,
+        tags: data.tags || [],
+        depends_on: data.depends_on || null,
+        description: content.trim().substring(0, 200),
+      });
     }
   } catch (error) {
-    console.error('Error reading backlog:', error);
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      console.warn(`Directory not found: ${dirPath}`);
+      return NextResponse.json([]);
+    }
+    console.error('Error reading feature requests:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 
-  // Sort by priority
-  tasks.sort((a, b) => a.priority.localeCompare(b.priority));
+  // Sort items
+  items.sort((a, b) => {
+    const projectA = projectOrder[a.project] ?? 3;
+    const projectB = projectOrder[b.project] ?? 3;
+    if (projectA !== projectB) {
+      return projectA - projectB;
+    }
+    const priorityA = priorityOrder[a.priority] ?? 3;
+    const priorityB = priorityOrder[b.priority] ?? 3;
+    return priorityA - priorityB;
+  });
 
-  return NextResponse.json({ tasks });
+  return NextResponse.json(items);
 }

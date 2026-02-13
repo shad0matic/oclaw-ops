@@ -5,9 +5,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useRef, useState } from "react";
-import { Filter, ChevronDown, ChevronUp, Plus, RefreshCw } from "lucide-react";
+import { FileText, Filter, ChevronDown, ChevronUp, Plus, RefreshCw } from "lucide-react";
 
-const ItemTypes = { CARD: "card" } as const;
+const ItemTypes = { 
+  DB_TASK_CARD: "db_task_card",
+  FR_CARD: "fr_card",
+} as const;
 
 interface Project {
   id: string;
@@ -36,6 +39,19 @@ interface QueueTask {
   review_feedback: string | null;
 }
 
+interface FeatureRequest {
+  id: string;
+  filename: string;
+  title: string;
+  project: string;
+  priority: 'high' | 'medium' | 'low';
+  status: string;
+  assigned: string | null;
+  tags: string[];
+  depends_on: string | null;
+  description: string;
+}
+
 // Priority color mapping: P1 (red/urgent) → P9 (grey/low)
 function getPriorityColor(p: number): { dot: string; text: string; bg: string } {
   if (p <= 1) return { dot: "bg-red-500", text: "text-red-400", bg: "bg-red-500/10" };
@@ -47,6 +63,15 @@ function getPriorityColor(p: number): { dot: string; text: string; bg: string } 
   if (p <= 7) return { dot: "bg-teal-500", text: "text-teal-400", bg: "bg-teal-500/10" };
   if (p <= 8) return { dot: "bg-zinc-400", text: "text-muted-foreground", bg: "bg-zinc-500/10" };
   return { dot: "bg-zinc-600", text: "text-muted-foreground/70", bg: "bg-zinc-600/10" };
+}
+
+function getFrPriorityColor(p: 'high' | 'medium' | 'low'): { dot: string; text: string; bg: string } {
+  switch (p) {
+    case 'high': return { dot: "bg-orange-500", text: "text-orange-400", bg: "bg-orange-500/10" };
+    case 'medium': return { dot: "bg-yellow-500", text: "text-yellow-400", bg: "bg-yellow-500/10" };
+    case 'low': return { dot: "bg-zinc-400", text: "text-muted-foreground", bg: "bg-zinc-500/10" };
+    default: return { dot: "bg-zinc-600", text: "text-muted-foreground/70", bg: "bg-zinc-600/10" };
+  }
 }
 
 // Fallback projects (used while DB loads)
@@ -65,6 +90,67 @@ async function fetchQueue(): Promise<QueueTask[]> {
   const res = await fetch("/api/tasks/queue");
   if (!res.ok) throw new Error("Failed to fetch task queue");
   return res.json();
+}
+
+async function fetchBacklog(): Promise<FeatureRequest[]> {
+  const res = await fetch("/api/tasks/backlog");
+  if (!res.ok) throw new Error("Failed to fetch backlog");
+  return res.json();
+}
+
+function FeatureRequestCard({ fr, projects }: { fr: FeatureRequest, projects: Project[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const pc = getFrPriorityColor(fr.priority);
+  
+  const [{ isDragging }, drag] = useDrag(
+    () => ({
+      type: ItemTypes.FR_CARD,
+      item: fr,
+      collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+    }),
+    [fr]
+  );
+
+  drag(ref);
+
+  const proj = projects.find(p => p.id === (fr.project || "other"));
+  const projectIcon = proj?.icon || "📦";
+  const projectColor = proj?.color || "border-l-zinc-500";
+
+  return (
+    <motion.div
+      ref={ref}
+      layout
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.18 }}
+      className={`relative rounded-lg border border-border bg-background/50 p-3 cursor-grab active:cursor-grabbing border-l-2 ${projectColor}`}
+      style={{ opacity: isDragging ? 0.5 : 1 }}
+    >
+      <div className="absolute top-1.5 right-1.5 text-muted-foreground/40">
+        <FileText size={12} />
+      </div>
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="text-sm font-semibold text-foreground leading-snug flex-1">{fr.title}</h3>
+        <div className="flex items-center gap-1">
+          <span className={`flex items-center gap-1 text-[10px] font-mono shrink-0 ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
+            <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />
+            {fr.priority}
+          </span>
+        </div>
+      </div>
+      <div className="mt-1.5 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-1.5">
+          <span>{projectIcon}</span>
+          <span className="font-medium text-foreground/80">{proj?.label || fr.project}</span>
+        </div>
+      </div>
+       {fr.description && (
+        <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/50">{fr.description}</p>
+      )}
+    </motion.div>
+  );
 }
 
 function TaskCard({ task, projects }: { task: QueueTask; projects: Project[] }) {
@@ -93,7 +179,7 @@ function TaskCard({ task, projects }: { task: QueueTask; projects: Project[] }) 
 
   const [{ isDragging }, drag] = useDrag(
     () => ({
-      type: ItemTypes.CARD,
+      type: ItemTypes.DB_TASK_CARD,
       item: { id: task.id },
       collect: (monitor) => ({ isDragging: monitor.isDragging() }),
     }),
@@ -253,6 +339,7 @@ function Column({
   title,
   status,
   tasks,
+  featureRequests,
   actionMap,
   projects,
   isInitiallyCollapsed,
@@ -260,13 +347,15 @@ function Column({
   title: string;
   status: string;
   tasks: QueueTask[];
+  featureRequests?: FeatureRequest[];
   actionMap: Record<string, string>;
   projects: Project[];
   isInitiallyCollapsed?: boolean;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(isInitiallyCollapsed);
   const qc = useQueryClient();
-  const mutation = useMutation({
+
+  const taskMutation = useMutation({
     mutationFn: async ({ id, to }: { id: number; to: string }) => {
         const res = await fetch(`/api/tasks/queue/${id}`, {
             method: "PATCH",
@@ -279,22 +368,53 @@ function Column({
     onSuccess: () => qc.invalidateQueries({ queryKey: ["task-queue"] }),
   });
 
+  const frMutation = useMutation({
+    mutationFn: async (fr: FeatureRequest) => {
+      const priorityMap = { high: 2, medium: 5, low: 8 };
+      const payload = {
+        title: fr.title,
+        description: fr.description,
+        project: fr.project,
+        priority: priorityMap[fr.priority] || 8,
+        status: 'planned'
+      };
+      const res = await fetch('/api/tasks/queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Failed to create task from feature request");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["task-queue"] });
+      qc.invalidateQueries({ queryKey: ["backlog"] });
+    }
+  });
+
   const ref = useRef<HTMLDivElement>(null);
   const [{ isOver }, drop] = useDrop(
     () => ({
-      accept: ItemTypes.CARD,
-      drop: (item: { id: number }) => {
+      accept: [ItemTypes.DB_TASK_CARD, ItemTypes.FR_CARD],
+      drop: (item: { id: number } | FeatureRequest, monitor) => {
+        const itemType = monitor.getItemType();
         const action = actionMap[status];
-        if (action) mutation.mutate({ id: item.id, to: action });
+
+        if (itemType === ItemTypes.DB_TASK_CARD && 'id' in item && typeof item.id === 'number') {
+           if (action) taskMutation.mutate({ id: item.id, to: action });
+        } else if (itemType === ItemTypes.FR_CARD && 'filename' in item) {
+          if (status === 'planned') {
+            frMutation.mutate(item as FeatureRequest);
+          }
+        }
       },
       collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
     }),
-    [mutation, status, actionMap]
+    [taskMutation, frMutation, status, actionMap]
   );
 
   drop(ref);
 
-  // Column header color based on status
   const headerColors: Record<string, string> = {
     backlog: "text-muted-foreground",
     planned: "text-blue-400",
@@ -303,6 +423,8 @@ function Column({
     human_todo: "text-orange-400",
     done: "text-green-400",
   };
+
+  const totalItems = tasks.length + (featureRequests?.length || 0);
 
   return (
     <div
@@ -316,11 +438,12 @@ function Column({
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         <h2 className={`text-sm font-medium ${headerColors[status] || "text-foreground/80"}`}>{title}</h2>
-        <span className="text-xs text-muted-foreground/70 bg-muted rounded-full px-2 py-0.5">{tasks.length}</span>
+        <span className="text-xs text-muted-foreground/70 bg-muted rounded-full px-2 py-0.5">{totalItems}</span>
       </div>
       {!isCollapsed && (
         <div className="space-y-2">
           <AnimatePresence>
+            {featureRequests?.map(fr => <FeatureRequestCard key={fr.id} fr={fr} projects={projects} />)}
             {tasks
               .sort((a, b) => a.priority - b.priority)
               .map((t) => (
@@ -338,10 +461,16 @@ export default function TasksPage() {
   const [projectFilter, setProjectFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data, isLoading, error, isFetching } = useQuery({
+  const { data: queueData, isLoading: isQueueLoading, error: queueError, isFetching: isQueueFetching } = useQuery({
     queryKey: ["task-queue"],
     queryFn: fetchQueue,
     refetchInterval: 10_000,
+  });
+
+  const { data: backlogData, isLoading: isBacklogLoading, error: backlogError } = useQuery({
+    queryKey: ["backlog"],
+    queryFn: fetchBacklog,
+    refetchInterval: 30_000,
   });
 
   const { data: projects = FALLBACK_PROJECTS } = useQuery({
@@ -363,7 +492,7 @@ export default function TasksPage() {
     cancelled: "done",
   };
 
-  const tasks = (data ?? []).map((t) => ({
+  const tasks = (queueData ?? []).map((t) => ({
     ...t,
     status: statusMapping[t.status] || t.status,
   }));
@@ -373,7 +502,10 @@ export default function TasksPage() {
       ? tasks
       : tasks.filter((t) => (t.project || "other") === projectFilter);
 
-  const projectMap = Object.fromEntries(projects.map(p => [p.id, p]));
+  const filteredBacklog =
+    projectFilter === 'all'
+      ? backlogData
+      : backlogData?.filter(fr => (fr.project || 'other') === projectFilter);
 
   // Action map: status → API action name
   const actionMap: Record<string, string> = {
@@ -393,6 +525,9 @@ export default function TasksPage() {
     { title: "👤 Human Todos", status: "human_todo" },
     { title: "✅ Done", status: "done" },
   ];
+  
+  const isLoading = isQueueLoading || isBacklogLoading;
+  const error = queueError || backlogError;
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -411,13 +546,16 @@ export default function TasksPage() {
               Filter
             </button>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-muted-foreground/50">Auto-refresh: 10s</p>
+              <p className="text-xs text-muted-foreground/50">Auto-refresh</p>
               <button
-                onClick={() => queryClient.invalidateQueries({ queryKey: ["task-queue"] })}
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: ["task-queue"] });
+                  queryClient.invalidateQueries({ queryKey: ["backlog"] });
+                }}
                 className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                 aria-label="Refresh tasks"
                 >
-                <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isQueueFetching ? "animate-spin" : ""}`} />
               </button>
             </div>
           </div>
@@ -464,6 +602,7 @@ export default function TasksPage() {
                 title={c.title}
                 status={c.status}
                 tasks={filteredTasks.filter((t) => t.status === c.status)}
+                featureRequests={c.status === 'backlog' ? filteredBacklog : []}
                 actionMap={actionMap}
                 projects={projects}
                 isInitiallyCollapsed={c.status === 'done' && !tasks.some(t => t.status === 'running')}
