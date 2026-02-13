@@ -1,24 +1,18 @@
-import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { SystemMonitor } from "@/components/dashboard/system-monitor"
-import si from "systeminformation"
+import { getCpuLoad, getMemStats, getUptime } from "@/lib/system-stats"
 import { PageHeader } from "@/components/layout/page-header"
 
 export default async function SystemPage() {
-    const session = await auth()
-    if (!session) redirect("/login")
-
     let initialData = undefined
     try {
-        const [load, mem, time] = await Promise.all([
-            si.currentLoad(),
-            si.mem(),
-            si.time()
-        ])
+        const cpuLoad = getCpuLoad()
+        const mem = getMemStats()
+        const uptime = getUptime()
         initialData = {
-            cpu: { usage: load.currentLoad },
-            memory: { total: mem.total, used: mem.active, free: mem.available },
-            uptime: time.uptime
+            cpu: { usage: cpuLoad },
+            memory: { total: mem.total, used: mem.active, free: mem.total - mem.active },
+            uptime
         }
     } catch (e) {
         console.error("System page fetch error", e)

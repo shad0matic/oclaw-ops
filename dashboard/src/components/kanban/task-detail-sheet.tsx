@@ -188,7 +188,7 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: Detail
             payload.fields = { agent_id: selectedAgent };
         }
         return (
-            <Button key={btn.action} onClick={() => taskMutation.mutate({ id: task.id, action: btn.action, payload })}
+            <Button key={btn.action} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => taskMutation.mutate({ id: task.id, action: btn.action, payload })}
                 variant="outline" size="sm" className="text-xs">
                 {btn.label}
             </Button>
@@ -224,8 +224,10 @@ const renderAgentPicker = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[500px] sm:max-w-xl bg-card/80 backdrop-blur-xl border-l-border overflow-y-auto">
+      <SheetContent className="w-[500px] sm:max-w-xl bg-card/80 backdrop-blur-xl border-l-border overflow-y-auto" aria-describedby="task-detail-desc">
         <SheetHeader className="mb-4">
+          <SheetTitle className="sr-only">Task Details</SheetTitle>
+          <SheetDescription id="task-detail-desc" className="sr-only">View and edit task details</SheetDescription>
           <Input 
             value={title} 
             onChange={(e) => setTitle(e.target.value)} 
@@ -369,7 +371,7 @@ function FrDetails({ fr }: { fr: FeatureRequest }) {
                 {fr.depends_on && <div className="space-y-1"><p className="text-muted-foreground">Depends On</p><p>{fr.depends_on}</p></div>}
             </div>
 
-            {fr.tags.length > 0 && <div className="flex items-center gap-2 flex-wrap">
+            {fr.tags?.length > 0 && <div className="flex items-center gap-2 flex-wrap">
                 {fr.tags.map(t => <span key={t} className="text-xs bg-blue-500/10 text-blue-400 rounded-full px-2 py-0.5">{t}</span>)}
             </div>}
 
@@ -405,7 +407,7 @@ function TaskTimeline({ timeline }: { timeline: any[] }) {
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground">{formatDate(item.timestamp)}</p>
-                            <p className="text-sm">{item.event.replace('task_', '').replace('_', ' ')}</p>
+                            <p className="text-sm">{(item.event || '').replace('task_', '').replace('_', ' ')}</p>
                             {item.data && <p className="text-xs text-muted-foreground">{JSON.stringify(item.data)}</p>}
                         </div>
                     </div>

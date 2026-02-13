@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
-import { auth } from "@/auth"
 import { pool } from "@/lib/db"
 import { AgentEntity } from "@/entities/agent"
 import fs from "fs"
@@ -17,8 +16,6 @@ function resolveAvatarUrl(agentId: string): string {
 }
 
 export async function GET() {
-  const session = await auth()
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   try {
     const { rows } = await pool.query(`

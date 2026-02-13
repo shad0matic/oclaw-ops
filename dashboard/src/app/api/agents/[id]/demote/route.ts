@@ -1,16 +1,11 @@
 export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/auth"
 import { pool } from "@/lib/db"
 
 export async function POST(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const session = await auth()
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
 
     const { id } = await params
 
@@ -47,7 +42,7 @@ export async function POST(
         await pool.query(`
             INSERT INTO ops.performance_reviews (agent_id, reviewer, rating, level_before, level_after, feedback, output_summary)
             VALUES ($1, $2, 2, $3, $4, $5, 'Level demotion');
-        `, [id, session.user?.email || "system", currentLevel, newLevel, feedback || `Demoted from level ${currentLevel} to ${newLevel}`]);
+        `, [id, "boss", currentLevel, newLevel, feedback || `Demoted from level ${currentLevel} to ${newLevel}`]);
 
 
         // Fetch updated agent data for response

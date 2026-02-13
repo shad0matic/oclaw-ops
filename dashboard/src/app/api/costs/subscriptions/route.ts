@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
-import { auth } from "@/auth"
 import { pool } from "@/lib/db"
 import { z } from "zod"
 
@@ -16,10 +15,6 @@ const subscriptionSchema = z.object({
 })
 
 export async function GET(req: Request) {
-    const session = await auth()
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
 
     try {
         const subscriptionsResult = await pool.query(`
@@ -33,10 +28,6 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-    const session = await auth()
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
 
     try {
         const body = await req.json()
@@ -68,10 +59,6 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-    const session = await auth()
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
 
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')
@@ -101,10 +88,6 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-    const session = await auth()
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
 
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')

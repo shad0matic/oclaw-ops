@@ -1,9 +1,8 @@
 export const dynamic = "force-dynamic"
 
 import { NextResponse } from "next/server"
-import { auth } from "@/auth"
 import { pool } from "@/lib/db"
-import si from "systeminformation"
+import { getCpuLoad, getMemStats, getUptime } from "@/lib/system-stats"
 
 interface TaskTree {
   id: number
@@ -22,23 +21,13 @@ interface TaskTree {
 
 export async function GET() {
   const t0 = Date.now()
-  const session = await auth()
   const tAuth = Date.now()
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   try {
-    // System stats — use timeout to prevent hangs
-    let cpuLoad = 0, memStats = { active: 0, total: 0 }, uptime = 0
-    try {
-      const siPromise = Promise.all([
-        si.currentLoad(), si.mem(), si.time()
-      ])
-      const siTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('si timeout')), 5000))
-      const [load, mem, time] = await Promise.race([siPromise, siTimeout]) as any
-      cpuLoad = load.currentLoad
-      memStats = mem
-      uptime = time.uptime
-    } catch {}
+    // System stats from /proc (instant, no child processes)
+    const cpuLoad = getCpuLoad()
+    const memStats = getMemStats()
+    const uptime = getUptime()
     const tSi = Date.now()
 
     const now = new Date()

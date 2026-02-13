@@ -1,16 +1,11 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
-import { auth } from "@/auth"
 import { pool } from "@/lib/db"
 
 export async function POST(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const session = await auth()
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
 
     const { id } = await params
 
@@ -39,7 +34,7 @@ export async function POST(
             workflow.id,
             workflow.name,
             task || "Manual trigger from dashboard",
-            session.user?.email || "manual",
+            "boss",
             context || {}
         ])
         const run = runResult.rows[0]

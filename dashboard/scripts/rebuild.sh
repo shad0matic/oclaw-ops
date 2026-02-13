@@ -1,7 +1,7 @@
 #!/bin/bash
 # MC Dashboard — Clean rebuild + restart + smoke test
 # Usage: bash scripts/rebuild.sh
-# Every agent MUST use this after making dashboard changes.
+# ONLY Kevin (main agent) may run this. Sub-agents: commit code only, Kevin builds.
 
 set -euo pipefail
 
