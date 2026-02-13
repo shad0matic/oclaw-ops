@@ -18,6 +18,9 @@ interface ColumnProps {
   projects: Project[];
   onCardClick: (item: QueueTask | FeatureRequest) => void;
   className?: string;
+  totalTasks?: number;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 export function KanbanColumn({
@@ -29,6 +32,9 @@ export function KanbanColumn({
   projects,
   onCardClick,
   className,
+  totalTasks,
+  isExpanded,
+  onToggleExpand,
 }: ColumnProps) {
   const qc = useQueryClient();
 
@@ -100,10 +106,19 @@ export function KanbanColumn({
 
   const totalItems = tasks.length + (featureRequests?.length || 0);
 
+  const statusColorClass = {
+    backlog: "border-t-zinc-500",
+    planned: "border-t-blue-500",
+    running: "border-t-amber-500",
+    review: "border-t-purple-500",
+    human_todo: "border-t-orange-500",
+    done: "border-t-green-500",
+  }[status] || "border-t-transparent";
+
   return (
     <div
       ref={ref}
-      className={`rounded-xl border p-3 bg-card/30 border-border min-h-[50vh] transition-colors duration-200 ${
+      className={`rounded-xl border p-3 bg-card/30 border-border min-h-[50vh] transition-colors duration-200 border-t-4 ${statusColorClass} ${
         isOver ? "bg-card/60 border-zinc-600" : ""
       } ${className}`}
     >
@@ -137,6 +152,13 @@ export function KanbanColumn({
           })()}
         </AnimatePresence>
       </div>
+      {status === 'done' && onToggleExpand && totalTasks && totalTasks > 5 && (
+        <div className="mt-2 text-center">
+          <button onClick={onToggleExpand} className="text-xs text-muted-foreground hover:text-foreground">
+            {isExpanded ? "Show less" : `Show all (${totalTasks})`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
