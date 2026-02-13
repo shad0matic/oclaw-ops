@@ -2,6 +2,8 @@
 
 import { WebSocketServer } from 'ws';
 import si from 'systeminformation';
+import { readFileSync } from 'fs';
+import { cpus } from 'os';
 
 const PORT = 3101;
 const HOST = '0.0.0.0';
@@ -23,12 +25,22 @@ wss.on('connection', (ws) => {
           si.mem(),
         ]);
 
+        // Load averages from /proc (no si dependency)
+        let load = [0, 0, 0];
+        try {
+          const parts = readFileSync('/proc/loadavg', 'utf8').split(/\s+/);
+          load = [parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2])];
+        } catch {}
+        const cores = cpus().length || 1;
+
         const data = {
           ts: Date.now(),
           cpu: parseFloat(cpuLoad.currentLoad.toFixed(2)),
           memUsed: mem.used,
           memTotal: mem.total,
           memPercent: parseFloat(((mem.used / mem.total) * 100).toFixed(2)),
+          load,
+          cores,
         };
 
         const jsonData = JSON.stringify(data);

@@ -6,7 +6,7 @@ export async function GET(req: Request) {
 
     try {
         const agentsResult = await pool.query(`SELECT * FROM memory.agent_profiles ORDER BY agent_id ASC`)
-        const agents = agentsResult.rows
+        const agents = agentsResult.rows.map((a: any) => ({ ...a, id: a.agent_id }))
 
         // Enrich with status
         // For each agent, check if they have active steps

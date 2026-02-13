@@ -18,9 +18,13 @@ async function notifyKevin(task: any, action: string) {
     })
 }
 
-// PATCH /api/tasks/queue/[id] — update task (assign, start, complete, fail, cancel)
+// PATCH /api/tasks/queue/[numId] — update task (assign, start, complete, fail, cancel)
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
+    const numId = Number(id)
+    if (!Number.isInteger(numId) || numId <= 0) {
+        return NextResponse.json({ error: "Invalid task ID" }, { status: 400 })
+    }
     const body = await request.json()
     const { action, agentId, result, reviewerId, reviewFeedback } = body
 
@@ -28,44 +32,44 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         case "assign":
             await pool.query(
                 `UPDATE ops.task_queue SET agent_id = $2, status = 'assigned' WHERE id = $1`,
-                [id, agentId]
+                [numId, agentId]
             )
             break
         case "run":
             if (agentId) {
                 await pool.query(
                     `UPDATE ops.task_queue SET status = 'running', agent_id = $2, started_at = now() WHERE id = $1`,
-                    [id, agentId]
+                    [numId, agentId]
                 )
             } else {
                 await pool.query(
                     `UPDATE ops.task_queue SET status = 'running', started_at = now() WHERE id = $1`,
-                    [id]
+                    [numId]
                 )
             }
             break
         case "complete":
             await pool.query(
                 `UPDATE ops.task_queue SET status = 'done', completed_at = now(), result = $2 WHERE id = $1`,
-                [id, JSON.stringify(result || {})]
+                [numId, JSON.stringify(result || {})]
             )
             break
         case "fail":
             await pool.query(
                 `UPDATE ops.task_queue SET status = 'failed', completed_at = now(), result = $2 WHERE id = $1`,
-                [id, JSON.stringify({ error: result || 'unknown' })]
+                [numId, JSON.stringify({ error: result || 'unknown' })]
             )
             break
         case "cancel":
             await pool.query(
                 `UPDATE ops.task_queue SET status = 'cancelled', completed_at = now() WHERE id = $1`,
-                [id]
+                [numId]
             )
             break
         case "plan":
             await pool.query(
                 `UPDATE ops.task_queue SET status = 'planned' WHERE id = $1`,
-                [id]
+                [numId]
             )
             break
         case "review":
@@ -73,26 +77,26 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 const { reviewerId, reviewFeedback } = body
                 await pool.query(
                     `UPDATE ops.task_queue SET status = 'review', review_count = review_count + 1, reviewer_id = $2, review_feedback = $3 WHERE id = $1`,
-                    [id, reviewerId, reviewFeedback]
+                    [numId, reviewerId, reviewFeedback]
                 )
             }
             break
         case "human":
             await pool.query(
                 `UPDATE ops.task_queue SET status = 'human_todo' WHERE id = $1`,
-                [id]
+                [numId]
             )
             break
         case "requeue":
             await pool.query(
                 `UPDATE ops.task_queue SET status = 'queued', agent_id = NULL, started_at = NULL, completed_at = NULL WHERE id = $1`,
-                [id]
+                [numId]
             )
             break
         case "approve":
             await pool.query(
                 `UPDATE ops.task_queue SET status = 'human_todo' WHERE id = $1`,
-                [id]
+                [numId]
             )
             break
         case "reject":
@@ -100,7 +104,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 const { reviewFeedback } = body
                 await pool.query(
                     `UPDATE ops.task_queue SET status = 'running', review_feedback = $2 WHERE id = $1`,
-                    [id, reviewFeedback]
+                    [numId, reviewFeedback]
                 )
             }
             break
@@ -108,7 +112,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             {
                 const { fields } = body
                 if (!fields || typeof fields !== 'object') return NextResponse.json({ error: "fields required" }, { status: 400 })
-                const allowed = ['title', 'description', 'priority', 'project', 'agent_id']
+                const allowed = ['title', 'description', 'priority', 'project', 'agent_id', 'spec_url']
                 const sets: string[] = []
                 const vals: any[] = []
                 for (const [k, v] of Object.entries(fields)) {
@@ -126,7 +130,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             return NextResponse.json({ error: "invalid action" }, { status: 400 })
     }
 
-    const { rows } = await pool.query(`SELECT * FROM ops.task_queue WHERE id = $1`, [id])
+    const { rows } = await pool.query(`SELECT * FROM ops.task_queue WHERE id = $1`, [numId])
     const task = { ...rows[0], id: Number(rows[0].id) }
 
     // Fire-and-forget: notify Kevin when task moves to running/planned
@@ -137,9 +141,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json(task)
 }
 
-// DELETE /api/tasks/queue/[id]
+// DELETE /api/tasks/queue/[numId]
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    await pool.query(`DELETE FROM ops.task_queue WHERE id = $1`, [id])
+    const numId = Number(id)
+    if (!Number.isInteger(numId) || numId <= 0) {
+        return NextResponse.json({ error: "Invalid task ID" }, { status: 400 })
+    }
+    await pool.query(`DELETE FROM ops.task_queue WHERE id = $1`, [numId])
     return NextResponse.json({ ok: true })
 }

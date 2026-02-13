@@ -130,7 +130,7 @@ export const KanbanView = ({ tasks }: { tasks: Task[] }) => {
               <div className="flex flex-col border rounded-md p-4 bg-card/50 mb-2">
                 <div className="flex justify-between items-center">
                   <Link href={`/tasks/${task.id}`} className="font-medium hover:underline">
-                    {task.title}
+                    <span className="text-muted-foreground mr-1">#{task.id}</span>{task.title}
                   </Link>
                   <div className="flex items-center gap-2">
                     <span className={`text-sm flex items-center gap-1 ${priorityColors[task.priority || 'P9']}`}>

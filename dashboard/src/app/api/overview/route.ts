@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextResponse } from "next/server"
 import { pool } from "@/lib/db"
-import { getCpuLoad, getMemStats, getUptime } from "@/lib/system-stats"
+import { getCpuLoad, getMemStats, getUptime, getDashboardUptime, getLoadAvg, getCoreCount } from "@/lib/system-stats"
 
 interface TaskTree {
   id: number
@@ -259,8 +259,11 @@ export async function GET() {
       system: {
         status: uptime > 0 ? 'online' : 'offline',
         uptime,
+        dashboardUptime: getDashboardUptime(),
         cpu: Math.round(cpuLoad * 10) / 10,
-        memory: Math.round((memStats.active / memStats.total) * 100)
+        memory: Math.round((memStats.active / memStats.total) * 100),
+        load: getLoadAvg(),
+        cores: getCoreCount()
       },
       liveWork: {
         count: taskTrees.reduce((sum, t) => sum + 1 + t.children.length, 0),

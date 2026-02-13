@@ -21,6 +21,7 @@ export function GlobalStatusBar() {
     <StatusBar
       status={overviewData?.system.status || 'degraded'}
       uptime={overviewData?.system.uptime || 0}
+      dashboardUptime={overviewData?.system.dashboardUptime}
       activeCount={liveWork?.count ?? overviewData?.liveWork?.count ?? 0}
       dailyCost={overviewData?.dailyCost || 0}
     />

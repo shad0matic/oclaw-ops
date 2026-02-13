@@ -1,13 +1,16 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { pool } from "@/lib/db"
+import { parseNumericId } from "@/lib/validate"
 
 export async function POST(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
 
-    const { id } = await params
+    const { id: rawId } = await params
+    const [id, idErr] = parseNumericId(rawId)
+    if (idErr) return idErr
 
     try {
         const body = await req.json()

@@ -96,8 +96,10 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: Detail
 
   const updateField = (field: string, value: any) => {
     if (!item || !("id" in item)) return;
+    const numId = Number(item.id);
+    if (isNaN(numId)) return; // FR items have string IDs, skip DB mutations
     taskMutation.mutate({
-      id: Number(item.id),
+      id: numId,
       action: "update",
       payload: { fields: { [field]: value } },
     });
@@ -313,6 +315,18 @@ const renderAgentPicker = () => {
 }
 
 
+function SpecUrlInput({ onSave }: { onSave: (url: string) => void }) {
+    const [editing, setEditing] = useState(false);
+    const [url, setUrl] = useState("");
+    if (!editing) return <button onClick={() => setEditing(true)} className="text-xs text-muted-foreground hover:text-foreground">+ Add spec link</button>;
+    return (
+        <div className="flex gap-1">
+            <input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://github.com/..." className="flex-1 text-xs bg-muted border rounded px-2 py-1" />
+            <button onClick={() => { if (url.trim()) { onSave(url.trim()); setEditing(false); } }} className="text-xs bg-blue-600 text-white rounded px-2 py-1">Save</button>
+        </div>
+    );
+}
+
 function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange: (field: string, value: any) => void }) {
     const pc = getPriorityColor(task.priority);
     const [desc, setDesc] = useState(task.description || "");
@@ -349,6 +363,17 @@ function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange
                 />
             </div>
             
+            <div className="space-y-1">
+                <h4 className="font-semibold text-foreground">Spec / Docs</h4>
+                {task.spec_url ? (
+                    <a href={task.spec_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline text-xs break-all">
+                        📄 {task.spec_url.replace(/.*github\.com\/[^/]+\/[^/]+\/blob\/main\//, '')}
+                    </a>
+                ) : (
+                    <SpecUrlInput onSave={(url) => onFieldChange('spec_url', url)} />
+                )}
+            </div>
+
             {task.review_feedback && <div className="space-y-1 bg-amber-500/10 p-3 rounded-lg">
                 <h4 className="font-semibold text-amber-400">Review Feedback</h4>
                 <p className="text-amber-400/80 italic break-all"> &ldquo;{task.review_feedback?.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>

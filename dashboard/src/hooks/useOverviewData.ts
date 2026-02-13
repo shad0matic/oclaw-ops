@@ -55,6 +55,7 @@ export interface OverviewData {
   system: {
     status: 'online' | 'offline' | 'degraded'
     uptime: number
+    dashboardUptime?: number
     cpu: number
     memory: number
   }

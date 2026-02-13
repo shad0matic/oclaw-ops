@@ -7,15 +7,30 @@ BigInt.prototype.toJSON = function () {
 };
 
 // Raw pg pool — the only DB layer we use
-let _pool: pg.Pool | null = null
-export const pool = new Proxy({} as pg.Pool, {
-    get(_target, prop) {
-        if (!_pool) {
-            const url = (process.env.DATABASE_URL || '').replace(/[?&]schema=[^&]+/, '')
-            _pool = new pg.Pool({
-                connectionString: url,
+// Use unix socket directly (no URL parsing issues)
+const getPool = (() => {
+    let instance: pg.Pool | null = null
+    return () => {
+        if (!instance) {
+            instance = new pg.Pool({
+                user: 'shad',
+                database: 'openclaw_db',
+                host: '/var/run/postgresql',
+                max: 20,
+                idleTimeoutMillis: 0,       // keep connections alive forever
+                connectionTimeoutMillis: 10000,
+            })
+            // Log errors instead of crashing
+            instance.on('error', (err) => {
+                console.error('PG Pool error:', err.message)
             })
         }
-        return (_pool as any)[prop]
+        return instance
+    }
+})()
+
+export const pool = new Proxy({} as pg.Pool, {
+    get(_target, prop) {
+        return (getPool() as any)[prop]
     }
 })

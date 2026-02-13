@@ -93,6 +93,7 @@ const MAX_DATA_POINTS = 150; // 5 minutes of data at 2s interval
 export interface StatusBarProps {
   status: 'online' | 'offline' | 'degraded'
   uptime: number
+  dashboardUptime?: number
   activeCount: number
   dailyCost: number
 }
@@ -117,10 +118,13 @@ const formatBytes = (bytes: number, decimals = 1) => {
 export function StatusBar({
   status,
   uptime,
+  dashboardUptime,
   activeCount,
   dailyCost
 }: StatusBarProps) {
-  const statusText = status === 'online' ? `Online · ${formatUptime(uptime)}` : status
+  const statusText = status === 'online'
+    ? `🖥 ${formatUptime(uptime)}${dashboardUptime != null ? ` · 🔲 ${formatUptime(dashboardUptime)}` : ''}`
+    : status
   
   // --- WebSocket Logic from LiveMetricsBar ---
   const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'stale' | 'disconnected'>('connecting');

@@ -1,13 +1,16 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from "next/server"
 import { pool } from "@/lib/db"
+import { parseNumericId } from "@/lib/validate"
 
 export async function PATCH(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
 
-    const { id } = await params
+    const { id: rawId } = await params
+    const [id, idErr] = parseNumericId(rawId)
+    if (idErr) return idErr
 
     try {
         const body = await req.json()
@@ -37,7 +40,9 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
 
-    const { id } = await params
+    const { id: rawId } = await params
+    const [id, idErr] = parseNumericId(rawId)
+    if (idErr) return idErr
 
     try {
         await pool.query(`DELETE FROM ops.reactions WHERE id = $1`, [id])

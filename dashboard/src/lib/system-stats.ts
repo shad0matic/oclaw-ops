@@ -34,3 +34,25 @@ export function getUptime(): number {
     return Math.floor(parseFloat(uptime.split(" ")[0]))
   } catch { return 0 }
 }
+
+export function getLoadAvg(): number[] {
+  try {
+    const data = readFileSync("/proc/loadavg", "utf8")
+    const parts = data.split(/\s+/)
+    return [parseFloat(parts[0]), parseFloat(parts[1]), parseFloat(parts[2])]
+  } catch { return [0, 0, 0] }
+}
+
+export function getCoreCount(): number {
+  try {
+    const cpuinfo = readFileSync("/proc/cpuinfo", "utf8")
+    return (cpuinfo.match(/^processor\s/gm) || []).length || 1
+  } catch { return 1 }
+}
+
+// Dashboard process start time (module-level = set once when Next.js loads)
+const DASHBOARD_START = Date.now()
+
+export function getDashboardUptime(): number {
+  return Math.floor((Date.now() - DASHBOARD_START) / 1000)
+}

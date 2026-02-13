@@ -35,10 +35,12 @@ async function fetchBacklog(): Promise<FeatureRequest[]> {
   return res.json();
 }
 
-async function fetchAgents(): Promise<{ id: string; name: string }[]> {
+async function fetchAgents(): Promise<{ id: string; name: string; agent_id: string }[]> {
   const res = await fetch("/api/agents");
   if (!res.ok) return [];
-  return res.json();
+  const data = await res.json();
+  // Normalize: API returns agent_id as the string identifier, id as numeric PK
+  return (Array.isArray(data) ? data : []).map((a: any) => ({ ...a, id: a.agent_id || a.id }));
 }
 
 const COLUMNS: Array<{ title: string; status: string }> = [
