@@ -212,10 +212,6 @@ export function StatusBar({
 
       {/* System Status */}
       <div className="flex items-center gap-2">
-        <AgentStatusDot
-          status={status === 'online' ? 'active' : status === 'offline' ? 'error' : 'warning'}
-          withPulse={status === 'online'}
-        />
         <span className="text-sm text-foreground">
           {statusText}
         </span>
