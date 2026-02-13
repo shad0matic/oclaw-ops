@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/collapsible"
 import { Eye, EyeOff, Search, Wrench, Clipboard, Check, Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import { useToast } from "@/components/ui/use-toast"
 
 type Status = "valid" | "expired" | "missing"
 
@@ -34,8 +33,6 @@ export function XTwitterSettings() {
   const [username, setUsername] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
-  const { toast } = useToast()
-
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -132,7 +129,7 @@ export function XTwitterSettings() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Collapsible open={isGuideOpen} onOpenChange={setIsGuideOpen} onOpenChange={(isOpen) => {
+        <Collapsible open={isGuideOpen} onOpenChange={(isOpen) => {
             setIsGuideOpen(isOpen);
             localStorage.setItem('x-cookie-guide-collapsed', isOpen ? 'false' : 'true');
         }}>

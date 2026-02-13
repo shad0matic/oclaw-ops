@@ -20,7 +20,7 @@ async function readConfig(): Promise<PhilConfig> {
     const data = await fs.readFile(configPath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
-    if (error.code === 'ENOENT') {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return {
         auth_token: '',
         ct0: '',
@@ -50,7 +50,7 @@ async function testCookies(auth_token: string, ct0: string): Promise<{ valid: bo
         return { valid: false, error: 'Invalid credentials' };
     } catch (error) {
         console.error('Error testing bird CLI:', error);
-        return { valid: false, error: error.message };
+        return { valid: false, error: (error as Error).message };
     }
 }
 
