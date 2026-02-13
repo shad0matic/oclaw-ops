@@ -41,13 +41,14 @@ async function testCookies(auth_token: string, ct0: string): Promise<{ valid: bo
         return { valid: false, error: 'Missing auth_token or ct0' };
     }
     try {
-        const command = `${birdCliPath} --auth-token "${auth_token}" --ct0 "${ct0}" whoami --plain --json`;
-        const result = execSync(command, { encoding: 'utf8' });
-        const data = JSON.parse(result);
-        if (data.valid) {
-            return { valid: true, username: data.username };
+        const command = `${birdCliPath} --auth-token "${auth_token}" --ct0 "${ct0}" whoami --plain`;
+        const result = execSync(command, { encoding: 'utf8', timeout: 15000 });
+        // Parse plain text output: "user: @handle (name)"
+        const userMatch = result.match(/user:\s*@(\S+)/);
+        if (userMatch) {
+            return { valid: true, username: userMatch[1] };
         }
-        return { valid: false, error: 'Invalid credentials' };
+        return { valid: false, error: 'Could not parse whoami output' };
     } catch (error) {
         console.error('Error testing bird CLI:', error);
         return { valid: false, error: (error as Error).message };
