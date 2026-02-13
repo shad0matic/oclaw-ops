@@ -349,7 +349,7 @@ function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange
             {task.review_feedback && <div className="space-y-1 bg-amber-500/10 p-3 rounded-lg">
                 <h4 className="font-semibold text-amber-400">Review Feedback</h4>
                 <p className="text-amber-400/80 italic break-all"> &ldquo;{task.review_feedback?.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
-                  part.match(/^https?:\/\//) ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-300">{part}</a> : part
+                  part.match(/^https?:\/\//) ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-300 cursor-pointer" onClick={(e) => { e.stopPropagation(); window.open(part, '_blank'); }}>{part}</a> : part
                 )}&rdquo; {task.reviewer_id ? `(by ${task.reviewer_id})` : ''}</p>
             </div>}
 
