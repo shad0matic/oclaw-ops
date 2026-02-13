@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import matter from 'gray-matter';
@@ -14,6 +14,29 @@ const getTitle = (content: string, fallback: string) => {
 // Priority mapping
 const priorityOrder: { [key: string]: number } = { high: 0, medium: 1, low: 2 };
 const projectOrder: { [key: string]: number } = { 'oclaw-ops': 0, 'taskbee': 1, 'openpeople': 2 };
+
+// PATCH /api/tasks/backlog — update a feature request file's frontmatter status
+export async function PATCH(request: NextRequest) {
+  const { filename, status } = await request.json();
+  if (!filename || !status) {
+    return NextResponse.json({ error: "filename and status required" }, { status: 400 });
+  }
+
+  const dirPath = '/home/shad/.openclaw/workspace/planning/feature-requests/';
+  const filePath = path.join(dirPath, filename);
+
+  try {
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    const { data, content } = matter(fileContent);
+    data.status = status;
+    const updated = matter.stringify(content, data);
+    await fs.writeFile(filePath, updated, 'utf-8');
+    return NextResponse.json({ ok: true, filename, status });
+  } catch (error) {
+    console.error('Error updating feature request:', error);
+    return NextResponse.json({ error: "Failed to update file" }, { status: 500 });
+  }
+}
 
 export async function GET() {
   const dirPath = '/home/shad/.openclaw/workspace/planning/feature-requests/';

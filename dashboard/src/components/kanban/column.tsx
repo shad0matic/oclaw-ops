@@ -47,7 +47,7 @@ export function KanbanColumn({
 
   const frMutation = useMutation({
     mutationFn: async (fr: FeatureRequest) => {
-      const priorityMap = { high: 2, medium: 5, low: 8 };
+      const priorityMap: Record<string, number> = { high: 2, medium: 5, low: 8 };
       const payload = {
         title: fr.title,
         description: fr.description,
@@ -61,6 +61,12 @@ export function KanbanColumn({
         body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error("Failed to create task from feature request");
+      // Mark the file as planned so it disappears from backlog
+      await fetch('/api/tasks/backlog', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: fr.filename, status: 'planned' })
+      });
       return res.json();
     },
     onSuccess: () => {
