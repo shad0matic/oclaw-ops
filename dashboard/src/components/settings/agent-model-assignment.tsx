@@ -62,7 +62,7 @@ export function AgentModelAssignment() {
       }
     }
     fetchAgents();
-  }, [toast]);
+  }, []);
 
   const handleModelChange = async (agentId: string, model: string) => {
     const originalAgents = [...agents];
