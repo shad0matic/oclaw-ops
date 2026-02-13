@@ -132,6 +132,15 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: Detail
               <span className="font-medium text-foreground/80">{proj?.label || item.project}</span>
             </div>
           </div>
+        {isDbTask && (item.status === "running" || item.status === "planned") && item.agent_id && (
+            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border/50">
+                <img src={`/agents/${item.agent_id}.png`} alt={item.agent_name || item.agent_id} className="w-9 h-9 rounded-full bg-primary/10" />
+                <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground">Assigned Agent</span>
+                    <span className="text-sm font-semibold text-foreground">{item.agent_name || item.agent_id}</span>
+                </div>
+            </div>
+        )}
         </SheetHeader>
 
         {isDbTask ? (
