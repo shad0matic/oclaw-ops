@@ -2,6 +2,22 @@ export const dynamic = "force-dynamic"
 import { pool } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 
+// Notify Kevin's main session when task status changes
+async function notifyKevin(task: any, action: string) {
+    const gwToken = process.env.OPENCLAW_GW_TOKEN
+    if (!gwToken) return
+    const emoji = action === 'run' ? '⚡' : '📋'
+    const msg = `${emoji} Kanban: #${task.id} "${task.title}" → ${action}${task.agent_id ? ` (assigned: ${task.agent_id})` : ' (unassigned)'}\nProject: ${task.project || 'unknown'}\nDescription: ${(task.description || 'none').substring(0, 200)}`
+    await fetch('http://127.0.0.1:18789/api/sessions/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${gwToken}` },
+        body: JSON.stringify({
+            sessionKey: 'agent:main:telegram:group:-1003396419207:topic:710',
+            message: msg,
+        }),
+    })
+}
+
 // PATCH /api/tasks/queue/[id] — update task (assign, start, complete, fail, cancel)
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -111,7 +127,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const { rows } = await pool.query(`SELECT * FROM ops.task_queue WHERE id = $1`, [id])
-    return NextResponse.json({ ...rows[0], id: Number(rows[0].id) })
+    const task = { ...rows[0], id: Number(rows[0].id) }
+
+    // Fire-and-forget: notify Kevin when task moves to running/planned
+    if (action === 'run' || action === 'plan') {
+        notifyKevin(task, action).catch(() => {})
+    }
+
+    return NextResponse.json(task)
 }
 
 // DELETE /api/tasks/queue/[id]
