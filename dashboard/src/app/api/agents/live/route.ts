@@ -1,78 +1,64 @@
 export const dynamic = "force-dynamic"
-import prisma from "@/lib/db"
+
+import { pool } from "@/lib/db"
 import { NextResponse } from "next/server"
 
-// GET /api/agents/live - returns current status for all agents
+// GET /api/agents/live — returns live session data per agent from ops.live_sessions
 export async function GET() {
-    try {
-        const agents = await prisma.agent_profiles.findMany({
-            orderBy: { name: 'asc' },
-        })
+  try {
+    // Per-agent summary: active session count + most recent session details
+    const { rows: agentSummary } = await pool.query(`
+      SELECT 
+        agent_id,
+        COUNT(*) FILTER (WHERE is_active) as active_sessions,
+        MAX(updated_at) as last_activity,
+        SUM(total_tokens) as total_tokens,
+        (SELECT label FROM ops.live_sessions ls2 
+         WHERE ls2.agent_id = ls.agent_id AND ls2.is_active = true 
+         ORDER BY ls2.updated_at DESC LIMIT 1) as current_task,
+        (SELECT model FROM ops.live_sessions ls3 
+         WHERE ls3.agent_id = ls.agent_id AND ls3.is_active = true 
+         ORDER BY ls3.updated_at DESC LIMIT 1) as current_model
+      FROM ops.live_sessions ls
+      GROUP BY agent_id
+      ORDER BY agent_id
+    `)
 
-        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+    // Also get all active sessions for detail view
+    const { rows: activeSessions } = await pool.query(`
+      SELECT agent_id, session_key, kind, model, label, total_tokens, updated_at
+      FROM ops.live_sessions
+      WHERE is_active = true
+      ORDER BY updated_at DESC
+    `)
 
-        const liveStatuses = await Promise.all(
-            agents.map(async (agent) => {
-                // Find the most recent task_start event (within 1h to avoid stale "active")
-                const lastTaskStart = await prisma.agent_events.findFirst({
-                    where: {
-                        agent_id: agent.agent_id,
-                        event_type: 'task_start',
-                        created_at: { gte: oneHourAgo },
-                    },
-                    orderBy: { created_at: 'desc' },
-                })
+    // Get last poll time
+    const { rows: pollTime } = await pool.query(`
+      SELECT MAX(polled_at) as last_polled FROM ops.live_sessions
+    `)
 
-                let status: "active" | "idle" | "error" = "idle"
-                let current_task: string | null = null
-
-                if (lastTaskStart) {
-                    const taskEnd = await prisma.agent_events.findFirst({
-                        where: {
-                            agent_id: agent.agent_id,
-                            event_type: { in: ['task_complete', 'task_fail', 'error'] },
-                            created_at: { gte: lastTaskStart.created_at! },
-                        },
-                    })
-
-                    if (!taskEnd) {
-                        status = "active"
-                        // @ts-ignore
-                        current_task = lastTaskStart.detail?.task || "Working..."
-                    }
-                }
-
-                // Show last completed task if idle
-                if (status === "idle") {
-                    const lastComplete = await prisma.agent_events.findFirst({
-                        where: { agent_id: agent.agent_id, event_type: 'task_complete' },
-                        orderBy: { created_at: 'desc' },
-                    })
-                    if (lastComplete) {
-                        // @ts-ignore
-                        current_task = `Last: ${lastComplete.detail?.task || "task"}`
-                    }
-                }
-
-                // Get last seen from any event
-                const lastEvent = await prisma.agent_events.findFirst({
-                    where: { agent_id: agent.agent_id },
-                    orderBy: { created_at: 'desc' },
-                })
-                
-                return {
-                    agent_id: agent.agent_id,
-                    name: agent.name,
-                    status,
-                    current_task,
-                    last_seen: lastEvent?.created_at?.toISOString() || null,
-                }
-            })
-        )
-
-        return NextResponse.json(liveStatuses)
-    } catch (error: any) {
-        console.error("Failed to fetch live agent status", error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    return NextResponse.json({
+      agents: agentSummary.map((r: any) => ({
+        agentId: r.agent_id,
+        activeSessions: parseInt(r.active_sessions) || 0,
+        lastActivity: r.last_activity,
+        totalTokens: parseInt(r.total_tokens) || 0,
+        currentTask: r.current_task,
+        currentModel: r.current_model,
+      })),
+      activeSessions: activeSessions.map((r: any) => ({
+        agentId: r.agent_id,
+        sessionKey: r.session_key,
+        kind: r.kind,
+        model: r.model,
+        label: r.label,
+        totalTokens: parseInt(r.total_tokens) || 0,
+        updatedAt: r.updated_at,
+      })),
+      lastPolled: pollTime[0]?.last_polled || null,
+    })
+  } catch (error) {
+    console.error("Live sessions error:", error)
+    return NextResponse.json({ agents: [], activeSessions: [], lastPolled: null }, { status: 500 })
+  }
 }

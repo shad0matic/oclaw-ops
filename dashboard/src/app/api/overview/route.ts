@@ -159,12 +159,32 @@ export async function GET() {
       }
     }
 
+    // Query live sessions from session poller (primary source of truth for activity)
+    let liveSessions: any[] = []
+    try {
+      const { rows } = await pool.query(`
+        SELECT agent_id, COUNT(*) FILTER (WHERE is_active)::int as active_count,
+               (SELECT label FROM ops.live_sessions ls2 
+                WHERE ls2.agent_id = ls.agent_id AND ls2.is_active = true 
+                ORDER BY ls2.updated_at DESC LIMIT 1) as current_label,
+               (SELECT model FROM ops.live_sessions ls3 
+                WHERE ls3.agent_id = ls.agent_id AND ls3.is_active = true 
+                ORDER BY ls3.updated_at DESC LIMIT 1) as current_model
+        FROM ops.live_sessions ls
+        GROUP BY agent_id
+      `)
+      liveSessions = rows
+    } catch { /* table might not exist yet */ }
+    const liveByAgent = Object.fromEntries(liveSessions.map((r: any) => [r.agent_id, r]))
+
     // Enrich agents with live status
     const zombieAgentIds = new Set(zombieEvents.map((e: any) => (e.detail as any)?.agent_id || e.agent_id))
 
     const enrichedAgents = agents.map((agent: any) => {
       const agentRuns = runningRuns.filter((r: any) => r.agent_id === agent.agent_id)
       const hasRunning = agentRuns.length > 0
+      const liveData = liveByAgent[agent.agent_id]
+      const hasActiveSessions = liveData && liveData.active_count > 0
 
       // Check for recent task_start without completion
       const lastStart = recentStarts.find((e: any) => e.agent_id === agent.agent_id)
@@ -176,8 +196,12 @@ export async function GET() {
       } else if (hasRunning) {
         status = 'active'
         currentTask = agentRuns[0]?.task || null
+      } else if (hasActiveSessions) {
+        // Live session data shows activity!
+        status = 'active'
+        currentTask = liveData.current_label || null
       } else if (lastStart) {
-        // Check if there's a completion after the start
+        // Fallback: check agent_events for recent task_start without completion
         const hasCompletion = recentEvents.some((e: any) =>
           e.agent_id === agent.agent_id &&
           ['task_complete', 'task_fail'].includes(e.event_type) &&
@@ -200,6 +224,8 @@ export async function GET() {
         successfulTasks: agent.successful_tasks || 0,
         status,
         currentTask,
+        currentModel: liveData?.current_model || null,
+        activeSessions: liveData?.active_count || 0,
         recentZombieKill: zombieAgentIds.has(agent.agent_id)
       }
     })
