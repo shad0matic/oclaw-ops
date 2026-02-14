@@ -81,7 +81,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     }))
 
     return NextResponse.json({
-      task: { ...task, id: Number(task.id) },
+      task: { ...task, id: Number(task.id), spec_url: task.specUrl, agent_id: task.agentId, review_feedback: task.reviewFeedback, reviewer_id: task.reviewerId, review_count: task.reviewCount, created_at: task.createdAt, started_at: task.startedAt, completed_at: task.completedAt, created_by: task.createdBy },
       timeline,
       stats: {
         totalCost,

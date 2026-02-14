@@ -30,6 +30,13 @@ export async function GET(request: NextRequest) {
     id: Number(task.id),
     priority: Number(task.priority),
     agent_name: agentName,
+    spec_url: task.specUrl,
+    agent_id: task.agentId,
+    created_at: task.createdAt,
+    started_at: task.startedAt,
+    completed_at: task.completedAt,
+    review_feedback: task.reviewFeedback,
+    reviewer_id: task.reviewerId,
   }))
 
   return NextResponse.json(tasks)
