@@ -26,6 +26,7 @@ export interface QueueTask {
   depends_on?: string | null;
   spec_url?: string | null;
   speced?: boolean;
+  notes?: string | null;
   epic?: string | null;
 }
 

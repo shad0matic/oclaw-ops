@@ -595,6 +595,7 @@ export const taskQueueInOps = ops.table("task_queue", {
 	specUrl: text("spec_url"),
 	speced: boolean().default(false).notNull(),
 	epic: text(),
+	notes: text(),
 }, (table) => [
 	index("idx_task_queue_agent").using("btree", table.agentId.asc().nullsLast().op("text_ops")).where(sql`(agent_id IS NOT NULL)`),
 	index("idx_task_queue_project").using("btree", table.project.asc().nullsLast().op("text_ops"), table.status.asc().nullsLast().op("text_ops")),

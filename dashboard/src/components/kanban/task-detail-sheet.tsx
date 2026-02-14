@@ -379,6 +379,7 @@ function EpicInput({ epic, onSave }: { epic: string, onSave: (epic: string) => v
 function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange: (field: string, value: any) => void }) {
     const pc = getPriorityColor(task.priority);
     const [desc, setDesc] = useState(task.description || "");
+    const [notes, setNotes] = useState(task.notes || "");
 
     return (
          <div className="space-y-4 text-sm">
@@ -412,6 +413,18 @@ function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange
                 />
             </div>
             
+            <div className="space-y-1">
+                <h4 className="font-semibold text-foreground">📝 Notes</h4>
+                <Textarea 
+                    value={notes} 
+                    onChange={(e) => setNotes(e.target.value)} 
+                    onBlur={() => onFieldChange('notes', notes)}
+                    className="text-amber-400/80 whitespace-pre-wrap bg-amber-500/5 border-amber-500/20 rounded-md p-3 sm:p-2"
+                    placeholder="Add notes (instructions, context, feedback...)"
+                    rows={3}
+                />
+            </div>
+
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-foreground">Spec / Docs</h4>
