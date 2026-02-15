@@ -80,18 +80,19 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: Detail
   });
 
   const taskMutation = useMutation({
-    mutationFn: async ({ id, action, payload }: { id: number; action: string; payload?: any }) => {
+    mutationFn: async ({ id, action, payload, closeOnSuccess = true }: { id: number; action: string; payload?: any; closeOnSuccess?: boolean }) => {
       const res = await fetch(`/api/tasks/queue/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, ...payload }),
       });
       if (!res.ok) throw new Error("Failed to update task");
-      return res.json();
+      const data = await res.json();
+      return { ...data, _closeOnSuccess: closeOnSuccess };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["task-queue"] });
-      onOpenChange(false);
+      if (data?._closeOnSuccess !== false) onOpenChange(false);
     },
   });
 
@@ -103,6 +104,7 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: Detail
       id: numId,
       action: "update",
       payload: { fields: { [field]: value } },
+      closeOnSuccess: false,
     });
   };
 
@@ -408,8 +410,9 @@ function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange
                     value={desc} 
                     onChange={(e) => setDesc(e.target.value)} 
                     onBlur={() => onFieldChange('description', desc)}
-                    className="text-muted-foreground/80 whitespace-pre-wrap bg-transparent border rounded-md p-3 sm:p-2"
+                    className="text-muted-foreground/80 whitespace-pre-wrap bg-transparent border rounded-md p-3 sm:p-2 resize-none"
                     placeholder="No description."
+                    rows={Math.max(3, Math.min(10, (desc || '').split('\n').length + 1))}
                 />
             </div>
             
@@ -499,19 +502,24 @@ function TaskTimeline({ timeline }: { timeline: any[] }) {
         <div className="space-y-4">
             <h4 className="font-semibold text-foreground">Activity</h4>
             <div className="space-y-4">
-                {timeline.map((item, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                        <div className="flex flex-col items-center">
-                            <div className="text-lg">{getIcon(item.event)}</div>
-                            <div className="w-px h-full bg-border"></div>
+                {timeline.map((item, index) => {
+                    const event = item.eventType || item.event || '';
+                    const timestamp = item.createdAt || item.timestamp;
+                    const detail = item.detail || item.data;
+                    return (
+                        <div key={index} className="flex items-start gap-3">
+                            <div className="flex flex-col items-center">
+                                <div className="text-lg">{getIcon(event)}</div>
+                                <div className="w-px h-full bg-border"></div>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground">{formatDate(timestamp)}</p>
+                                <p className="text-sm">{event.replace('task_', '').replace('_', ' ')}</p>
+                                {detail && <p className="text-xs text-muted-foreground">{typeof detail === 'string' ? detail : JSON.stringify(detail)}</p>}
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">{formatDate(item.timestamp)}</p>
-                            <p className="text-sm">{(item.event || '').replace('task_', '').replace('_', ' ')}</p>
-                            {item.data && <p className="text-xs text-muted-foreground">{JSON.stringify(item.data)}</p>}
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     )

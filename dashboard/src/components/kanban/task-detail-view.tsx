@@ -181,7 +181,7 @@ export default function TaskDetailView({ taskId }: { taskId: number }) {
 
                     {ev.detail && (
                       <p className="mt-1 line-clamp-3 text-xs text-foreground/80">
-                        {ev.detail}
+                        {typeof ev.detail === 'string' ? ev.detail : JSON.stringify(ev.detail)}
                       </p>
                     )}
 
