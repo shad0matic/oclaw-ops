@@ -17,6 +17,7 @@ interface TaskTree {
   cost: number
   spawnedBy: string | null
   children: TaskTree[]
+  source?: 'runs' | 'queue'
 }
 
 export async function GET() {
@@ -40,6 +41,7 @@ export async function GET() {
     const [
       { rows: agents },
       { rows: runningRuns },
+      { rows: runningQueueTasks },
       { rows: pipelineRaw },
       { rows: recentEvents },
       { rows: dailyCostRows },
@@ -49,8 +51,16 @@ export async function GET() {
       // All agents with profiles
       pool.query("SELECT * FROM memory.agent_profiles ORDER BY agent_id ASC"),
 
-      // Currently running tasks
+      // Currently running tasks (ops.runs)
       pool.query("SELECT * FROM ops.runs WHERE status = 'running' ORDER BY started_at DESC"),
+
+      // Currently running tasks from kanban (ops.task_queue)
+      pool.query(`
+        SELECT id, title, description, agent_id, status, started_at, project
+        FROM ops.task_queue
+        WHERE status IN ('running', 'planned', 'assigned')
+        ORDER BY started_at DESC NULLS LAST
+      `),
 
       // Pipeline stats (last 24h)
       pool.query(`
@@ -88,7 +98,7 @@ export async function GET() {
     
     const dailyCost = dailyCostRows[0]?.cost_usd || 0
 
-    // Build task trees from running runs
+    // Build task trees from running runs + running queue tasks
     const nowMs = now.getTime()
     const flatTasks: TaskTree[] = runningRuns.map((run: any) => ({
       id: Number(run.id),
@@ -102,8 +112,31 @@ export async function GET() {
       heartbeatMsg: run.heartbeat_msg || null,
       cost: 0,
       spawnedBy: null,
-      children: []
+      children: [],
+      source: 'runs' as const,
     }))
+
+    // Merge running kanban tasks (avoid duplicates if same task is in both tables)
+    const runTaskIds = new Set(flatTasks.map(t => t.task))
+    for (const qt of runningQueueTasks) {
+      // Skip if already tracked via ops.runs
+      if (runTaskIds.has(qt.title)) continue
+      flatTasks.push({
+        id: Number(qt.id) + 100000, // offset to avoid ID collision with runs
+        agentId: qt.agent_id || 'unassigned',
+        agentName: agents.find((a: any) => a.agent_id === qt.agent_id)?.name || qt.agent_id || 'Unassigned',
+        task: qt.title || 'Unknown task',
+        model: null,
+        startedAt: qt.started_at?.toISOString() || now.toISOString(),
+        elapsedSeconds: qt.started_at ? Math.round((nowMs - new Date(qt.started_at).getTime()) / 1000) : 0,
+        heartbeatAge: 0,
+        heartbeatMsg: qt.status === 'running' ? null : `Status: ${qt.status}`,
+        cost: 0,
+        spawnedBy: null,
+        children: [],
+        source: 'queue' as const,
+      })
+    }
 
     // Enrich with spawn relationships from agent_events
     const { rows: recentStarts } = await pool.query(`
@@ -176,7 +209,9 @@ export async function GET() {
 
     const enrichedAgents = agents.map((agent: any) => {
       const agentRuns = runningRuns.filter((r: any) => r.agent_id === agent.agent_id)
-      const hasRunning = agentRuns.length > 0
+      const agentQueueTasks = runningQueueTasks.filter((t: any) => t.agent_id === agent.agent_id)
+      const hasRunning = agentRuns.length > 0 || agentQueueTasks.some((t: any) => t.status === 'running')
+      const hasPlanned = agentQueueTasks.some((t: any) => ['planned', 'assigned'].includes(t.status))
       const liveData = liveByAgent[agent.agent_id]
       const hasActiveSessions = liveData && liveData.active_count > 0
 
@@ -189,13 +224,14 @@ export async function GET() {
         status = 'zombie'
       } else if (hasRunning) {
         status = 'active'
-        currentTask = agentRuns[0]?.task || null
+        currentTask = agentRuns[0]?.task || agentQueueTasks.find((t: any) => t.status === 'running')?.title || null
       } else if (hasActiveSessions) {
-        // Live session data shows activity!
         status = 'active'
         currentTask = liveData.current_label || null
+      } else if (hasPlanned) {
+        status = 'idle'
+        currentTask = `📋 ${agentQueueTasks[0]?.title || 'Planned task'}`
       } else if (lastStart) {
-        // Fallback: check agent_events for recent task_start without completion
         const hasCompletion = recentEvents.some((e: any) =>
           e.agent_id === agent.agent_id &&
           ['task_complete', 'task_fail'].includes(e.event_type) &&
@@ -220,17 +256,18 @@ export async function GET() {
         currentTask,
         currentModel: liveData?.current_model || null,
         activeSessions: liveData?.active_count || 0,
+        runningTasks: agentQueueTasks.filter((t: any) => t.status === 'running').length,
+        plannedTasks: agentQueueTasks.filter((t: any) => ['planned', 'assigned'].includes(t.status)).length,
         recentZombieKill: zombieAgentIds.has(agent.agent_id)
       }
     })
 
-    // Pipeline stats
+    // Pipeline stats — use task_queue as primary source
     const pipelineMap = Object.fromEntries(pipelineRaw.map((p: any) => [p.event_type, p.count]))
     const completed = pipelineMap['task_complete'] || 0
     const failed = pipelineMap['task_fail'] || 0
-    const started = pipelineMap['task_start'] || 0
-    const running = runningRuns.length
-    const queued = Math.max(0, started - completed - failed - running)
+    const running = runningQueueTasks.filter((t: any) => t.status === 'running').length || runningRuns.length
+    const queued = runningQueueTasks.filter((t: any) => ['planned', 'assigned'].includes(t.status)).length
 
     const pipeline = {
       queued,
