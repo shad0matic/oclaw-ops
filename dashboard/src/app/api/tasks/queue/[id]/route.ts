@@ -90,6 +90,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       const allowed: Record<string, keyof typeof taskQueueInOps.$inferInsert> = {
         title: 'title', description: 'description', priority: 'priority',
         project: 'project', agent_id: 'agentId', spec_url: 'specUrl', speced: 'speced', epic: 'epic', notes: 'notes',
+        model: 'model', session_key: 'sessionKey', heartbeat_msg: 'heartbeatMsg',
       }
       const values: Partial<typeof taskQueueInOps.$inferInsert> = {}
       for (const [k, v] of Object.entries(fields)) {

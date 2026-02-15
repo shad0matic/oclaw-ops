@@ -11,6 +11,7 @@ import { TaskDetailSheet } from "@/components/kanban/task-detail-sheet";
 import { NewTaskSheet } from "@/components/kanban/new-task-sheet";
 import { Project, QueueTask, FeatureRequest } from "@/components/kanban/types";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useTaskStream } from "@/hooks/use-task-stream";
 
 // --- Data Fetching ---
 const FALLBACK_PROJECTS: Project[] = [
@@ -55,6 +56,7 @@ const COLUMNS: Array<{ title: string; status: string }> = [
 
 export function KanbanBoard() {
   const queryClient = useQueryClient();
+  useTaskStream(); // Real-time SSE updates
   const [projectFilter, setProjectFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [activeColumn, setActiveColumn] = useState<string>("backlog");

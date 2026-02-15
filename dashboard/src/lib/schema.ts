@@ -588,7 +588,7 @@ export const taskQueueInOps = ops.table("task_queue", {
 	priority: smallint().default(5),
 	status: text().default('queued'),
 	createdBy: text("created_by").default('boss'),
-	result: jsonb().default({}),
+	result: text(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }),
 	completedAt: timestamp("completed_at", { withTimezone: true, mode: 'string' }),
@@ -599,12 +599,31 @@ export const taskQueueInOps = ops.table("task_queue", {
 	speced: boolean().default(false).notNull(),
 	epic: text(),
 	notes: text(),
+	sessionKey: text("session_key"),
+	model: text(),
+	lastHeartbeat: timestamp("last_heartbeat", { withTimezone: true, mode: 'string' }),
+	heartbeatMsg: text("heartbeat_msg"),
 }, (table) => [
 	index("idx_task_queue_agent").using("btree", table.agentId.asc().nullsLast().op("text_ops")).where(sql`(agent_id IS NOT NULL)`),
 	index("idx_task_queue_project").using("btree", table.project.asc().nullsLast().op("text_ops"), table.status.asc().nullsLast().op("text_ops")),
 	index("idx_task_queue_status").using("btree", table.status.asc().nullsLast().op("text_ops"), table.priority.desc().nullsFirst().op("int2_ops")),
 	check("task_queue_priority_check", sql`(priority >= 1) AND (priority <= 10)`),
 	check("task_queue_status_check", sql`status = ANY (ARRAY['queued'::text, 'assigned'::text, 'planned'::text, 'running'::text, 'review'::text, 'human_todo'::text, 'done'::text, 'failed'::text, 'cancelled'::text])`),
+]);
+
+export const taskEventsInOps = ops.table("task_events", {
+	id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+	taskId: bigint("task_id", { mode: "bigint" }).notNull().references(() => taskQueueInOps.id, { onDelete: "cascade" }),
+	eventType: text("event_type").notNull(),
+	fromStatus: text("from_status"),
+	toStatus: text("to_status"),
+	agentId: text("agent_id"),
+	actor: text(),
+	detail: jsonb().default({}),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("idx_task_events_task").using("btree", table.taskId.asc().nullsLast(), table.createdAt.desc().nullsFirst()),
+	index("idx_task_events_type").using("btree", table.eventType.asc().nullsLast()),
 ]);
 
 export const telegramMessagesInOps = ops.table("telegram_messages", {
