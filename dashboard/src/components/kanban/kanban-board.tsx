@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -13,6 +13,45 @@ import { NewTaskSheet } from "@/components/kanban/new-task-sheet";
 import { Project, QueueTask, FeatureRequest } from "@/components/kanban/types";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useTaskStream } from "@/hooks/use-task-stream";
+
+const REFRESH_INTERVAL = 10_000; // 10s
+
+// --- Countdown refresh ring ---
+function RefreshCountdown({ isFetching, onRefresh }: { isFetching: boolean; onRefresh: () => void }) {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (isFetching) { setProgress(0); return; }
+    const start = Date.now();
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      setProgress(Math.min(elapsed / REFRESH_INTERVAL, 1));
+    };
+    const id = setInterval(tick, 100);
+    return () => clearInterval(id);
+  }, [isFetching]);
+
+  const r = 7, c = 2 * Math.PI * r;
+  const offset = c * (1 - progress);
+
+  return (
+    <button
+      onClick={onRefresh}
+      className="relative w-7 h-7 flex items-center justify-center group"
+      aria-label={`Refresh tasks (${Math.round((1 - progress) * 10)}s)`}
+      title={`Next refresh in ${Math.round((1 - progress) * 10)}s`}
+    >
+      <svg className="absolute inset-0 w-7 h-7 -rotate-90" viewBox="0 0 18 18">
+        <circle cx="9" cy="9" r={r} fill="none" stroke="currentColor" strokeWidth="1.5"
+          className="text-muted-foreground/15" />
+        <circle cx="9" cy="9" r={r} fill="none" stroke="currentColor" strokeWidth="1.5"
+          strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
+          className="text-amber-500/60 transition-[stroke-dashoffset] duration-100" />
+      </svg>
+      <RefreshCw className={`w-3 h-3 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors ${isFetching ? "animate-spin" : ""}`} />
+    </button>
+  );
+}
 
 // --- Data Fetching ---
 const FALLBACK_PROJECTS: Project[] = [
@@ -177,16 +216,13 @@ export function KanbanBoard() {
               <Filter className="w-3.5 h-3.5" />
               Filter
             </button>
-            <button
-              onClick={() => {
+            <RefreshCountdown
+              isFetching={isQueueFetching}
+              onRefresh={() => {
                 queryClient.invalidateQueries({ queryKey: ["task-queue"] });
                 queryClient.invalidateQueries({ queryKey: ["backlog"] });
               }}
-              className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-              aria-label="Refresh tasks"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isQueueFetching ? "animate-spin" : ""}`} />
-            </button>
+            />
           </div>
         </div>
 
