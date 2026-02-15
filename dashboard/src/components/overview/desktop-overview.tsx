@@ -1,6 +1,6 @@
 "use client"
 
-import { UnifiedTeamBoard } from "./desktop/unified-team-board"
+import { TeamTree } from "./shared/team-tree"
 import { PipelineStrip } from "./desktop/pipeline-strip"
 import { ActivityTimeline } from "./desktop/activity-timeline"
 import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData"
@@ -21,12 +21,17 @@ export function DesktopOverview() {
           <ZombieAlertBanner zombies={overviewData.zombies} />
         )}
 
-        {/* Unified Team Board */}
-        <UnifiedTeamBoard
-          agents={overviewData?.team || []}
-          liveWork={liveWork || overviewData?.liveWork || { count: 0, tasks: [] }}
-          isLoading={isLoading || (liveWorkLoading && !liveWork)}
-        />
+        {/* Team Tree */}
+        <div className="bg-card border rounded-lg shadow-sm p-4">
+          {isLoading ? (
+            <div className="text-sm text-muted-foreground">Loading team...</div>
+          ) : (
+            <TeamTree
+              agents={overviewData?.team || []}
+              liveWork={liveWork || overviewData?.liveWork || { count: 0, tasks: [] }}
+            />
+          )}
+        </div>
 
         {/* Pipeline Strip */}
         {overviewData && (

@@ -1,14 +1,14 @@
 
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { HealthPulse } from "./mobile/health-pulse"
 import { AlertBanner, type Alert } from "./mobile/alert-banner"
 import { AgentBottomSheet } from "./mobile/agent-bottom-sheet"
 import { TodaySummary } from "./mobile/today-summary"
 import { ActivityCollapsed } from "./mobile/activity-collapsed"
 import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData"
-import { AgentCard } from "./desktop/agent-card" // Reusing the desktop card
+import { TeamTree } from "./shared/team-tree"
 interface AgentProfile { id: string; name: string; description: string; level: number; trustScore: number; status: string; currentTask: string | null; }
 import type { AgentData, TaskTree } from "@/hooks/useOverviewData"
 type LiveWorkData = { count: number; tasks: TaskTree[] }
@@ -58,31 +58,6 @@ export function MobileOverview() {
   const agents = overviewData?.team || []
   const alerts = overviewData ? generateAlerts(liveWork?.tasks || [], agents) : []
 
-  const sortedAgents = useMemo(() => {
-    if (!agents) return []
-    return [...agents].sort((a, b) => {
-      const aTasks = liveWork?.tasks?.filter(t => t.agentId === a.id) || []
-      const bTasks = liveWork?.tasks?.filter(t => t.agentId === b.id) || []
-      const aIsWorking = aTasks.length > 0
-      const bIsWorking = bTasks.length > 0
-      const aIsZombie = a.status === "zombie"
-      const bIsZombie = b.status === "zombie"
-
-      if (aIsWorking && !bIsWorking) return -1
-      if (!aIsWorking && bIsWorking) return 1
-
-      // More tasks = higher priority
-      if (aIsWorking && bIsWorking) {
-        return bTasks.length - aTasks.length || (bTasks[0]?.elapsedSeconds || 0) - (aTasks[0]?.elapsedSeconds || 0)
-      }
-
-      if (aIsZombie && !bIsZombie) return -1
-      if (!aIsZombie && bIsZombie) return 1
-
-      return a.name.localeCompare(b.name)
-    })
-  }, [agents, liveWork])
-  
   const selectedAgent = agents.find(a => a.id === selectedAgentId)
 
   if (!overviewData) {
@@ -112,47 +87,8 @@ export function MobileOverview() {
       {alerts.length > 0 && <AlertBanner alerts={alerts} />}
 
       {/* Unified Team Section */}
-      <section className="p-4 space-y-3" aria-labelledby="team-heading-mobile">
-        <div className="flex items-center justify-between">
-          <h2 id="team-heading-mobile" className="text-sm font-medium text-foreground">
-            THE TEAM
-          </h2>
-          <span className="text-xs font-medium text-foreground px-2 py-0.5 rounded-full bg-muted">
-            {agents.length} agents · {liveWork?.count || 0} working
-          </span>
-        </div>
-
-        {sortedAgents.length === 0 ? (
-          <div className="text-center py-12 space-y-2">
-            <p className="text-4xl" aria-hidden="true">🤖</p>
-            <p className="text-sm font-medium text-foreground">No agents found</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {sortedAgents.map(agent => {
-              const agentTasks = liveWork?.tasks?.filter(t => t.agentId === agent.id) || []
-              // Also include child tasks (sub-agents spawned by this agent)
-              const childTasks = liveWork?.tasks?.flatMap(t => 
-                t.children?.filter(c => c.agentId === agent.id) || []
-              ) || []
-              const allTasks = [...agentTasks, ...childTasks].map(t => ({
-                task: t.task,
-                elapsedSeconds: t.elapsedSeconds,
-                model: t.model,
-                source: t.source,
-              }))
-              return (
-                <div key={agent.id} onClick={() => setSelectedAgentId(agent.id)}>
-                  <AgentCard
-                    agent={agent}
-                    tasks={allTasks}
-                    isWorking={allTasks.length > 0}
-                  />
-                </div>
-              )
-            })}
-          </div>
-        )}
+      <section className="p-4" aria-labelledby="team-heading-mobile">
+        <TeamTree agents={agents} liveWork={liveWork || undefined} />
       </section>
 
       {/* Today Summary */}
