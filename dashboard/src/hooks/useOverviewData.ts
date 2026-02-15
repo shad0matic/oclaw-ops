@@ -59,6 +59,8 @@ export interface OverviewData {
     dashboardUptime?: number
     cpu: number
     memory: number
+    load?: number[]
+    cores?: number
   }
   liveWork: {
     count: number
