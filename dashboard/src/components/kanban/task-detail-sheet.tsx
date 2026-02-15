@@ -161,29 +161,29 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: Detail
   const projectIcon = proj?.icon || "📦";
 
   const renderStatusTransitions = (task: QueueTask) => {
-    const buttons = [];
+    const buttons: { action: string; label: string; primary?: boolean }[] = [];
     switch (task.status) {
         case 'queued':
         case 'backlog':
+            buttons.push({ action: 'run', label: '▶️ Run Now', primary: true });
             buttons.push({ action: 'plan', label: '📋 Plan' });
-            buttons.push({ action: 'run', label: '▶️ Run Now' });
             break;
         case 'planned':
         case 'assigned':
-            buttons.push({ action: 'run', label: '▶️ Run' });
+            buttons.push({ action: 'run', label: '▶️ Run', primary: true });
             buttons.push({ action: 'requeue', label: '↩️ Back to Backlog' });
             break;
         case 'running':
-            buttons.push({ action: 'review', label: 'Finish for Review' });
+            buttons.push({ action: 'review', label: 'Finish for Review', primary: true });
             buttons.push({ action: 'human', label: 'Flag for Human' });
             buttons.push({ action: 'fail', label: 'Mark as Failed' });
             break;
         case 'review':
-            buttons.push({ action: 'approve', label: 'Approve' });
+            buttons.push({ action: 'approve', label: '✅ Approve', primary: true });
             buttons.push({ action: 'reject', label: 'Reject & Requeue' });
             break;
         case 'human_todo':
-            buttons.push({ action: 'complete', label: 'Complete' });
+            buttons.push({ action: 'complete', label: '✅ Complete', primary: true });
             buttons.push({ action: 'requeue', label: 'Requeue' });
             break;
     }
@@ -192,9 +192,17 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: Detail
         if (btn.action === 'run' && selectedAgent) {
             payload.fields = { agent_id: selectedAgent };
         }
+        const isPrimary = btn.primary;
         return (
-            <Button key={btn.action} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => taskMutation.mutate({ id: task.id, action: btn.action, payload })}
-                variant="outline" size="sm" className="h-11 sm:h-8 min-h-11 sm:min-h-8 w-full sm:w-auto text-xs">
+            <Button 
+                key={btn.action} 
+                type="button" 
+                onMouseDown={(e) => e.preventDefault()} 
+                onClick={() => taskMutation.mutate({ id: task.id, action: btn.action, payload })}
+                variant={isPrimary ? "default" : "outline"} 
+                size="sm" 
+                className={`h-12 sm:h-9 min-h-12 sm:min-h-9 w-full text-sm ${isPrimary ? 'bg-emerald-600 hover:bg-emerald-700 text-white font-medium' : 'text-xs'}`}
+            >
                 {btn.label}
             </Button>
     )});
@@ -287,11 +295,11 @@ const renderAgentPicker = () => {
           </div>
 
           <div className="shrink-0 border-t border-border/50 px-4 py-4 sm:px-6 sm:py-6">
-            <SheetFooter className="mt-0 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+            <SheetFooter className="mt-0 flex flex-col gap-4">
               {isDbTask ? (
-                <div className="w-full sm:w-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2 sm:flex-wrap">
+                <div className="w-full flex flex-col gap-3">
                   {renderAgentPicker()}
-                  <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+                  <div className="flex flex-col gap-2">
                     {renderStatusTransitions(item as QueueTask)}
                   </div>
                 </div>
@@ -302,25 +310,29 @@ const renderAgentPicker = () => {
                 </button>
               )}
               {isDbTask && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" className="h-11 sm:h-8 min-h-11 sm:min-h-8 text-xs">🗑️ Delete</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the task.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="min-h-11 sm:min-h-9">Cancel</AlertDialogCancel>
-                      <AlertDialogAction className="min-h-11 sm:min-h-9" onClick={() => deleteMutation.mutate((item as QueueTask).id)}>
-                        Continue
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <div className="pt-2 border-t border-border/30">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="text-xs text-red-400/70 hover:text-red-400 transition-colors">
+                        Delete task
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the task.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="min-h-11 sm:min-h-9">Cancel</AlertDialogCancel>
+                        <AlertDialogAction className="min-h-11 sm:min-h-9" onClick={() => deleteMutation.mutate((item as QueueTask).id)}>
+                          Continue
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               )}
             </SheetFooter>
           </div>
