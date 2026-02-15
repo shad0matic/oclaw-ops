@@ -1,54 +1,39 @@
-export const dynamic = "force-dynamic"
+
 import { db } from "@/lib/drizzle"
-import { projectsInOps } from "@/lib/schema"
-import { eq } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
+import { sql } from "drizzle-orm"
+import { projectsInOps, taskQueueInOps } from "@/lib/schema"
 
-export async function GET() {
-  const rows = await db.select().from(projectsInOps)
-    .where(eq(projectsInOps.active, true))
-    .orderBy(projectsInOps.label)
-  return NextResponse.json(rows)
-}
+export const dynamic = "force-dynamic"
 
-export async function POST(request: NextRequest) {
-  const { id, label, icon, description, color } = await request.json()
-  if (!id || !label) return NextResponse.json({ error: "id and label required" }, { status: 400 })
+export async function GET(request: NextRequest) {
+  try {
+    const projectTaskStats = db
+      .select({
+        projectId: taskQueueInOps.epic,
+        status: taskQueueInOps.status,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(taskQueueInOps)
+      .where(sql`${taskQueueInOps.epic} IS NOT NULL`)
+      .groupBy(taskQueueInOps.epic, taskQueueInOps.status)
+      .as("task_stats")
 
-  const [row] = await db.insert(projectsInOps).values({
-    id, label,
-    icon: icon || '📦',
-    description: description || null,
-    color: color || 'border-l-zinc-500',
-  }).onConflictDoUpdate({
-    target: projectsInOps.id,
-    set: { label, icon: icon || '📦', description: description || null, color: color || 'border-l-zinc-500' },
-  }).returning()
-  return NextResponse.json(row, { status: 201 })
-}
+    const projectsWithStats = await db
+      .select({
+        ...projectsInOps,
+        tasksOpen: sql<number>`SUM(CASE WHEN ${projectTaskStats.status} = 'queued' THEN ${projectTaskStats.count} ELSE 0 END)::int`,
+        tasksRunning: sql<number>`SUM(CASE WHEN ${projectTaskStats.status} = 'running' THEN ${projectTaskStats.count} ELSE 0 END)::int`,
+        tasksDone: sql<number>`SUM(CASE WHEN ${projectTaskStats.status} = 'done' THEN ${projectTaskStats.count} ELSE 0 END)::int`,
+      })
+      .from(projectsInOps)
+      .leftJoin(projectTaskStats, sql`${projectsInOps.id} = ${projectTaskStats.projectId}`)
+      .groupBy(projectsInOps.id)
+      .orderBy(projectsInOps.label)
 
-export async function PATCH(request: NextRequest) {
-  const id = request.nextUrl.searchParams.get("id")
-  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 })
-
-  const body = await request.json()
-  const values: Partial<typeof projectsInOps.$inferInsert> = {}
-  if (body.label !== undefined) values.label = body.label
-  if (body.icon !== undefined) values.icon = body.icon
-  if (body.description !== undefined) values.description = body.description
-  if (body.color !== undefined) values.color = body.color
-  if (body.active !== undefined) values.active = body.active
-
-  if (Object.keys(values).length === 0) return NextResponse.json({ error: "nothing to update" }, { status: 400 })
-
-  const [row] = await db.update(projectsInOps).set(values).where(eq(projectsInOps.id, id)).returning()
-  return NextResponse.json(row)
-}
-
-export async function DELETE(request: NextRequest) {
-  const id = request.nextUrl.searchParams.get("id")
-  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 })
-
-  await db.update(projectsInOps).set({ active: false }).where(eq(projectsInOps.id, id))
-  return NextResponse.json({ ok: true })
+    return NextResponse.json(projectsWithStats)
+  } catch (error: any) {
+    console.error("Failed to fetch projects with task stats", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }

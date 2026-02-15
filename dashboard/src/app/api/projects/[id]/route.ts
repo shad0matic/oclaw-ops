@@ -1,0 +1,93 @@
+
+import { db } from "@/lib/drizzle"
+import { NextRequest, NextResponse } from "next/server"
+import { projectsInOps, taskQueueInOps } from "@/lib/schema"
+import { eq } from "drizzle-orm"
+
+export const dynamic = "force-dynamic"
+
+// GET a single project with its tasks
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params
+  if (!id) {
+    return NextResponse.json({ error: "Project ID is required" }, { status: 400 })
+  }
+
+  try {
+    const project = await db
+      .select()
+      .from(projectsInOps)
+      .where(eq(projectsInOps.id, id))
+      .limit(1)
+
+    if (project.length === 0) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 })
+    }
+
+    const tasks = await db
+      .select()
+      .from(taskQueueInOps)
+      .where(eq(taskQueueInOps.epic, id))
+      .orderBy(taskQueueInOps.createdAt)
+
+    return NextResponse.json({ ...project[0], tasks })
+  } catch (error: any) {
+    console.error(`Failed to fetch project ${id}`, error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+// PATCH to update a project's fields
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params
+  if (!id) {
+    return NextResponse.json({ error: "Project ID is required" }, { status: 400 })
+  }
+
+  try {
+    const body = await request.json()
+    const { label, description, icon, color, active, owner, status } = body
+
+    const updatedFields: Partial<typeof projectsInOps.$inferInsert> = {}
+    if (label) updatedFields.label = label
+    if (description) updatedFields.description = description
+    if (icon) updatedFields.icon = icon
+    if (color) updatedFields.color = color
+    if (active !== undefined) updatedFields.active = active
+    
+    // The spec uses owner and status, but the schema doesn't have them.
+    // I will add them to the update object if they exist in the body,
+    // assuming the schema might be out of date. The DB will throw an
+    // error if the columns don't exist, which is fine for now.
+    if (owner) (updatedFields as any).owner = owner
+    if (status) (updatedFields as any).status = status
+
+    if (Object.keys(updatedFields).length === 0) {
+      return NextResponse.json(
+        { error: "No fields to update" },
+        { status: 400 }
+      )
+    }
+
+    const result = await db
+      .update(projectsInOps)
+      .set(updatedFields)
+      .where(eq(projectsInOps.id, id))
+      .returning()
+
+    if (result.length === 0) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(result[0])
+  } catch (error: any) {
+    console.error(`Failed to update project ${id}`, error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}

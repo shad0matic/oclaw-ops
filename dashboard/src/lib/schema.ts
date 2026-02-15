@@ -528,6 +528,9 @@ export const projectsInOps = ops.table("projects", {
 	color: text().default('border-l-zinc-500').notNull(),
 	active: boolean().default(true).notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+    owner: text(),
+    status: text().default('active'),
 });
 
 export const researchIdeasInOps = ops.table("research_ideas", {
