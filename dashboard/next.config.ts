@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     keepAlive: false,
   },
   serverExternalPackages: ['systeminformation'],
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;

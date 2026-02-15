@@ -43,32 +43,36 @@ async function proxyRequest(req: NextRequest, path: string) {
 
 export async function GET(
 	req: NextRequest,
-	{params}: {params: {slug: string[]}},
+	{params}: {params: Promise<{slug?: string[]}>},
 ) {
-	const path = params.slug ? `/${params.slug.join('/')}` : ''
+	const { slug } = await params;
+	const path = slug ? `/${slug.join('/')}` : ''
 	return proxyRequest(req, path)
 }
 
 export async function POST(
 	req: NextRequest,
-	{params}: {params: {slug: string[]}},
+	{params}: {params: Promise<{slug?: string[]}>},
 ) {
-	const path = params.slug ? `/${params.slug.join('/')}` : ''
+	const { slug } = await params;
+	const path = slug ? `/${slug.join('/')}` : ''
 	return proxyRequest(req, path)
 }
 
 export async function PATCH(
 	req: NextRequest,
-	{params}: {params: {slug: string[]}},
+	{params}: {params: Promise<{slug?: string[]}>},
 ) {
-	const path = params.slug ? `/${params.slug.join('/')}` : ''
+	const { slug } = await params;
+	const path = slug ? `/${slug.join('/')}` : ''
 	return proxyRequest(req, path)
 }
 
 export async function DELETE(
 	req: NextRequest,
-	{params}: {params: {slug: string[]}},
+	{params}: {params: Promise<{slug?: string[]}>},
 ) {
-	const path = params.slug ? `/${params.slug.join('/')}` : ''
+	const { slug } = await params;
+	const path = slug ? `/${slug.join('/')}` : ''
 	return proxyRequest(req, path)
 }

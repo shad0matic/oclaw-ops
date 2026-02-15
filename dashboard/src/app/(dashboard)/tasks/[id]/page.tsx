@@ -34,8 +34,9 @@ async function getTaskDetails(id: string) {
   return MOCK_DATA;
 }
 
-export default async function TaskDetailsPage({ params }: { params: { id: string } }) {
-  const data = await getTaskDetails(params.id);
+export default async function TaskDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const data = await getTaskDetails(id);
 
   if (!data) {
     notFound();

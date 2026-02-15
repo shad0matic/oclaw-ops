@@ -141,8 +141,16 @@ export function StatusBar({
     if (ws.current && ws.current.readyState === WebSocket.OPEN) return;
     if (typeof window === 'undefined') return;
 
-    const wsUrl = `ws://${window.location.hostname}:3101`;
-    ws.current = new WebSocket(wsUrl);
+    // Use wss:// when page is loaded over HTTPS
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.hostname}:3101`;
+    try {
+      ws.current = new WebSocket(wsUrl);
+    } catch (e) {
+      // WSS not available — stay disconnected, rely on polling
+      setWsStatus('disconnected');
+      return;
+    }
 
     ws.current.onopen = () => {
       setWsStatus('connected');
