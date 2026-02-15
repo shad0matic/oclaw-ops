@@ -127,7 +127,7 @@ export function KanbanBoard() {
     review: "review", human_todo: "human", done: "complete",
   };
   
-  const DONE_LIMIT = 15;
+  const DONE_LIMIT = 10;
 
   const getColumnTasks = (status: string) => {
     let tasksInColumn = filteredTasks.filter((t) => t.status === status);
