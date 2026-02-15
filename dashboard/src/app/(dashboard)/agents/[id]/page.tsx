@@ -31,14 +31,18 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
     const todayStart = new Date()
     todayStart.setHours(0, 0, 0, 0)
 
-    const [eventsResult, reviewsResult, todayEventsResult] = await Promise.all([
+    const [eventsResult, todayEventsResult] = await Promise.all([
         pool.query('SELECT * FROM ops.agent_events WHERE agent_id = $1 ORDER BY created_at DESC LIMIT 50', [id]),
-        pool.query('SELECT * FROM ops.performance_reviews WHERE agent_id = $1 ORDER BY created_at DESC', [id]),
         pool.query('SELECT COUNT(*)::int as count FROM ops.agent_events WHERE agent_id = $1 AND created_at >= $2', [id, todayStart])
     ])
 
+    let reviews: any[] = []
+    try {
+        const reviewsResult = await pool.query('SELECT * FROM ops.performance_reviews WHERE agent_id = $1 ORDER BY created_at DESC', [id])
+        reviews = reviewsResult.rows
+    } catch { /* table may not exist yet */ }
+
     const events = eventsResult.rows
-    const reviews = reviewsResult.rows
     const todayEvents = todayEventsResult.rows[0].count
 
     const serializedEvents = events.map((e: any) => ({
