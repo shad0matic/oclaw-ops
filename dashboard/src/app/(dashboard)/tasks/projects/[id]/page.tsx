@@ -8,18 +8,19 @@ import { notFound } from "next/navigation"
 export default async function ProjectDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   const session = await auth()
   if (!session) redirect("/login")
 
-  if (!params.id) {
+  const { id } = await params
+  if (!id) {
     notFound()
   }
 
   return (
     <div className="space-y-8">
-      <ProjectDetailClient projectId={params.id} />
+      <ProjectDetailClient projectId={id} />
     </div>
   )
 }
