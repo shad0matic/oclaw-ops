@@ -214,8 +214,44 @@ export function KanbanBoard() {
          : error ? <p className="text-sm text-red-400">Failed to load tasks.</p> 
          : (
           <>
-            <div className="lg:hidden">
-              {/* Mobile Kanban View */}
+            <div className="lg:hidden space-y-3">
+              {/* Mobile: tab-based column switcher */}
+              <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+                {COLUMNS.map((c) => {
+                  const count = c.status === 'backlog'
+                    ? filteredTasks.filter(t => t.status === c.status).length + (filteredBacklog?.length || 0)
+                    : filteredTasks.filter(t => t.status === c.status).length;
+                  return (
+                    <button
+                      key={c.status}
+                      onClick={() => setActiveColumn(c.status)}
+                      className={`flex-shrink-0 text-xs px-3 py-2 rounded-lg transition-colors ${
+                        activeColumn === c.status
+                          ? "bg-amber-500/20 text-amber-400"
+                          : "bg-muted/50 text-muted-foreground"
+                      }`}
+                    >
+                      {c.title.split(" ")[0]} {count > 0 && <span className="ml-1 opacity-70">{count}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {COLUMNS.filter(c => c.status === activeColumn).map((c) => {
+                const tasksInColumn = filteredTasks.filter((t) => t.status === c.status);
+                return (
+                  <KanbanColumn
+                    key={c.status}
+                    title={c.title}
+                    status={c.status}
+                    tasks={tasksInColumn}
+                    totalTasks={tasksInColumn.length}
+                    featureRequests={c.status === 'backlog' ? filteredBacklog : []}
+                    actionMap={actionMap}
+                    projects={projects}
+                    onCardClick={handleCardClick}
+                  />
+                );
+              })}
             </div>
             <div className="hidden lg:grid gap-3 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               {COLUMNS.map((c) => {
