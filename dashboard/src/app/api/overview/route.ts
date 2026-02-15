@@ -256,6 +256,8 @@ export async function GET() {
         currentTask,
         currentModel: liveData?.current_model || null,
         activeSessions: liveData?.active_count || 0,
+        role: agent.role || 'agent',
+        reportsTo: agent.reports_to || null,
         runningTasks: agentQueueTasks.filter((t: any) => t.status === 'running').length,
         plannedTasks: agentQueueTasks.filter((t: any) => ['planned', 'assigned'].includes(t.status)).length,
         recentZombieKill: zombieAgentIds.has(agent.agent_id)

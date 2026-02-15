@@ -31,6 +31,12 @@ export interface AgentData {
   status: 'active' | 'idle' | 'error' | 'zombie'
   currentTask: string | null
   recentZombieKill: boolean
+  role?: string
+  reportsTo?: string | null
+  runningTasks?: number
+  plannedTasks?: number
+  currentModel?: string | null
+  activeSessions?: number
 }
 
 export interface PipelineData {
