@@ -5,7 +5,8 @@ import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Filter, RefreshCw, Plus, Search } from "lucide-react";
+import { Filter, RefreshCw, Plus, Search, Archive } from "lucide-react";
+import Link from "next/link";
 import { KanbanColumn } from "@/components/kanban/column";
 import { TaskDetailSheet } from "@/components/kanban/task-detail-sheet";
 import { NewTaskSheet } from "@/components/kanban/new-task-sheet";
@@ -126,6 +127,21 @@ export function KanbanBoard() {
     review: "review", human_todo: "human", done: "complete",
   };
   
+  const DONE_LIMIT = 15;
+
+  const getColumnTasks = (status: string) => {
+    let tasksInColumn = filteredTasks.filter((t) => t.status === status);
+    if (status === 'done') {
+      // Sort by completed_at desc (most recent first)
+      tasksInColumn = [...tasksInColumn].sort((a, b) => {
+        const aDate = a.completed_at ? new Date(a.completed_at).getTime() : 0;
+        const bDate = b.completed_at ? new Date(b.completed_at).getTime() : 0;
+        return bDate - aDate;
+      });
+    }
+    return tasksInColumn;
+  };
+
   const handleCardClick = (item: QueueTask | FeatureRequest) => setSelectedItem(item);
   const handleSheetOpenChange = (isOpen: boolean) => !isOpen && setSelectedItem(null);
 
@@ -239,37 +255,61 @@ export function KanbanBoard() {
                 })}
               </div>
               {COLUMNS.filter(c => c.status === activeColumn).map((c) => {
-                const tasksInColumn = filteredTasks.filter((t) => t.status === c.status);
+                const allTasks = getColumnTasks(c.status);
+                const displayTasks = c.status === 'done' && !isDoneExpanded ? allTasks.slice(0, DONE_LIMIT) : allTasks;
                 return (
-                  <KanbanColumn
-                    key={c.status}
-                    title={c.title}
-                    status={c.status}
-                    tasks={tasksInColumn}
-                    totalTasks={tasksInColumn.length}
-                    featureRequests={c.status === 'backlog' ? filteredBacklog : []}
-                    actionMap={actionMap}
-                    projects={projects}
-                    onCardClick={handleCardClick}
-                  />
+                  <div key={c.status}>
+                    <KanbanColumn
+                      title={c.title}
+                      status={c.status}
+                      tasks={displayTasks}
+                      totalTasks={allTasks.length}
+                      featureRequests={c.status === 'backlog' ? filteredBacklog : []}
+                      actionMap={actionMap}
+                      projects={projects}
+                      onCardClick={handleCardClick}
+                    />
+                    {c.status === 'done' && allTasks.length > DONE_LIMIT && (
+                      <div className="mt-2 flex flex-col items-center gap-1">
+                        <button onClick={() => setIsDoneExpanded(!isDoneExpanded)} className="text-xs text-muted-foreground hover:text-foreground">
+                          {isDoneExpanded ? "Show less" : `Show ${DONE_LIMIT} of ${allTasks.length}`}
+                        </button>
+                        <Link href="/tasks/archive" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                          <Archive className="w-3 h-3" /> View archive
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
             <div className="hidden lg:grid gap-3 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               {COLUMNS.map((c) => {
-                const tasksInColumn = filteredTasks.filter((t) => t.status === c.status);
+                const allTasks = getColumnTasks(c.status);
+                const displayTasks = c.status === 'done' && !isDoneExpanded ? allTasks.slice(0, DONE_LIMIT) : allTasks;
                 return (
-                  <KanbanColumn
-                    key={c.status}
-                    title={c.title}
-                    status={c.status}
-                    tasks={tasksInColumn}
-                    totalTasks={tasksInColumn.length}
-                    featureRequests={c.status === 'backlog' ? filteredBacklog : []}
-                    actionMap={actionMap}
-                    projects={projects}
-                    onCardClick={handleCardClick}
-                  />
+                  <div key={c.status}>
+                    <KanbanColumn
+                      title={c.title}
+                      status={c.status}
+                      tasks={displayTasks}
+                      totalTasks={allTasks.length}
+                      featureRequests={c.status === 'backlog' ? filteredBacklog : []}
+                      actionMap={actionMap}
+                      projects={projects}
+                      onCardClick={handleCardClick}
+                    />
+                    {c.status === 'done' && allTasks.length > DONE_LIMIT && (
+                      <div className="mt-2 flex flex-col items-center gap-1">
+                        <button onClick={() => setIsDoneExpanded(!isDoneExpanded)} className="text-xs text-muted-foreground hover:text-foreground">
+                          {isDoneExpanded ? "Show less" : `Show ${DONE_LIMIT} of ${allTasks.length}`}
+                        </button>
+                        <Link href="/tasks/archive" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                          <Archive className="w-3 h-3" /> View archive
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>

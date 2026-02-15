@@ -51,7 +51,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     case "fail":
       await db.update(taskQueueInOps).set({
         status: 'failed', completedAt: sql`now()`,
-        result: { error: body.result || 'unknown' },
+        result: sql`${JSON.stringify({ error: body.result || 'unknown' })}::jsonb`,
       }).where(where)
       break
     case "cancel":
