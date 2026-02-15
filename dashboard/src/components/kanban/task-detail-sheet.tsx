@@ -229,7 +229,7 @@ const renderAgentPicker = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:w-[500px] sm:max-w-xl bg-card/80 backdrop-blur-xl border-l-border p-0" aria-describedby="task-detail-desc" onFocusOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+      <SheetContent className="w-full sm:w-[500px] sm:max-w-xl bg-card/80 backdrop-blur-xl border-l-border p-0" aria-describedby="task-detail-desc">
         <div className="flex h-dvh sm:h-full flex-col">
           <div className="shrink-0 border-b border-border/50 px-4 py-4 sm:px-6 sm:py-6">
             <SheetHeader className="mb-0">
