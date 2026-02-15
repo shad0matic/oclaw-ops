@@ -17,6 +17,7 @@ export interface TaskTree {
   cost: number
   spawnedBy: string | null
   children: TaskTree[]
+  source?: string
 }
 
 export interface AgentData {

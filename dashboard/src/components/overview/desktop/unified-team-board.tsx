@@ -23,8 +23,10 @@ export function UnifiedTeamBoard({
   const sortedAgents = useMemo(() => {
     if (!agents) return []
     return [...agents].sort((a, b) => {
-      const aIsWorking = liveWork?.tasks?.some(t => t.agentId === a.id)
-      const bIsWorking = liveWork?.tasks?.some(t => t.agentId === b.id)
+      const aTasks = liveWork?.tasks?.filter(t => t.agentId === a.id) || []
+      const bTasks = liveWork?.tasks?.filter(t => t.agentId === b.id) || []
+      const aIsWorking = aTasks.length > 0
+      const bIsWorking = bTasks.length > 0
       const aIsZombie = a.status === "zombie"
       const bIsZombie = b.status === "zombie"
 
@@ -32,9 +34,7 @@ export function UnifiedTeamBoard({
       if (!aIsWorking && bIsWorking) return 1
 
       if (aIsWorking && bIsWorking) {
-        const aTask = liveWork.tasks.find(t => t.agentId === a.id)
-        const bTask = liveWork.tasks.find(t => t.agentId === b.id)
-        return (bTask?.elapsedSeconds || 0) - (aTask?.elapsedSeconds || 0)
+        return bTasks.length - aTasks.length || (bTasks[0]?.elapsedSeconds || 0) - (aTasks[0]?.elapsedSeconds || 0)
       }
 
       if (aIsZombie && !bIsZombie) return -1
@@ -65,7 +65,13 @@ export function UnifiedTeamBoard({
           <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AnimatePresence>
               {sortedAgents.map(agent => {
-                const task = liveWork?.tasks?.find(t => t.agentId === agent.id)
+                const agentTasks = liveWork?.tasks?.filter(t => t.agentId === agent.id) || []
+                const allTasks = agentTasks.map(t => ({
+                  task: t.task,
+                  elapsedSeconds: t.elapsedSeconds,
+                  model: t.model,
+                  source: t.source,
+                }))
                 return (
                   <motion.div
                     key={agent.id}
@@ -76,10 +82,8 @@ export function UnifiedTeamBoard({
                   >
                     <AgentCard
                       agent={agent}
-                      taskName={task?.task}
-                      elapsedSeconds={task?.elapsedSeconds}
-                      model={task?.model ?? undefined}
-                      isWorking={!!task}
+                      tasks={allTasks}
+                      isWorking={allTasks.length > 0}
                     />
                   </motion.div>
                 )
