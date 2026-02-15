@@ -103,6 +103,9 @@ export function MobileOverview() {
         status={overviewData.system.status}
         activeCount={liveWork?.count || overviewData.liveWork.count}
         dailyCost={overviewData.dailyCost}
+        cpu={overviewData.system.cpu}
+        memory={overviewData.system.memory}
+        load={overviewData.system.load}
       />
 
       {/* Alert Banner */}
