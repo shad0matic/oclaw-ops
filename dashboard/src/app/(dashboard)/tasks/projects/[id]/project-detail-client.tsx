@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import Link from "next/link"
 import { Task } from "@/lib/types" // Assuming a Task type exists
@@ -60,16 +60,19 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
     queryKey: ["project", projectId],
     queryFn: () => fetchProject(projectId),
     enabled: !!projectId,
-    onSuccess: (data) => {
-        setFormData({
-            label: data.label,
-            description: data.description,
-            icon: data.icon,
-            owner: data.owner,
-            status: data.status,
-        })
-    }
   })
+
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        label: project.label,
+        description: project.description,
+        icon: project.icon,
+        owner: project.owner,
+        status: project.status,
+      })
+    }
+  }, [project])
 
   const mutation = useMutation({
     mutationFn: updateProject,
@@ -101,7 +104,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
     <>
       <div className="flex items-center justify-between">
         <PageHeader 
-          title={<><span className="text-2xl mr-2">{project.icon}</span>{project.label}</>}
+          title={`${project.icon} ${project.label}`}
           subtitle={project.description || "No description."} 
         />
         <div>

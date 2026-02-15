@@ -1,37 +1,25 @@
-
 import { db } from "@/lib/drizzle"
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "drizzle-orm"
-import { projectsInOps, taskQueueInOps } from "@/lib/schema"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
-    const projectTaskStats = db
-      .select({
-        projectId: taskQueueInOps.epic,
-        status: taskQueueInOps.status,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(taskQueueInOps)
-      .where(sql`${taskQueueInOps.epic} IS NOT NULL`)
-      .groupBy(taskQueueInOps.epic, taskQueueInOps.status)
-      .as("task_stats")
+    const rows = await db.execute(sql`
+      SELECT
+        p.*,
+        COALESCE(SUM(CASE WHEN t.status IN ('queued','planned','assigned') THEN 1 ELSE 0 END), 0)::int AS "tasksOpen",
+        COALESCE(SUM(CASE WHEN t.status = 'running' THEN 1 ELSE 0 END), 0)::int AS "tasksRunning",
+        COALESCE(SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END), 0)::int AS "tasksDone",
+        MAX(GREATEST(t.started_at, t.completed_at)) AS "lastActivity"
+      FROM ops.projects p
+      LEFT JOIN ops.task_queue t ON t.epic = p.id
+      GROUP BY p.id
+      ORDER BY p.label
+    `)
 
-    const projectsWithStats = await db
-      .select({
-        ...projectsInOps,
-        tasksOpen: sql<number>`SUM(CASE WHEN ${projectTaskStats.status} = 'queued' THEN ${projectTaskStats.count} ELSE 0 END)::int`,
-        tasksRunning: sql<number>`SUM(CASE WHEN ${projectTaskStats.status} = 'running' THEN ${projectTaskStats.count} ELSE 0 END)::int`,
-        tasksDone: sql<number>`SUM(CASE WHEN ${projectTaskStats.status} = 'done' THEN ${projectTaskStats.count} ELSE 0 END)::int`,
-      })
-      .from(projectsInOps)
-      .leftJoin(projectTaskStats, sql`${projectsInOps.id} = ${projectTaskStats.projectId}`)
-      .groupBy(projectsInOps.id)
-      .orderBy(projectsInOps.label)
-
-    return NextResponse.json(projectsWithStats)
+    return NextResponse.json(rows.rows)
   } catch (error: any) {
     console.error("Failed to fetch projects with task stats", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

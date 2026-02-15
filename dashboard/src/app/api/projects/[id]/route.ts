@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic"
 // GET a single project with its tasks
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params
+  const { id } = await params
   if (!id) {
     return NextResponse.json({ error: "Project ID is required" }, { status: 400 })
   }
@@ -43,9 +43,9 @@ export async function GET(
 // PATCH to update a project's fields
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params
+  const { id } = await params
   if (!id) {
     return NextResponse.json({ error: "Project ID is required" }, { status: 400 })
   }
