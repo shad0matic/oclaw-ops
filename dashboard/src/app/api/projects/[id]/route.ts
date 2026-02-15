@@ -30,7 +30,7 @@ export async function GET(
     const tasks = await db
       .select()
       .from(taskQueueInOps)
-      .where(eq(taskQueueInOps.epic, id))
+      .where(eq(taskQueueInOps.project, id))
       .orderBy(taskQueueInOps.createdAt)
 
     return NextResponse.json({ ...project[0], tasks })
