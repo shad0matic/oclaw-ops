@@ -603,6 +603,7 @@ export const taskQueueInOps = ops.table("task_queue", {
 	model: text(),
 	lastHeartbeat: timestamp("last_heartbeat", { withTimezone: true, mode: 'string' }),
 	heartbeatMsg: text("heartbeat_msg"),
+	acked: boolean('acked').default(false).notNull(),
 }, (table) => [
 	index("idx_task_queue_agent").using("btree", table.agentId.asc().nullsLast().op("text_ops")).where(sql`(agent_id IS NOT NULL)`),
 	index("idx_task_queue_project").using("btree", table.project.asc().nullsLast().op("text_ops"), table.status.asc().nullsLast().op("text_ops")),

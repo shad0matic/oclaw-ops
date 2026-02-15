@@ -28,6 +28,7 @@ export interface QueueTask {
   speced?: boolean;
   notes?: string | null;
   epic?: string | null;
+  acked?: boolean;
 }
 
 export interface FeatureRequest {

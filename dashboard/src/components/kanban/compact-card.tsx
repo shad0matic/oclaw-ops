@@ -29,6 +29,21 @@ import { Badge } from "@/components/ui/badge";
 
 // ... (imports remain the same)
 
+const spinnerAnimation = `
+@keyframes acked-spinner {
+  to { transform: rotate(360deg); }
+}
+.acked-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(252, 211, 77, 0.2); /* amber-300 */
+  border-top-color: rgba(252, 211, 77, 0.8);
+  border-radius: 50%;
+  animation: acked-spinner 0.8s linear infinite;
+}
+`;
+
 export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
   // ... (ref, pc, drag hooks remain the same)
   const ref = useRef<HTMLDivElement>(null);
@@ -61,6 +76,7 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
       className={`relative rounded-md border border-border bg-card/40 hover:bg-card/80 p-2 cursor-pointer active:cursor-grabbing border-l-2 ${projectColor}`}
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
+      <style>{spinnerAnimation}</style>
       <div onClick={onClick}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
@@ -83,6 +99,11 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
             </span>
             {task.agent_id && (
               <div className="flex items-center gap-1">
+                {task.status === 'running' && (
+                  task.acked 
+                    ? <span title="Acknowledged & Dispatched" className="text-emerald-500 text-xs">✓</span>
+                    : <span title="Awaiting Dispatch" className="acked-spinner"></span>
+                )}
                 <img
                   src={`/assets/minion-avatars/${task.agent_id}.webp`}
                   alt={task.agent_name || task.agent_id}

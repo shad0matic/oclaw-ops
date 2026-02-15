@@ -7,7 +7,11 @@ import { NextRequest, NextResponse } from "next/server"
 async function notifyKevin(task: any, action: string) {
   const gwToken = process.env.OPENCLAW_GW_TOKEN
   if (!gwToken) return
-  const emoji = action === 'run' ? '⚡' : '📋'
+  
+  let emoji = '📋' // Default
+  if (action === 'run') emoji = '⚡'
+  if (action === 'ack') emoji = '✅'
+
   const msg = `${emoji} Kanban: #${task.id} "${task.title}" → ${action}${task.agentId ? ` (assigned: ${task.agentId})` : ' (unassigned)'}\nProject: ${task.project || 'unknown'}\nDescription: ${(task.description || 'none').substring(0, 200)}`
   await fetch('http://127.0.0.1:18789/api/sessions/send', {
     method: 'POST',
@@ -84,6 +88,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         status: 'running', reviewFeedback: body.reviewFeedback,
       }).where(where)
       break
+    case "ack":
+      await db.update(taskQueueInOps).set({ acked: true }).where(where)
+      break
     case "update": {
       const { fields } = body
       if (!fields || typeof fields !== 'object') return NextResponse.json({ error: "fields required" }, { status: 400 })
@@ -108,7 +115,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const [task] = await db.select().from(taskQueueInOps).where(where)
   const result = { ...task, id: Number(task.id) }
 
-  if (action === 'run' || action === 'plan') {
+  if (action === 'run' || action === 'plan' || action === 'ack') {
     notifyKevin(result, action).catch(() => {})
   }
 
