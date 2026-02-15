@@ -6,6 +6,18 @@ import { useRef } from "react";
 import { ItemTypes } from "./item-types";
 import { QueueTask, Project, getPriorityColor } from "./types";
 
+function timeAgo(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
 interface TaskCardProps {
   task: QueueTask;
   projects: Project[];
@@ -59,6 +71,9 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
               <span>{projectIcon}</span>
               <span className="truncate">{proj?.label || task.project}</span>
+              {task.status === 'done' && task.completed_at && (
+                <span className="text-green-500/70">✓ {timeAgo(task.completed_at)}</span>
+              )}
             </div>
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
