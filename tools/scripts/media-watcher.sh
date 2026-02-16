@@ -20,7 +20,7 @@ fi
 
 # Find media files (audio/video)
 shopt -s nullglob
-files=("$INBOX_DIR"/*.{mp3,m4a,wav,ogg,flac,mp4,mkv,webm,mov,avi} 2>/dev/null)
+files=("$INBOX_DIR"/*.mp3 "$INBOX_DIR"/*.m4a "$INBOX_DIR"/*.wav "$INBOX_DIR"/*.ogg "$INBOX_DIR"/*.flac "$INBOX_DIR"/*.mp4 "$INBOX_DIR"/*.mkv "$INBOX_DIR"/*.webm "$INBOX_DIR"/*.mov "$INBOX_DIR"/*.avi)
 shopt -u nullglob
 
 if [ ${#files[@]} -eq 0 ]; then
