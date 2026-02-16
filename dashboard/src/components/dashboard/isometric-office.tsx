@@ -224,7 +224,7 @@ function AnimatedAgentSprite({
             : { duration: 3, repeat: Infinity, ease: 'easeInOut' }
         }
       >
-        {/* Avatar image */}
+        {/* Avatar image - rounded */}
         <motion.g
           style={{
             transformOrigin: '0 0',
@@ -234,12 +234,19 @@ function AnimatedAgentSprite({
           }}
           transition={{ duration: 0.2 }}
         >
+          <defs>
+            <clipPath id={`avatar-clip-${agent.id}`}>
+              <circle cx={0} cy={0} r={avatarSize / 2} />
+            </clipPath>
+          </defs>
+          <circle cx={0} cy={0} r={avatarSize / 2 + 2} fill="#27272a" /> {/* Border */}
           <image
             href={avatarUrl}
             x={-avatarSize / 2}
             y={-avatarSize / 2}
             width={avatarSize}
             height={avatarSize}
+            clipPath={`url(#avatar-clip-${agent.id})`}
             style={{
               filter: isZombie ? 'saturate(0.3) brightness(0.6)' : 'none',
             }}
@@ -469,6 +476,9 @@ export function IsometricOfficeWrapper() {
   const { data, error, isLoading } = useSWR<AgentRegistryItem[]>('/api/agents/registry', fetcher, {
     refreshInterval: 10000,
   })
+  
+  // Debug state for testing walk animations
+  const [debugOverrides, setDebugOverrides] = useState<Record<string, AgentStatus>>({})
 
   if (isLoading && !data) return <IsometricOfficeSkeleton />
 
@@ -483,10 +493,54 @@ export function IsometricOfficeWrapper() {
   const agents: Agent[] = (data || []).map((a) => ({
     id: a.id,
     name: a.name,
-    status: a.status,
+    status: debugOverrides[a.id] || a.status,
     currentTask: a.currentTask,
     trustScore: a.trustScore,
   }))
 
-  return <IsometricOffice agents={agents} />
+  const sendBobToWork = () => {
+    setDebugOverrides(prev => ({ ...prev, bob: 'active' }))
+  }
+
+  const sendBobToLounge = () => {
+    setDebugOverrides(prev => ({ ...prev, bob: 'idle' }))
+  }
+
+  const resetDebug = () => {
+    setDebugOverrides({})
+  }
+
+  return (
+    <div className="space-y-3">
+      <IsometricOffice agents={agents} />
+      
+      {/* Debug Controls */}
+      <div className="flex items-center gap-2 p-3 bg-zinc-900/50 rounded-lg border border-zinc-800">
+        <span className="text-xs text-muted-foreground mr-2">🧪 Debug:</span>
+        <button
+          onClick={sendBobToWork}
+          className="px-3 py-1.5 text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 rounded transition-colors"
+        >
+          Bob → Work 💻
+        </button>
+        <button
+          onClick={sendBobToLounge}
+          className="px-3 py-1.5 text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors"
+        >
+          Bob → Lounge 🛋️
+        </button>
+        <button
+          onClick={resetDebug}
+          className="px-3 py-1.5 text-xs bg-zinc-500/20 text-zinc-400 hover:bg-zinc-500/30 rounded transition-colors"
+        >
+          Reset
+        </button>
+        {Object.keys(debugOverrides).length > 0 && (
+          <span className="text-xs text-amber-400/60 ml-2">
+            (overrides active)
+          </span>
+        )}
+      </div>
+    </div>
+  )
 }
