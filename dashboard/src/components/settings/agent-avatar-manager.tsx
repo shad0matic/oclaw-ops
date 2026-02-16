@@ -7,10 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 
 interface Agent {
-    agent_id: string
+    agent_id?: string
+    agentId?: string
     name: string
     status: string
 }
+
+// Helper to get agent ID regardless of property name
+const getAgentId = (agent: Agent): string => agent.agent_id || agent.agentId || ""
 
 interface AvatarFile {
     name: string
@@ -84,27 +88,27 @@ export function AgentAvatarManager({ refreshKey = 0 }: { refreshKey?: number }) 
                 )}
                 <div className="space-y-4">
                     {agents.map((agent) => (
-                        <div key={agent.agent_id} className="flex items-center justify-between">
+                        <div key={getAgentId(agent)} className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <Avatar className="h-10 w-10 border border-border">
                                     <AvatarImage
-                                        src={`/assets/minion-avatars/${currentAvatar(agent.agent_id)}?v=${refreshKey}`}
+                                        src={`/assets/minion-avatars/${currentAvatar(getAgentId(agent))}?v=${refreshKey}`}
                                     />
                                     <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <div>
                                     <div className="font-medium text-foreground">{agent.name}</div>
-                                    <div className="text-sm text-muted-foreground/70">{agent.agent_id}</div>
+                                    <div className="text-sm text-muted-foreground/70">{getAgentId(agent)}</div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Badge variant="outline" className="text-[10px] text-muted-foreground/70 border-border">
-                                    {currentAvatar(agent.agent_id)}
+                                    {currentAvatar(getAgentId(agent))}
                                 </Badge>
                                 <Select
-                                    value={currentAvatar(agent.agent_id)}
-                                    onValueChange={(value) => handleAvatarChange(agent.agent_id, value)}
-                                    disabled={assigning === agent.agent_id}
+                                    value={currentAvatar(getAgentId(agent))}
+                                    onValueChange={(value) => handleAvatarChange(getAgentId(agent), value)}
+                                    disabled={assigning === getAgentId(agent)}
                                 >
                                     <SelectTrigger className="w-[200px] bg-muted border-border">
                                         <SelectValue placeholder="Select avatar..." />

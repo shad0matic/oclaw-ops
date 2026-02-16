@@ -14,10 +14,10 @@ fi
 
 # Get duration in minutes using ffprobe
 duration_sec=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$audio_file" 2>/dev/null || echo "0")
-duration_min=$(echo "scale=2; $duration_sec / 60" | bc)
+duration_min=$(awk "BEGIN {printf \"%.2f\", $duration_sec / 60}")
 
 # Whisper-1 pricing: $0.006/minute
-cost_usd=$(echo "scale=4; $duration_min * 0.006" | bc)
+cost_usd=$(awk "BEGIN {printf \"%.4f\", $duration_min * 0.006}")
 
 # Log to database
 psql -U shad openclaw_db -c "
