@@ -1,24 +1,17 @@
 "use client"
 
-import React from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import useSWR from 'swr'
+import { motion, useAnimation, AnimatePresence } from 'framer-motion'
 
 // --- Types ---
 type AgentStatus = 'idle' | 'active' | 'zombie' | 'dead'
 
-interface SubSpawn {
-  id: string
-  name: string
-  status: AgentStatus
-}
-
 interface Agent {
   id: string
   name: string
-  emoji: string
   status: AgentStatus
   currentTask?: string
-  subSpawns?: SubSpawn[]
   trustScore?: number
 }
 
@@ -32,17 +25,40 @@ type AgentRegistryItem = {
   avatarUrl?: string
 }
 
+interface AgentPosition {
+  x: number
+  y: number
+  room: keyof typeof ROOMS
+}
+
+interface AgentAnimState {
+  isMoving: boolean
+  facingRight: boolean
+  prevPosition: AgentPosition
+  targetPosition: AgentPosition
+}
+
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-const AGENT_EMOJI: Record<string, string> = {
-  main: '🍌',
-  bob: '🎨',
-  nefario: '🔬',
-  phil: '🐊',
-  mel: '🚔',
-  dave: '💰',
-  stuart: '🔒',
-  xreader: '📰',
+// Available avatar mappings (agent id -> filename)
+const AVATAR_MAP: Record<string, string> = {
+  main: 'main.webp',
+  kevin: 'kevin.webp',
+  bob: 'bob.webp',
+  nefario: 'nefario.webp',
+  phil: 'phil.webp',
+  mel: 'mel.webp',
+  dave: 'dave.webp',
+  stuart: 'stuart.webp',
+  xreader: 'xreader.webp',
+  echo: 'echo.webp',
+  smaug: 'smaug.webp',
+  spy_minion: 'spy_minion.webp',
+}
+
+function getAvatarUrl(agentId: string): string {
+  const filename = AVATAR_MAP[agentId] || 'default.webp'
+  return `/assets/minion-avatars/${filename}`
 }
 
 // --- Room definitions (isometric diamond shapes) ---
@@ -74,7 +90,7 @@ function diamondPath(cx: number, cy: number, w: number, h: number) {
 }
 
 // Position agents within a room, spread evenly
-function getAgentPos(roomKey: keyof typeof ROOMS, index: number, total: number) {
+function getAgentPos(roomKey: keyof typeof ROOMS, index: number, total: number): { x: number; y: number } {
   const room = ROOMS[roomKey]
   const spread = Math.min(total, 4)
   const offsetX = (index - (spread - 1) / 2) * 50
@@ -102,82 +118,183 @@ function Room({ roomKey }: { roomKey: keyof typeof ROOMS }) {
   )
 }
 
-// --- Agent Sprite ---
-function AgentSprite({ agent, x, y }: { agent: Agent; x: number; y: number }) {
+// --- Animated Agent Sprite with Avatar ---
+function AnimatedAgentSprite({
+  agent,
+  position,
+  animState,
+  onAnimationComplete,
+}: {
+  agent: Agent
+  position: AgentPosition
+  animState: AgentAnimState
+  onAnimationComplete: () => void
+}) {
   const isZombie = agent.status === 'zombie'
   const isActive = agent.status === 'active'
+  const { isMoving, facingRight } = animState
+
+  const avatarUrl = getAvatarUrl(agent.id)
+  const avatarSize = 40
 
   return (
-    <g>
+    <motion.g
+      initial={{ x: position.x, y: position.y }}
+      animate={{ x: position.x, y: position.y }}
+      transition={{
+        duration: 1.8,
+        ease: [0.34, 1.56, 0.64, 1], // Custom spring-like easing
+      }}
+      onAnimationComplete={onAnimationComplete}
+    >
+      {/* Shadow under avatar */}
+      <motion.ellipse
+        cx={0}
+        cy={18}
+        rx={16}
+        ry={6}
+        fill="#000000"
+        opacity={0.3}
+        animate={isMoving ? { rx: [16, 14, 16], opacity: [0.3, 0.2, 0.3] } : {}}
+        transition={isMoving ? { repeat: Infinity, duration: 0.3 } : {}}
+      />
+
       {/* Glow for active agents */}
-      {isActive && (
-        <circle cx={x} cy={y} r={22} fill="#eab308" fillOpacity={0.15}>
-          <animate attributeName="fillOpacity" values="0.1;0.25;0.1" dur="2s" repeatCount="indefinite" />
-        </circle>
+      {isActive && !isMoving && (
+        <motion.circle
+          cx={0}
+          cy={0}
+          r={26}
+          fill="#eab308"
+          initial={{ fillOpacity: 0.1 }}
+          animate={{ fillOpacity: [0.1, 0.25, 0.1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
       )}
 
       {/* Zombie alarm flash */}
       {isZombie && (
-        <circle cx={x + 18} cy={y - 18} r={5} fill="#ef4444">
-          <animate attributeName="opacity" values="1;0.2;1" dur="0.5s" repeatCount="indefinite" />
-        </circle>
+        <motion.circle
+          cx={20}
+          cy={-20}
+          r={5}
+          fill="#ef4444"
+          animate={{ opacity: [1, 0.2, 1] }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+        />
       )}
 
-      {/* Agent emoji */}
-      <text
-        x={x}
-        y={y}
-        fontSize={28}
-        textAnchor="middle"
-        dominantBaseline="central"
-        style={{ filter: isZombie ? 'saturate(0.3) brightness(0.6)' : 'none' }}
+      {/* Dust puff when arriving */}
+      <AnimatePresence>
+        {!isMoving && animState.prevPosition.room !== animState.targetPosition.room && (
+          <>
+            {[...Array(3)].map((_, i) => (
+              <motion.circle
+                key={`dust-${i}`}
+                cx={-10 + i * 10}
+                cy={15}
+                r={3}
+                fill="#71717a"
+                initial={{ opacity: 0.6, scale: 0.3, y: 0 }}
+                animate={{ opacity: 0, scale: 1, y: -8 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Avatar container with walk animation */}
+      <motion.g
+        animate={
+          isMoving
+            ? {
+                y: [0, -6, 0, -6, 0],
+                x: [0, -2, 0, 2, 0],
+              }
+            : {
+                // Subtle idle breathing
+                y: [0, -1, 0],
+              }
+        }
+        transition={
+          isMoving
+            ? { duration: 0.4, repeat: Infinity }
+            : { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+        }
       >
-        {agent.emoji}
-      </text>
+        {/* Avatar image */}
+        <motion.g
+          style={{
+            transformOrigin: '0 0',
+          }}
+          animate={{
+            scaleX: facingRight ? 1 : -1,
+          }}
+          transition={{ duration: 0.2 }}
+        >
+          <image
+            href={avatarUrl}
+            x={-avatarSize / 2}
+            y={-avatarSize / 2}
+            width={avatarSize}
+            height={avatarSize}
+            style={{
+              filter: isZombie ? 'saturate(0.3) brightness(0.6)' : 'none',
+            }}
+            preserveAspectRatio="xMidYMid slice"
+          />
+        </motion.g>
 
-      {/* Zombie overlay */}
-      {isZombie && (
-        <text x={x + 12} y={y - 10} fontSize={14} textAnchor="middle" dominantBaseline="central">
-          🧟
-        </text>
-      )}
+        {/* Zombie overlay */}
+        {isZombie && (
+          <text x={14} y={-12} fontSize={14} textAnchor="middle" dominantBaseline="central">
+            🧟
+          </text>
+        )}
+      </motion.g>
 
       {/* Name label */}
-      <text x={x} y={y + 22} fill="#d4d4d8" fontSize={9} textAnchor="middle" fontWeight="500">
+      <text x={0} y={28} fill="#d4d4d8" fontSize={9} textAnchor="middle" fontWeight="500">
         {agent.name}
       </text>
 
-      {/* Current task */}
-      {agent.currentTask && (
-        <text x={x} y={y + 33} fill="#71717a" fontSize={7} textAnchor="middle">
+      {/* Current task (only show when not moving) */}
+      {agent.currentTask && !isMoving && (
+        <motion.text
+          x={0}
+          y={39}
+          fill="#71717a"
+          fontSize={7}
+          textAnchor="middle"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
           {agent.currentTask.length > 25 ? agent.currentTask.slice(0, 25) + '…' : agent.currentTask}
-        </text>
+        </motion.text>
       )}
 
-      {/* Sub-spawns */}
-      {agent.subSpawns?.map((sub, i) => (
-        <g key={sub.id}>
-          {/* Dotted line to parent */}
-          <line
-            x1={x + 20}
-            y1={y}
-            x2={x + 40 + i * 30}
-            y2={y - 15}
-            stroke="#71717a"
-            strokeWidth={1}
-            strokeDasharray="3,3"
-          />
-          {/* Mini bubble */}
-          <circle cx={x + 40 + i * 30} cy={y - 15} r={12} fill="#27272a" stroke="#3f3f46" strokeWidth={1} />
-          <text x={x + 40 + i * 30} y={y - 15} fontSize={10} textAnchor="middle" dominantBaseline="central">
+      {/* Working indicator when active and not moving */}
+      {isActive && !isMoving && (
+        <motion.g
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <motion.text
+            x={24}
+            y={-16}
+            fontSize={12}
+            animate={{ y: [-16, -18, -16] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
             ⚡
-          </text>
-          <text x={x + 40 + i * 30} y={y - 1} fill="#71717a" fontSize={6} textAnchor="middle">
-            {sub.name}
-          </text>
-        </g>
-      ))}
-    </g>
+          </motion.text>
+        </motion.g>
+      )}
+    </motion.g>
   )
 }
 
@@ -225,15 +342,84 @@ function IsometricOfficeSkeleton() {
   )
 }
 
-// --- Main Component ---
+// --- Main Component with Animation State Management ---
 export function IsometricOffice({ agents }: { agents: Agent[] }) {
-  // Group agents by their target room
-  const agentsByRoom: Record<string, Agent[]> = {}
-  agents.forEach((a) => {
-    const room = getRoomForAgent(a)
-    if (!agentsByRoom[room]) agentsByRoom[room] = []
-    agentsByRoom[room].push(a)
-  })
+  // Track previous agent states for detecting changes
+  const prevAgentsRef = useRef<Map<string, Agent>>(new Map())
+  const [animStates, setAnimStates] = useState<Map<string, AgentAnimState>>(new Map())
+
+  // Calculate positions for all agents grouped by room
+  const getPositions = useCallback((agentList: Agent[]) => {
+    const agentsByRoom: Record<string, Agent[]> = {}
+    agentList.forEach((a) => {
+      const room = getRoomForAgent(a)
+      if (!agentsByRoom[room]) agentsByRoom[room] = []
+      agentsByRoom[room].push(a)
+    })
+
+    const positions = new Map<string, AgentPosition>()
+    agentList.forEach((agent) => {
+      const room = getRoomForAgent(agent)
+      const roomAgents = agentsByRoom[room] || []
+      const index = roomAgents.findIndex((a) => a.id === agent.id)
+      const pos = getAgentPos(room, index, roomAgents.length)
+      positions.set(agent.id, { ...pos, room })
+    })
+    return positions
+  }, [])
+
+  // Update animation states when agents change
+  useEffect(() => {
+    const currentPositions = getPositions(agents)
+    const newAnimStates = new Map<string, AgentAnimState>()
+
+    agents.forEach((agent) => {
+      const prevAgent = prevAgentsRef.current.get(agent.id)
+      const currentPos = currentPositions.get(agent.id)!
+      const prevAnimState = animStates.get(agent.id)
+
+      // Determine if the agent has moved rooms
+      const prevRoom = prevAgent ? getRoomForAgent(prevAgent) : currentPos.room
+      const currentRoom = getRoomForAgent(agent)
+      const hasMovedRooms = prevRoom !== currentRoom
+
+      // Calculate facing direction based on movement
+      let facingRight = prevAnimState?.facingRight ?? true
+      if (hasMovedRooms && prevAnimState?.targetPosition) {
+        facingRight = currentPos.x > prevAnimState.targetPosition.x
+      }
+
+      const prevPosition = prevAnimState?.targetPosition || currentPos
+
+      newAnimStates.set(agent.id, {
+        isMoving: hasMovedRooms,
+        facingRight,
+        prevPosition,
+        targetPosition: currentPos,
+      })
+    })
+
+    setAnimStates(newAnimStates)
+
+    // Update prev agents ref
+    const newPrevAgents = new Map<string, Agent>()
+    agents.forEach((a) => newPrevAgents.set(a.id, a))
+    prevAgentsRef.current = newPrevAgents
+  }, [agents, getPositions])
+
+  // Handler for when animation completes
+  const handleAnimationComplete = useCallback((agentId: string) => {
+    setAnimStates((prev) => {
+      const newStates = new Map(prev)
+      const state = newStates.get(agentId)
+      if (state) {
+        newStates.set(agentId, { ...state, isMoving: false })
+      }
+      return newStates
+    })
+  }, [])
+
+  const currentPositions = getPositions(agents)
 
   return (
     <div className="w-full bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden">
@@ -251,11 +437,23 @@ export function IsometricOffice({ agents }: { agents: Agent[] }) {
 
         {/* Agents */}
         {agents.map((agent) => {
-          const room = getRoomForAgent(agent)
-          const roomAgents = agentsByRoom[room] || []
-          const index = roomAgents.findIndex((a) => a.id === agent.id)
-          const pos = getAgentPos(room, index, roomAgents.length)
-          return <AgentSprite key={agent.id} agent={agent} x={pos.x} y={pos.y} />
+          const position = currentPositions.get(agent.id)!
+          const animState = animStates.get(agent.id) || {
+            isMoving: false,
+            facingRight: true,
+            prevPosition: position,
+            targetPosition: position,
+          }
+
+          return (
+            <AnimatedAgentSprite
+              key={agent.id}
+              agent={agent}
+              position={position}
+              animState={animState}
+              onAnimationComplete={() => handleAnimationComplete(agent.id)}
+            />
+          )
         })}
 
         {/* Title */}
@@ -285,7 +483,6 @@ export function IsometricOfficeWrapper() {
   const agents: Agent[] = (data || []).map((a) => ({
     id: a.id,
     name: a.name,
-    emoji: AGENT_EMOJI[a.id] || '👤',
     status: a.status,
     currentTask: a.currentTask,
     trustScore: a.trustScore,
