@@ -13,17 +13,21 @@ export async function GET() {
       const todayStart = new Date()
       todayStart.setHours(0, 0, 0, 0)
 
-      const [activeStepResult, lastActiveResult, todayTotalResult, todayCompletedResult] = await Promise.all([
+      const [activeStepResult, activeTaskResult, lastActiveResult, todayTotalResult, todayCompletedResult] = await Promise.all([
         pool.query(`SELECT * FROM ops.steps WHERE agent_id = $1 AND status = 'running' LIMIT 1`, [agent.agentId]),
+        pool.query(`SELECT * FROM ops.task_queue WHERE agent_id = $1 AND status = 'running' LIMIT 1`, [agent.agentId]),
         pool.query(`SELECT * FROM ops.agent_events WHERE agent_id = $1 ORDER BY created_at DESC LIMIT 1`, [agent.agentId]),
         pool.query(`SELECT COUNT(*)::int as count FROM ops.agent_events WHERE agent_id = $1 AND created_at >= $2`, [agent.agentId, todayStart]),
         pool.query(`SELECT COUNT(*)::int as count FROM ops.agent_events WHERE agent_id = $1 AND created_at >= $2 AND event_type IN ('task_complete', 'step_complete', 'phase_complete', 'run_completed')`, [agent.agentId, todayStart]),
       ])
 
+      // Agent is running if they have an active step OR an active task in Kanban
+      const isRunning = activeStepResult.rows[0] || activeTaskResult.rows[0]
+
       return {
         ...agent,
         id: agent.agentId,
-        status: activeStepResult.rows[0] ? "running" : "idle",
+        status: isRunning ? "running" : "idle",
         last_active: lastActiveResult.rows[0]?.created_at || agent.updatedAt,
         today_tasks: todayTotalResult.rows[0].count,
         today_completed: todayCompletedResult.rows[0].count,
