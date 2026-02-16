@@ -123,7 +123,7 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: {
             <label htmlFor="description" className="text-xs font-medium text-muted-foreground">Description</label>
             <Textarea 
               id="description"
-              value={description} 
+              value={description || ""} 
               onChange={(e) => setDescription(e.target.value)} 
               onBlur={() => updateField('description', description)}
               className="text-foreground/80 whitespace-pre-wrap bg-background/50 border rounded-md p-3 sm:p-2 resize-y"
