@@ -9,6 +9,7 @@ import type { OverviewEvent } from "@/hooks/useOverviewData"
 export interface ActivityTimelineProps {
   events: OverviewEvent[]
   isLoading?: boolean
+  defaultExpanded?: boolean
 }
 
 const EVENT_ICONS: Record<string, string> = {
@@ -72,8 +73,8 @@ function getEventDescription(event: OverviewEvent): string {
   }
 }
 
-export function ActivityTimeline({ events, isLoading }: ActivityTimelineProps) {
-  const [expanded, setExpanded] = useState(false)
+export function ActivityTimeline({ events, isLoading, defaultExpanded = false }: ActivityTimelineProps) {
+  const [expanded, setExpanded] = useState(defaultExpanded)
 
   if (isLoading) {
     return (
