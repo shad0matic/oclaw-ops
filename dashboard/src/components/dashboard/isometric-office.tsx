@@ -479,6 +479,8 @@ export function IsometricOfficeWrapper() {
   
   // Debug state for testing walk animations
   const [debugOverrides, setDebugOverrides] = useState<Record<string, AgentStatus>>({})
+  const [showDebugPanel, setShowDebugPanel] = useState(false)
+  const [viewMode, setViewMode] = useState<'basic' | 'detailed'>('basic')
 
   if (isLoading && !data) return <IsometricOfficeSkeleton />
 
@@ -512,35 +514,85 @@ export function IsometricOfficeWrapper() {
 
   return (
     <div className="space-y-3">
-      <IsometricOffice agents={agents} />
-      
-      {/* Debug Controls */}
-      <div className="flex items-center gap-2 p-3 bg-zinc-900/50 rounded-lg border border-zinc-800">
-        <span className="text-xs text-muted-foreground mr-2">🧪 Debug:</span>
+      {/* View Mode & Debug Toggle Bar */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">View:</span>
+          <button
+            onClick={() => setViewMode('basic')}
+            className={`px-3 py-1.5 text-xs rounded transition-colors ${
+              viewMode === 'basic' 
+                ? 'bg-amber-500/20 text-amber-400' 
+                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+            }`}
+          >
+            Basic
+          </button>
+          <button
+            onClick={() => setViewMode('detailed')}
+            className={`px-3 py-1.5 text-xs rounded transition-colors ${
+              viewMode === 'detailed' 
+                ? 'bg-amber-500/20 text-amber-400' 
+                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+            }`}
+          >
+            Detailed ✨
+          </button>
+        </div>
         <button
-          onClick={sendBobToWork}
-          className="px-3 py-1.5 text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 rounded transition-colors"
+          onClick={() => setShowDebugPanel(!showDebugPanel)}
+          className={`px-3 py-1.5 text-xs rounded transition-colors ${
+            showDebugPanel 
+              ? 'bg-purple-500/20 text-purple-400' 
+              : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+          }`}
         >
-          Bob → Work 💻
+          🧪 Debug {showDebugPanel ? 'ON' : 'OFF'}
         </button>
-        <button
-          onClick={sendBobToLounge}
-          className="px-3 py-1.5 text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors"
-        >
-          Bob → Lounge 🛋️
-        </button>
-        <button
-          onClick={resetDebug}
-          className="px-3 py-1.5 text-xs bg-zinc-500/20 text-zinc-400 hover:bg-zinc-500/30 rounded transition-colors"
-        >
-          Reset
-        </button>
-        {Object.keys(debugOverrides).length > 0 && (
-          <span className="text-xs text-amber-400/60 ml-2">
-            (overrides active)
-          </span>
-        )}
       </div>
+
+      {/* The Office View */}
+      {viewMode === 'basic' ? (
+        <IsometricOffice agents={agents} />
+      ) : (
+        <div className="w-full bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden p-8 text-center" style={{ minHeight: 400 }}>
+          <div className="text-6xl mb-4">🏗️</div>
+          <h3 className="text-lg font-medium text-foreground mb-2">Detailed View Coming Soon</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            Individual agent rooms with custom decor: Nefario's lab, Echo's studio, Mel's police box, Bob's coding space... plus a cozy lounge with sofas, billiard, and more!
+          </p>
+        </div>
+      )}
+      
+      {/* Debug Controls (toggleable) */}
+      {showDebugPanel && (
+        <div className="flex items-center gap-2 p-3 bg-zinc-900/50 rounded-lg border border-purple-500/30">
+          <span className="text-xs text-purple-400 mr-2">🧪 Debug:</span>
+          <button
+            onClick={sendBobToWork}
+            className="px-3 py-1.5 text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 rounded transition-colors"
+          >
+            Bob → Work 💻
+          </button>
+          <button
+            onClick={sendBobToLounge}
+            className="px-3 py-1.5 text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded transition-colors"
+          >
+            Bob → Lounge 🛋️
+          </button>
+          <button
+            onClick={resetDebug}
+            className="px-3 py-1.5 text-xs bg-zinc-500/20 text-zinc-400 hover:bg-zinc-500/30 rounded transition-colors"
+          >
+            Reset
+          </button>
+          {Object.keys(debugOverrides).length > 0 && (
+            <span className="text-xs text-amber-400/60 ml-2">
+              (overrides active)
+            </span>
+          )}
+        </div>
+      )}
     </div>
   )
 }
