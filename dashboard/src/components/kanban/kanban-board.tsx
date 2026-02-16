@@ -100,7 +100,7 @@ export function KanbanBoard() {
   const [projectFilter, setProjectFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [activeColumn, setActiveColumn] = useState<string>("backlog");
-  const [isDoneExpanded, setIsDoneExpanded] = useState(false);
+  const [expandedColumns, setExpandedColumns] = useState<Record<string, boolean>>({});
   const [selectedItem, setSelectedItem] = useState<QueueTask | FeatureRequest | null>(null);
   const [isNewTaskSheetOpen, setIsNewTaskSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -166,7 +166,11 @@ export function KanbanBoard() {
     review: "review", human_todo: "human", done: "complete",
   };
   
-  const DONE_LIMIT = 10;
+  const COLUMN_LIMIT = 10;
+
+  const toggleColumnExpanded = (status: string) => {
+    setExpandedColumns(prev => ({ ...prev, [status]: !prev[status] }));
+  };
 
   const getColumnTasks = (status: string) => {
     let tasksInColumn = filteredTasks.filter((t) => t.status === status);
@@ -292,7 +296,13 @@ export function KanbanBoard() {
               </div>
               {COLUMNS.filter(c => c.status === activeColumn).map((c) => {
                 const allTasks = getColumnTasks(c.status);
-                const displayTasks = c.status === 'done' && !isDoneExpanded ? allTasks.slice(0, DONE_LIMIT) : allTasks;
+                const backlogItems = c.status === 'backlog' ? (filteredBacklog || []) : [];
+                const totalItems = allTasks.length + backlogItems.length;
+                const isExpanded = expandedColumns[c.status] || false;
+                const displayTasks = !isExpanded && allTasks.length > COLUMN_LIMIT ? allTasks.slice(0, COLUMN_LIMIT) : allTasks;
+                const displayBacklog = c.status === 'backlog' 
+                  ? (!isExpanded && totalItems > COLUMN_LIMIT ? backlogItems.slice(0, Math.max(0, COLUMN_LIMIT - displayTasks.length)) : backlogItems)
+                  : [];
                 return (
                   <div key={c.status}>
                     <KanbanColumn
@@ -300,19 +310,21 @@ export function KanbanBoard() {
                       status={c.status}
                       tasks={displayTasks}
                       totalTasks={allTasks.length}
-                      featureRequests={c.status === 'backlog' ? filteredBacklog : []}
+                      featureRequests={displayBacklog}
                       actionMap={actionMap}
                       projects={projects}
                       onCardClick={handleCardClick}
                     />
-                    {c.status === 'done' && allTasks.length > DONE_LIMIT && (
+                    {totalItems > COLUMN_LIMIT && (
                       <div className="mt-2 flex flex-col items-center gap-1">
-                        <button onClick={() => setIsDoneExpanded(!isDoneExpanded)} className="text-xs text-muted-foreground hover:text-foreground">
-                          {isDoneExpanded ? "Show less" : `Show ${DONE_LIMIT} of ${allTasks.length}`}
+                        <button onClick={() => toggleColumnExpanded(c.status)} className="text-xs text-muted-foreground hover:text-foreground">
+                          {isExpanded ? "Show less" : `Show ${COLUMN_LIMIT} of ${totalItems}`}
                         </button>
-                        <Link href="/tasks/archive" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                          <Archive className="w-3 h-3" /> View archive
-                        </Link>
+                        {c.status === 'done' && (
+                          <Link href="/tasks/archive" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                            <Archive className="w-3 h-3" /> View archive
+                          </Link>
+                        )}
                       </div>
                     )}
                   </div>
@@ -322,7 +334,13 @@ export function KanbanBoard() {
             <div className="hidden lg:grid gap-3 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               {COLUMNS.map((c) => {
                 const allTasks = getColumnTasks(c.status);
-                const displayTasks = c.status === 'done' && !isDoneExpanded ? allTasks.slice(0, DONE_LIMIT) : allTasks;
+                const backlogItems = c.status === 'backlog' ? (filteredBacklog || []) : [];
+                const totalItems = allTasks.length + backlogItems.length;
+                const isExpanded = expandedColumns[c.status] || false;
+                const displayTasks = !isExpanded && allTasks.length > COLUMN_LIMIT ? allTasks.slice(0, COLUMN_LIMIT) : allTasks;
+                const displayBacklog = c.status === 'backlog' 
+                  ? (!isExpanded && totalItems > COLUMN_LIMIT ? backlogItems.slice(0, Math.max(0, COLUMN_LIMIT - displayTasks.length)) : backlogItems)
+                  : [];
                 return (
                   <div key={c.status}>
                     <KanbanColumn
@@ -330,19 +348,21 @@ export function KanbanBoard() {
                       status={c.status}
                       tasks={displayTasks}
                       totalTasks={allTasks.length}
-                      featureRequests={c.status === 'backlog' ? filteredBacklog : []}
+                      featureRequests={displayBacklog}
                       actionMap={actionMap}
                       projects={projects}
                       onCardClick={handleCardClick}
                     />
-                    {c.status === 'done' && allTasks.length > DONE_LIMIT && (
+                    {totalItems > COLUMN_LIMIT && (
                       <div className="mt-2 flex flex-col items-center gap-1">
-                        <button onClick={() => setIsDoneExpanded(!isDoneExpanded)} className="text-xs text-muted-foreground hover:text-foreground">
-                          {isDoneExpanded ? "Show less" : `Show ${DONE_LIMIT} of ${allTasks.length}`}
+                        <button onClick={() => toggleColumnExpanded(c.status)} className="text-xs text-muted-foreground hover:text-foreground">
+                          {isExpanded ? "Show less" : `Show ${COLUMN_LIMIT} of ${totalItems}`}
                         </button>
-                        <Link href="/tasks/archive" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                          <Archive className="w-3 h-3" /> View archive
-                        </Link>
+                        {c.status === 'done' && (
+                          <Link href="/tasks/archive" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                            <Archive className="w-3 h-3" /> View archive
+                          </Link>
+                        )}
                       </div>
                     )}
                   </div>
