@@ -40,7 +40,7 @@ const getAuthorLabel = (author: string) => {
 };
 
 export function TaskComments({ taskId }: TaskCommentsProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [message, setMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
