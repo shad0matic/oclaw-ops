@@ -34,8 +34,8 @@ if [[ -z "$audio_file" ]]; then
   exit 1
 fi
 
-# Run transcription (use bash to bypass execute permission issues)
-bash "$WHISPER_SCRIPT" "$audio_file" "${other_args[@]}"
+# Run transcription
+"$WHISPER_SCRIPT" "$audio_file" "${other_args[@]}"
 
 # Log usage
 "$SCRIPT_DIR/log-whisper-usage.sh" "$audio_file" "$agent_id"

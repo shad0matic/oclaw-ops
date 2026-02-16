@@ -45,7 +45,7 @@ openclaw agent --agent echo --local --timeout 600 --message "Process media files
 ${file_list}
 
 For each file:
-1. Transcribe: bash /usr/lib/node_modules/openclaw/skills/openai-whisper-api/scripts/transcribe.sh <file>
+1. Transcribe: /usr/lib/node_modules/openclaw/skills/openai-whisper-api/scripts/transcribe.sh <file>
 2. Log usage: /home/shad/projects/oclaw-ops/tools/scripts/log-whisper-usage.sh <file> echo
 3. Move to processed: mv <file> \$HOME/.openclaw/incoming/processed/
 4. Save transcript next to processed file
