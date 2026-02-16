@@ -21,19 +21,7 @@ export function DesktopOverview() {
           <ZombieAlertBanner zombies={overviewData.zombies} />
         )}
 
-        {/* Team Tree */}
-        <div className="bg-card border rounded-lg shadow-sm p-4">
-          {isLoading ? (
-            <div className="text-sm text-muted-foreground">Loading team...</div>
-          ) : (
-            <TeamTree
-              agents={overviewData?.team || []}
-              liveWork={liveWork || overviewData?.liveWork || { count: 0, tasks: [] }}
-            />
-          )}
-        </div>
-
-        {/* Pipeline Strip */}
+        {/* Pipeline Strip - Full width */}
         {overviewData && (
           <PipelineStrip
             pipeline={overviewData.pipeline}
@@ -41,13 +29,28 @@ export function DesktopOverview() {
           />
         )}
 
-        {/* Activity Timeline */}
-        {overviewData && (
-          <ActivityTimeline
-            events={overviewData.recentEvents}
-            isLoading={isLoading}
-          />
-        )}
+        {/* Two-column layout: Team + Activity */}
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(300px,400px)_1fr] gap-6">
+          {/* Team Tree - Compact */}
+          <div className="bg-card border rounded-lg shadow-sm p-4">
+            {isLoading ? (
+              <div className="text-sm text-muted-foreground">Loading team...</div>
+            ) : (
+              <TeamTree
+                agents={overviewData?.team || []}
+                liveWork={liveWork || overviewData?.liveWork || { count: 0, tasks: [] }}
+              />
+            )}
+          </div>
+
+          {/* Activity Timeline - Takes remaining space */}
+          {overviewData && (
+            <ActivityTimeline
+              events={overviewData.recentEvents}
+              isLoading={isLoading}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
