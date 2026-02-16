@@ -18,6 +18,7 @@ import { AgentAvatar } from "../ui/agent-avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Button } from "../ui/button";
 import { useEffect } from "react";
+import { TaskComments } from "./task-comments";
 
 interface DetailSheetProps {
   item: QueueTask | FeatureRequest | null;
@@ -427,6 +428,7 @@ function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange
     const pc = getPriorityColor(task.priority);
     const [desc, setDesc] = useState(task.description || "");
     const [notes, setNotes] = useState(task.notes || "");
+    const taskId = typeof task.id === 'number' ? task.id : parseInt(String(task.id), 10);
 
     return (
          <div className="space-y-4 text-sm">
@@ -475,6 +477,9 @@ function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange
                     rows={3}
                 />
             </div>
+
+            {/* Task Chat */}
+            {!isNaN(taskId) && <TaskComments taskId={taskId} />}
 
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
