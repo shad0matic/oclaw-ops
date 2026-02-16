@@ -42,6 +42,32 @@ const spinnerAnimation = `
   border-radius: 50%;
   animation: acked-spinner 0.8s linear infinite;
 }
+.auto-ribbon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.auto-ribbon span {
+  position: absolute;
+  display: block;
+  width: 60px;
+  padding: 1px 0;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  font-size: 8px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transform: rotate(45deg);
+  top: 8px;
+  right: -16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
 `;
 
 export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
@@ -77,6 +103,11 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       <style>{spinnerAnimation}</style>
+      {task.created_by && task.created_by !== 'boss' && (
+        <div className="auto-ribbon" title={`Created by ${task.created_by}`}>
+          <span>auto</span>
+        </div>
+      )}
       <div onClick={onClick}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">

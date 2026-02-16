@@ -29,6 +29,7 @@ export interface QueueTask {
   notes?: string | null;
   epic?: string | null;
   acked?: boolean;
+  created_by?: string | null;
 }
 
 export interface FeatureRequest {
