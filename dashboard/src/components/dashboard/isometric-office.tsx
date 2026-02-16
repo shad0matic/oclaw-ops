@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import useSWR from 'swr'
 import { motion, useAnimation, AnimatePresence } from 'framer-motion'
+import { IsometricDetailedView } from './isometric-detailed'
 
 // --- Types ---
 type AgentStatus = 'idle' | 'active' | 'zombie' | 'dead'
@@ -555,13 +556,7 @@ export function IsometricOfficeWrapper() {
       {viewMode === 'basic' ? (
         <IsometricOffice agents={agents} />
       ) : (
-        <div className="w-full bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden p-8 text-center" style={{ minHeight: 400 }}>
-          <div className="text-6xl mb-4">🏗️</div>
-          <h3 className="text-lg font-medium text-foreground mb-2">Detailed View Coming Soon</h3>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Individual agent rooms with custom decor: Nefario's lab, Echo's studio, Mel's police box, Bob's coding space... plus a cozy lounge with sofas, billiard, and more!
-          </p>
-        </div>
+        <IsometricDetailedView agents={agents} />
       )}
       
       {/* Debug Controls (toggleable) */}
