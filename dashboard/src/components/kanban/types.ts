@@ -30,6 +30,16 @@ export interface QueueTask {
   epic?: string | null;
   acked?: boolean;
   created_by?: string | null;
+  progress?: {
+    kpis?: Array<{
+      label: string;
+      value: number;
+      target?: number;
+      unit?: string;
+    }>;
+    updatedAt?: string;
+  } | null;
+  tags?: string[] | null;
 }
 
 export interface FeatureRequest {

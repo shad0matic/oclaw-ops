@@ -39,6 +39,8 @@ export async function GET(request: NextRequest) {
     reviewer_id: task.reviewerId,
     notes: task.notes,
     created_by: task.createdBy,
+    progress: task.progress,
+    tags: task.tags,
   }))
 
   return NextResponse.json(tasks)

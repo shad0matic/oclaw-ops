@@ -390,6 +390,39 @@ function EpicInput({ epic, onSave }: { epic: string, onSave: (epic: string) => v
     );
 }
 
+function KpiDisplay({ progress }: { progress: QueueTask['progress'] }) {
+    if (!progress?.kpis?.length) return null;
+    
+    return (
+        <div className="space-y-2 bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-indigo-400 text-sm">📊 Progress</h4>
+                {progress.updatedAt && (
+                    <span className="text-[10px] text-muted-foreground">
+                        {formatDate(progress.updatedAt)}
+                    </span>
+                )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+                {progress.kpis.map((kpi, i) => (
+                    <div key={i} className="bg-background/50 rounded-md p-2">
+                        <div className="text-xs text-muted-foreground">{kpi.label}</div>
+                        <div className="text-lg font-bold text-foreground">
+                            {kpi.value.toLocaleString()}
+                            {kpi.target && (
+                                <span className="text-sm font-normal text-muted-foreground">
+                                    {' / '}{kpi.target.toLocaleString()}
+                                </span>
+                            )}
+                        </div>
+                        {kpi.unit && <div className="text-[10px] text-muted-foreground">{kpi.unit}</div>}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange: (field: string, value: any) => void }) {
     const pc = getPriorityColor(task.priority);
     const [desc, setDesc] = useState(task.description || "");
@@ -397,6 +430,9 @@ function DbTaskDetails({ task, onFieldChange }: { task: QueueTask, onFieldChange
 
     return (
          <div className="space-y-4 text-sm">
+            {/* KPI Progress Display */}
+            <KpiDisplay progress={task.progress} />
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div className="space-y-1"><p className="text-muted-foreground">Status</p><p className="font-mono bg-muted text-foreground rounded px-2 py-1">{task.status}</p></div>
                 <div className="space-y-1"><p className="text-muted-foreground">Priority</p>
