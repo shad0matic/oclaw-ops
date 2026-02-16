@@ -1,0 +1,144 @@
+import { useState, useEffect } from "react";
+import { Input } from "../../../components/ui/input";
+import { Button } from "../../../components/ui/button";
+import { CategorySidebar } from "../../../components/bookmarks/category-sidebar";
+import { BookmarkCard } from "../../../components/bookmarks/bookmark-card";
+import { CategoryChat } from "../../../components/bookmarks/category-chat";
+
+interface Bookmark {
+  id: string;
+  author: string;
+  text: string;
+  created_at: string;
+  category: string;
+  url: string;
+}
+
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+}
+
+export default function BookmarksPage() {
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 25, total: 0, pages: 0 });
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  // Fetch bookmarks based on filters
+  useEffect(() => {
+    async function fetchBookmarks() {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams({
+          page: pagination.page.toString(),
+          limit: pagination.limit.toString(),
+        });
+        if (selectedCategory) params.append("category", selectedCategory);
+        if (debouncedSearch) params.append("search", debouncedSearch);
+
+        const res = await fetch(`/api/bookmarks?${params.toString()}`);
+        const data = await res.json();
+        setBookmarks(data.bookmarks);
+        setPagination(data.pagination);
+      } catch (error) {
+        console.error("Failed to fetch bookmarks", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBookmarks();
+  }, [pagination.page, selectedCategory, debouncedSearch]);
+
+  const handlePageChange = (newPage: number) => {
+    setPagination({ ...pagination, page: newPage });
+    window.scrollTo(0, 0);
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setPagination({ ...pagination, page: 1 });
+  };
+
+  return (
+    <div className="flex h-screen bg-background">
+      {/* Sidebar with categories */}
+      <div className="w-64 border-r border-border hidden md:block">
+        <CategorySidebar 
+          selectedCategory={selectedCategory} 
+          onSelectCategory={handleCategorySelect} 
+        />
+      </div>
+      {/* Main content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Bookmarks content */}
+        <div className="flex-1 flex flex-col overflow-hidden border-r border-border">
+          {/* Search bar */}
+          <div className="p-6 border-b border-border">
+            <div className="relative max-w-lg">
+              <Input
+                placeholder="Search bookmarks..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full"
+              />
+            </div>
+          </div>
+          {/* Bookmarks list */}
+          <div className="flex-1 overflow-y-auto p-6">
+          {loading ? (
+            <div className="text-center py-10 text-muted-foreground">Loading bookmarks...</div>
+          ) : bookmarks.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">No bookmarks found.</div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
+              {bookmarks.map((bookmark) => (
+                <BookmarkCard key={bookmark.id} bookmark={bookmark} />
+              ))}
+            </div>
+          )}
+          {/* Pagination */}
+          {!loading && bookmarks.length > 0 && (
+            <div className="flex items-center justify-center mt-6 space-x-2">
+              <Button
+                variant="outline"
+                disabled={pagination.page === 1}
+                onClick={() => handlePageChange(pagination.page - 1)}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {pagination.page} of {pagination.pages} ({pagination.total} total)
+              </span>
+              <Button
+                variant="outline"
+                disabled={pagination.page === pagination.pages}
+                onClick={() => handlePageChange(pagination.page + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </div>
+        {/* Chat for selected category */}
+        {selectedCategory && (
+          <div className="w-96 hidden lg:block">
+            <CategoryChat category={selectedCategory} currentUser="currentUser" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
