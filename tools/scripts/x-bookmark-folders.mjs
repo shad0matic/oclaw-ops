@@ -109,13 +109,11 @@ To find folder IDs:
   }
 }
 
-// Database connection
+// Database connection - use Unix socket for peer auth
 const pool = new Pool({
   user: process.env.PGUSER || 'shad',
   database: process.env.PGDATABASE || 'openclaw_db',
-  password: process.env.PGPASSWORD,
-  host: process.env.PGHOST || 'localhost',
-  port: process.env.PGPORT || 5432,
+  host: process.env.PGHOST || '/var/run/postgresql',
 });
 
 /**
