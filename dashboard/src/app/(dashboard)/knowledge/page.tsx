@@ -2,9 +2,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import FolderTree from '~/components/bookmarks/folder-tree';
-import BookmarkList from '~/components/bookmarks/bookmark-list';
-import UnassignedBookmarks from '~/components/bookmarks/unassigned-bookmarks';
+import FolderTree from '@/components/bookmarks/folder-tree';
+import BookmarkList from '@/components/bookmarks/bookmark-list';
+import UnassignedBookmarks from '@/components/bookmarks/unassigned-bookmarks';
 
 const KnowledgePage = () => {
   const [selectedFolderId, setSelectedFolderId] = useState<bigint | null>(null);

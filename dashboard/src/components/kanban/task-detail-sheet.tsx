@@ -203,6 +203,21 @@ function TaskDetailHeader({ item, projects, title, setTitle, updateField, projec
             <span className="font-mono bg-muted text-foreground rounded px-2 py-0.5 text-xs">{item.status}</span>
           }
         </div>
+        
+        {/* Timestamps */}
+        {'created_at' in item && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pt-2">
+            {item.created_at && (
+              <span>Created: {formatDate(item.created_at)}</span>
+            )}
+            {item.started_at && (
+              <span>Started: {formatDate(item.started_at)}</span>
+            )}
+            {item.completed_at && ['review', 'human_todo', 'done', 'failed', 'cancelled'].includes(item.status) && (
+              <span>Finished: {formatDate(item.completed_at)}</span>
+            )}
+          </div>
+        )}
       </SheetHeader>
     </div>
   );
