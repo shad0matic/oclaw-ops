@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,6 +14,7 @@ interface Event {
     event_type: string
     detail: any
     context_id?: number | null
+    task_id?: number | null
     created_at: string
 }
 
@@ -267,6 +269,7 @@ function TaskGroup({ events, agent_id }: { events: Event[]; agent_id: string }) 
     const endEvent = events.find((e) => ["task_complete", "task_fail", "task_stalled"].includes(e.event_type))
     const commits = events.filter((e) => e.event_type === "commit")
     const taskName = startEvent?.detail?.task || endEvent?.detail?.task || "task"
+    const taskId = startEvent?.task_id || endEvent?.task_id || startEvent?.detail?.task_id || endEvent?.detail?.task_id
     const status = endEvent ? (endEvent.event_type === "task_complete" ? "complete" : endEvent.event_type === "task_fail" ? "failed" : "stalled") : "running"
     const badge = statusBadge(status)
 
@@ -290,17 +293,26 @@ function TaskGroup({ events, agent_id }: { events: Event[]; agent_id: string }) 
                             {timeAgo(events[0].created_at)}
                         </span>
                     </div>
-                    <button
-                        onClick={() => setExpanded(!expanded)}
-                        className="text-left text-muted-foreground hover:text-foreground/90 transition-colors"
-                    >
-                        <span>{taskName}</span>
-                        {commits.length > 0 && (
-                            <span className="text-xs text-muted-foreground/70 ml-2">
-                                {expanded ? "▾" : "▸"} {commits.length} commit{commits.length !== 1 ? "s" : ""}
-                            </span>
+                    <div className="flex items-center gap-2">
+                        {taskId ? (
+                            <Link 
+                                href={`/tasks/${taskId}`}
+                                className="text-muted-foreground hover:text-blue-400 hover:underline transition-colors"
+                            >
+                                {taskName}
+                            </Link>
+                        ) : (
+                            <span className="text-muted-foreground">{taskName}</span>
                         )}
-                    </button>
+                        {commits.length > 0 && (
+                            <button
+                                onClick={() => setExpanded(!expanded)}
+                                className="text-xs text-muted-foreground/70 hover:text-foreground/90"
+                            >
+                                {expanded ? "▾" : "▸"} {commits.length} commit{commits.length !== 1 ? "s" : ""}
+                            </button>
+                        )}
+                    </div>
                     {expanded && commits.length > 0 && (
                         <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground/70">
                             {commits.map((e) => (
@@ -321,6 +333,8 @@ function SingleEvent({ event }: { event: Event }) {
     const agent = getAgent(event.agent_id)
     const { text, status } = formatSingleEvent(event)
     const badge = statusBadge(status)
+    const taskId = event.task_id || event.detail?.task_id
+    const isTaskEvent = ['task_start', 'task_complete', 'task_fail', 'task_assign', 'task_stalled'].includes(event.event_type)
 
     return (
         <div className="flex items-start gap-3 text-sm border-b border-border/50 pb-4 last:border-0">
@@ -341,7 +355,16 @@ function SingleEvent({ event }: { event: Event }) {
                         {timeAgo(event.created_at)}
                     </span>
                 </div>
-                <p className="text-muted-foreground break-words">{text}</p>
+                {isTaskEvent && taskId ? (
+                    <Link 
+                        href={`/tasks/${taskId}`}
+                        className="text-muted-foreground hover:text-blue-400 hover:underline transition-colors break-words"
+                    >
+                        {text}
+                    </Link>
+                ) : (
+                    <p className="text-muted-foreground break-words">{text}</p>
+                )}
             </div>
         </div>
     )

@@ -1283,3 +1283,53 @@ FROM ops.task_checklist WHERE task_id = $TASK_ID;
 ---
 
 *End of specification. Questions → ping Nefario or Boss on Telegram.*
+
+---
+
+## 9. Data Retention & Cleanup
+
+### Policy
+- **Retention period:** 6 months after parent task reaches `done`, `failed`, or `cancelled`
+- **Cleanup scope:** Checklist items cascade-delete when parent task is deleted, but we also need periodic cleanup of old completed tasks
+
+### Implementation Options
+
+#### Option A: Cron job (recommended)
+```sql
+-- Run monthly via pg_cron or external scheduler
+DELETE FROM ops.task_queue 
+WHERE status IN ('done', 'failed', 'cancelled')
+  AND completed_at < NOW() - INTERVAL '6 months';
+-- Checklist items auto-delete via ON DELETE CASCADE
+```
+
+#### Option B: Database trigger
+```sql
+-- Trigger that archives/deletes old tasks on INSERT (piggyback on activity)
+-- Less predictable, harder to debug
+```
+
+#### Option C: Scheduled OpenClaw cron job
+```yaml
+# Add to cron config
+- name: task-cleanup
+  schedule: { kind: cron, expr: "0 3 1 * *" }  # 3 AM, 1st of month
+  payload:
+    kind: agentTurn
+    message: "Run task_queue cleanup: DELETE tasks older than 6 months"
+```
+
+### Recommendation
+Use **Option A** with pg_cron for reliability:
+```sql
+SELECT cron.schedule('task-cleanup-monthly', '0 3 1 * *', $$
+  DELETE FROM ops.task_queue 
+  WHERE status IN ('done', 'failed', 'cancelled')
+    AND completed_at < NOW() - INTERVAL '6 months'
+$$);
+```
+
+### Safeguards
+- Only delete `done`/`failed`/`cancelled` (never `running` or `planned`)
+- Log count before delete for audit trail
+- Consider archiving to `ops.task_queue_archive` first if history needed
