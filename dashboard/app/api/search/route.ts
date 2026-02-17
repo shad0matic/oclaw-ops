@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db'; // Assuming db connection is in lib/db
+import { pool } from '@/lib/db'; // Use pool for raw SQL queries
 import { promises as fs } from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
       WHERE title ILIKE $1 OR notes ILIKE $1 OR epic ILIKE $1
       LIMIT 10;
     `;
-    const tasks = await db.query(taskQuery, [`%${q}%`]);
+    const tasks = await pool.query(taskQuery, [`%${q}%`]);
     const taskResults = tasks.rows.map((task: any) => ({
       type: task.epic ? 'epic' : 'task',
       id: task.id,

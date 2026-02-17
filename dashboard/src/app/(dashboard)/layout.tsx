@@ -2,12 +2,12 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { GlobalStatusBar } from "@/components/layout/global-status-bar"
 import Providers from "../providers"
-import { CommandPalette } from "@/components/command-palette" // Added import
+// import { CommandPalette } from "@/components/command-palette" // TODO: Bob incomplete
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
         <Providers>
-            <CommandPalette /> 
+            {/* <CommandPalette /> */} 
             <div className="flex h-screen bg-background">
                 <aside className="hidden md:block">
                     <Sidebar className="h-full" />
