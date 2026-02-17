@@ -11,9 +11,9 @@ interface ChatStatusIconProps {
 
 const statusColors: Record<CommentStatus, string> = {
   red: 'text-red-500',
-  yellow: 'text-yellow-500',
-  green: 'text-green-500',
-  gray: 'text-gray-500',
+  yellow: 'text-amber-400',  // More visible than yellow-500
+  green: 'text-emerald-500',
+  gray: 'text-gray-400',
 };
 
 export const ChatStatusIcon: FC<ChatStatusIconProps> = ({ status, commentCount }) => {

@@ -97,7 +97,7 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
         return null;
       }
 
-      // Gray for done/review tasks
+      // Gray for done/review tasks only
       if (task.status === 'done' || task.status === 'review') {
         return 'gray';
       }
