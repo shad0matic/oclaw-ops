@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../lib/db";
+import { pool } from "../../../lib/db";
 
 // GET /api/bookmark-categories - Fetch hierarchical categories with counts
 
 export async function GET() {
   try {
     // Fetch all categories
-    const categories = await db.query(`
+    const { rows: categories } = await pool.query(`
       SELECT c.*, COUNT(b.id) as bookmark_count
       FROM ops.x_bookmark_categories c
       LEFT JOIN ops.x_bookmarks b ON c.slug = b.category

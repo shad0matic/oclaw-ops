@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../lib/db";
+import { pool } from "../../../lib/db";
 
 // GET /api/bookmarks - Fetch bookmarks with pagination, filtering, and search
 
@@ -39,8 +39,8 @@ export async function GET(request: Request) {
 
     // Get total count for pagination
     const countQuery = query.replace("SELECT *", "SELECT COUNT(*)");
-    const countResult = await db.query(countQuery, params);
-    const total = parseInt(countResult[0].count, 10);
+    const { rows: countRows } = await pool.query(countQuery, params);
+    const total = parseInt(countRows[0].count, 10);
 
     // Add pagination and ordering
     query += `
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     params.push(limit, offset);
 
     // Fetch paginated bookmarks
-    const bookmarks = await db.query(query, params);
+    const { rows: bookmarks } = await pool.query(query, params);
 
     return NextResponse.json({
       bookmarks,

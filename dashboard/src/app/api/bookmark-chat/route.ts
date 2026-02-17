@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../lib/db";
+import { pool } from "../../../lib/db";
 
 // GET /api/bookmark-chat - Fetch chat messages for a category
 
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const messages = await db.query(
+    const { rows: messages } = await pool.query(
       `SELECT * FROM ops.x_bookmark_chat WHERE category = $1 ORDER BY created_at ASC`,
       [category]
     );
@@ -44,12 +44,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await db.query(
+    const { rows } = await pool.query(
       `INSERT INTO ops.x_bookmark_chat (category, text, author) VALUES ($1, $2, $3) RETURNING *`,
       [category, text, author]
     );
 
-    return NextResponse.json({ message: result[0] });
+    return NextResponse.json({ message: rows[0] });
   } catch (error) {
     console.error("Error sending chat message:", error);
     return NextResponse.json(

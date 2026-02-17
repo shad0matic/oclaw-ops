@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../../lib/db";
+import { pool } from "../../../../lib/db";
 
 // POST /api/bookmarks/update-category - Update category for a bookmark
 
@@ -15,19 +15,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await db.query(
+    const { rows } = await pool.query(
       `UPDATE ops.x_bookmarks SET category = $1 WHERE id = $2 RETURNING *`,
       [category, bookmarkId]
     );
 
-    if (result.length === 0) {
+    if (rows.length === 0) {
       return NextResponse.json(
         { error: "Bookmark not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ bookmark: result[0] });
+    return NextResponse.json({ bookmark: rows[0] });
   } catch (error) {
     console.error("Error updating bookmark category:", error);
     return NextResponse.json(
