@@ -119,6 +119,32 @@ function Room({ roomKey }: { roomKey: keyof typeof ROOMS }) {
   )
 }
 
+// --- Walking Avatar Component ---
+function WalkingAvatar({ agent, avatarUrl, avatarSize, isMoving, facingRight }: { agent: Agent, avatarUrl: string, avatarSize: number, isMoving: boolean, facingRight: boolean }) {
+  const walkSpriteUrl = avatarUrl.replace('.webp', '_walk.webp').replace('minion-avatars', 'isometric/characters/minions');
+
+  return (
+    <g>
+      <style>{`
+        .walker-${agent.id} {
+          width: ${avatarSize}px;
+          height: ${avatarSize}px;
+          background-image: url(${walkSpriteUrl});
+          background-size: ${avatarSize * 2}px ${avatarSize}px;
+          animation: walk-anim-${agent.id} 0.4s steps(2) infinite;
+        }
+        @keyframes walk-anim-${agent.id} {
+          from { background-position: 0 0; }
+          to { background-position: -${avatarSize * 2}px 0; }
+        }
+      `}</style>
+      <foreignObject x={-avatarSize / 2} y={-avatarSize / 2} width={avatarSize} height={avatarSize} clipPath={`url(#avatar-clip-${agent.id})`}>
+        <div className={`walker-${agent.id}`} />
+      </foreignObject>
+    </g>
+  );
+}
+
 // --- Animated Agent Sprite with Avatar ---
 function AnimatedAgentSprite({
   agent,
@@ -241,18 +267,23 @@ function AnimatedAgentSprite({
             </clipPath>
           </defs>
           <circle cx={0} cy={0} r={avatarSize / 2 + 2} fill="#27272a" /> {/* Border */}
-          <image
-            href={avatarUrl}
-            x={-avatarSize / 2}
-            y={-avatarSize / 2}
-            width={avatarSize}
-            height={avatarSize}
-            clipPath={`url(#avatar-clip-${agent.id})`}
-            style={{
-              filter: isZombie ? 'saturate(0.3) brightness(0.6)' : 'none',
-            }}
-            preserveAspectRatio="xMidYMid slice"
-          />
+          
+          {isMoving ? (
+            <WalkingAvatar agent={agent} avatarUrl={avatarUrl} avatarSize={avatarSize} isMoving={isMoving} facingRight={facingRight} />
+          ) : (
+            <image
+              href={avatarUrl}
+              x={-avatarSize / 2}
+              y={-avatarSize / 2}
+              width={avatarSize}
+              height={avatarSize}
+              clipPath={`url(#avatar-clip-${agent.id})`}
+              style={{
+                filter: isZombie ? 'saturate(0.3) brightness(0.6)' : 'none',
+              }}
+              preserveAspectRatio="xMidYMid slice"
+            />
+          )}
         </motion.g>
 
         {/* Zombie overlay */}
