@@ -1,63 +1,35 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
-import { pool } from "@/lib/drizzle"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Network } from "lucide-react"
-import { PageHeader } from "@/components/layout/page-header"
 
-export default async function KnowledgePage() {
-    const session = await auth()
-    if (!session) redirect("/login")
+'use client';
 
-    const entitiesResult = await pool.query("SELECT * FROM memory.entities ORDER BY created_at DESC LIMIT 50")
-    const entities = entitiesResult.rows
+import React, { useState } from 'react';
+import FolderTree from '~/components/bookmarks/folder-tree';
+import BookmarkList from '~/components/bookmarks/bookmark-list';
+import UnassignedBookmarks from '~/components/bookmarks/unassigned-bookmarks';
 
-    const entityTypes = Array.from(new Set(entities.map(e => e.entity_type)))
+const KnowledgePage = () => {
+  const [selectedFolderId, setSelectedFolderId] = useState<bigint | null>(null);
 
-    return (
-        <div className="space-y-8">
-            <div className="flex items-center justify-between">
-                <PageHeader title="Knowledge Graph" subtitle="Entities and relationships extracted from agent interactions and memory." />
-            </div>
+  // This is a placeholder for the folder selection logic.
+  // In a real implementation, the FolderTree component would have a callback to set the selected folder.
+  // For now, I'll just hardcode a folder ID for demonstration purposes.
+  const handleFolderSelect = (folderId: bigint) => {
+    setSelectedFolderId(folderId);
+  }
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {entities.map((entity: any) => (
-                    <Card key={Number(entity.id)} className="bg-zinc-900/50 border-zinc-800">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Network className="h-4 w-4 text-blue-500" />
-                                    <CardTitle className="text-white text-base">{entity.name}</CardTitle>
-                                </div>
-                                <Badge variant="outline" className="border-zinc-700 text-zinc-400">
-                                    {entity.entity_type}
-                                </Badge>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            {entity.aliases && entity.aliases.length > 0 && (
-                                <div>
-                                    <div className="text-xs font-semibold text-zinc-500 mb-1">Aliases</div>
-                                    <div className="flex flex-wrap gap-1">
-                                        {entity.aliases.map((alias: string) => (
-                                            <span key={alias} className="text-xs bg-zinc-950 px-2 py-0.5 rounded text-zinc-400">
-                                                {alias}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            <div className="text-xs text-zinc-500">
-                                {entity.first_seen_by && (
-                                    <span>Seen by {entity.first_seen_by} • </span>
-                                )}
-                                {entity.created_at?.toLocaleDateString()}
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Knowledge Base</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-1">
+          <FolderTree onSelectFolder={handleFolderSelect} />
         </div>
-    )
-}
+        <div className="md:col-span-2 space-y-4">
+          <BookmarkList folderId={selectedFolderId} />
+          <UnassignedBookmarks />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default KnowledgePage;

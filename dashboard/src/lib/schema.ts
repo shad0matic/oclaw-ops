@@ -648,3 +648,31 @@ export const telegramMessagesInOps = ops.table("telegram_messages", {
 	index("idx_tg_msg_topic").using("btree", table.chatId.asc().nullsLast().op("timestamptz_ops"), table.topicId.asc().nullsLast().op("timestamptz_ops"), table.ts.desc().nullsFirst().op("int8_ops")),
 	unique("telegram_messages_chat_id_message_id_key").on(table.messageId, table.chatId),
 ]);
+
+export const bookmarkFolders = ops.table("bookmark_folders", {
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    parentId: bigint('parent_id', { mode: 'bigint' }).references(() => bookmarkFolders.id),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+});
+
+export const xBookmarks = ops.table("x_bookmarks", {
+    id: text('id').primaryKey().notNull(),
+    url: text('url').notNull(),
+    text: text('text'),
+    author_id: text('author_id'),
+    author_name: text('author_name'),
+    author_handle: text('author_handle'),
+    created_at: timestamp("created_at", { withTimezone: true, mode: 'string' }),
+    media: jsonb('media'),
+});
+
+export const bookmarkFolderItems = ops.table("bookmark_folder_items", {
+    folderId: bigint('folder_id', { mode: 'bigint' }).notNull().references(() => bookmarkFolders.id),
+    bookmarkId: text('bookmark_id').notNull().references(() => xBookmarks.id),
+    addedAt: timestamp("added_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => ({
+    pk: unique().on(table.folderId, table.bookmarkId),
+}));
