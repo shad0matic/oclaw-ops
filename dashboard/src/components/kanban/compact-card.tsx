@@ -5,6 +5,7 @@ import { useDrag } from "react-dnd";
 import { useRef } from "react";
 import { ItemTypes } from "./item-types";
 import { QueueTask, Project, getPriorityColor, TaskComment } from "./types";
+import { ChecklistProgressBadge } from "./checklist-progress-badge";
 import { ChatStatusIcon } from "@/components/ui/chat-status-icon";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -163,6 +164,7 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
               P{task.priority}
             </span>
             <div className="flex items-center gap-1">
+                {task.status === 'running' && <ChecklistProgressBadge taskId={task.id} />}
                 {commentStatus && (
                     <ChatStatusIcon status={commentStatus} commentCount={task.comments?.length || 0} />
                 )}

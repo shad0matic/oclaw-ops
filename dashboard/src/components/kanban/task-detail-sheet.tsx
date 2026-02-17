@@ -15,6 +15,7 @@ import { useState, useEffect, useMemo } from "react";
 import { AgentAvatar } from "../ui/agent-avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Button } from "../ui/button";
+import { TaskChecklist } from "./task-checklist";
 import { TaskComments } from "./task-comments";
 import {
   AlertDialog,
@@ -132,7 +133,8 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: {
             />
           </div>
 
-          {taskId && <TaskComments taskId={taskId} />}
+          {taskId && <TaskChecklist taskId={taskId} />}
+      {taskId && <TaskComments taskId={taskId} />}
           
           {isDbTask && <NotesSection task={item as QueueTask} updateField={updateField} />}
           
