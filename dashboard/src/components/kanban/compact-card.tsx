@@ -9,7 +9,7 @@ import { ChatStatusIcon } from "@/components/ui/chat-status-icon";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
-type CommentStatus = 'red' | 'yellow' | 'green' | 'gray';
+type CommentStatus = 'waiting' | 'attention' | 'gray';
 
 
 function timeAgo(dateStr: string | null | undefined): string | null {
@@ -97,7 +97,7 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
         return null;
       }
 
-      // Gray for done/review tasks only
+      // Gray for closed tasks
       if (task.status === 'done' || task.status === 'review') {
         return 'gray';
       }
@@ -109,15 +109,11 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
       const lastCommenterIsBoss = lastComment.author === 'boss';
 
       if (lastCommenterIsBoss) {
-        // Boss commented last - check if agent read it
-        if (lastComment.read_at) {
-          return 'yellow'; // Agent saw it
-        } else {
-          return 'red'; // Awaiting agent
-        }
+        // Boss commented last - waiting for agent (blue)
+        return 'waiting';
       } else {
-        // Agent replied
-        return 'green';
+        // Agent replied - needs Boss attention (pulsing amber)
+        return 'attention';
       }
   }
   
