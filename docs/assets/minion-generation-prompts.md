@@ -8,9 +8,14 @@
 
 ## 🍌 Nano Banana (Gemini 3 Pro Image) — RECOMMENDED
 
-### Key Learning
+### Key Learnings
 **ALWAYS use:** `"a Minion from Despicable Me"` 
 **NEVER use:** `"Dave the Minion"` or `"[Name] the Minion"` — produces humanoid shapes with long legs
+
+**Eye Variations (for character variety):**
+- **Two-eyed:** Kevin, Bob, Nefario, Phil, Mel
+- **Single-eyed:** Stuart, Dave, Echo, Smaug
+- Add `"two-eyed"` or `"single-eyed"` before "Minion" in prompts
 
 ### 8-Direction Sprite Sheet Template (Proven)
 ```
