@@ -28,18 +28,18 @@ const getEventIcon = (type: string) => {
 
 export function TimelineEventCard({ event }: { event: any }) {
   return (
-    <Card>
+    <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {getEventIcon(event.type)}
           <span className="capitalize">{event.type.replace("_", " ")}</span>
-          <span className="text-sm text-gray-500 ml-auto">
+          <span className="text-sm text-muted-foreground ml-auto">
             {new Date(event.timestamp).toLocaleString()}
           </span>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <pre className="bg-gray-100 p-2 rounded">
+        <pre className="bg-muted text-foreground p-2 rounded text-xs overflow-auto">
           {JSON.stringify(event, null, 2)}
         </pre>
       </CardContent>
