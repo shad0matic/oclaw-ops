@@ -1,24 +1,17 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 
-// GET /api/x-folders - Fetch X bookmark folders with counts and mappings
+// GET /api/x-folders - Fetch X bookmark folders with counts
 export async function GET() {
   try {
+    // Simple query first - just get folders and counts
     const { rows } = await pool.query(`
       SELECT 
         x_folder,
-        COUNT(*) as bookmark_count,
-        m.id as mapping_id,
-        m.category_id,
-        m.analysis_prompt,
-        m.description,
-        c.name as category_name,
-        c.emoji as category_emoji
-      FROM ops.x_bookmarks b
-      LEFT JOIN ops.x_folder_mappings m ON b.x_folder = m.x_folder
-      LEFT JOIN ops.x_bookmark_categories c ON m.category_id = c.id
-      WHERE b.x_folder IS NOT NULL AND b.x_folder != ''
-      GROUP BY b.x_folder, m.id, m.category_id, m.analysis_prompt, m.description, c.name, c.emoji
+        COUNT(*)::integer as bookmark_count
+      FROM ops.x_bookmarks
+      WHERE x_folder IS NOT NULL AND x_folder != ''
+      GROUP BY x_folder
       ORDER BY COUNT(*) DESC
     `);
 
@@ -26,7 +19,7 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching X folders:", error);
     return NextResponse.json(
-      { error: "Failed to fetch X folders" },
+      { error: "Failed to fetch X folders", details: String(error) },
       { status: 500 }
     );
   }

@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { LayoutDashboard, Users, Activity, Menu, LogOut, ListTodo, DollarSign, FlaskConical, Settings, Sun, Moon } from "lucide-react"
+import { LayoutDashboard, Users, Activity, Menu, LogOut, ListTodo, DollarSign, FlaskConical, Settings, Sun, Moon, Bookmark, Brain } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
     Sheet,
@@ -22,6 +22,8 @@ const topItems = [
 ]
 
 const overflowItems = [
+    { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
+    { href: "/knowledge", label: "Knowledge", icon: Brain },
     { href: "/agents", label: "Agents", icon: Users },
     { href: "/events", label: "Events", icon: Activity },
     { href: "/settings", label: "Settings", icon: Settings },
