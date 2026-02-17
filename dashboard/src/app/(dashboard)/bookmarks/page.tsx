@@ -81,7 +81,7 @@ export default function BookmarksPage() {
   const handleXFolderSelect = (folder: string) => {
     setSelectedXFolder(folder);
     setSelectedCategory("");
-    setPagination({ ...pagination, page: 1 });
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   return (

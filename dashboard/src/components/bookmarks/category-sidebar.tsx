@@ -79,7 +79,6 @@ export function CategorySidebar({
   const handleXFolderClick = (folder: string) => {
     if (onSelectXFolder) {
       onSelectXFolder(folder);
-      onSelectCategory(""); // Clear category selection
     }
   };
 
