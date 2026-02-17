@@ -91,14 +91,14 @@ export function MobileOverview() {
         <TeamTree agents={agents} liveWork={liveWork || undefined} />
       </section>
 
-      {/* Today Summary */}
+      {/* Activity */}
+      <ActivityCollapsed events={overviewData.recentEvents} />
+
+      {/* Today Summary - Pipeline at bottom */}
       <TodaySummary
         pipeline={overviewData.pipeline}
         dailyCost={overviewData.dailyCost}
       />
-
-      {/* Activity */}
-      <ActivityCollapsed events={overviewData.recentEvents} />
 
       {/* Agent Bottom Sheet */}
       <AgentBottomSheet

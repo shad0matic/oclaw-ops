@@ -21,14 +21,6 @@ export function DesktopOverview() {
           <ZombieAlertBanner zombies={overviewData.zombies} />
         )}
 
-        {/* Pipeline Strip - Full width */}
-        {overviewData && (
-          <PipelineStrip
-            pipeline={overviewData.pipeline}
-            isLoading={isLoading}
-          />
-        )}
-
         {/* Two-column layout: Team + Activity */}
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(500px,600px)_1fr] gap-6">
           {/* Team Tree - Compact */}
@@ -52,6 +44,14 @@ export function DesktopOverview() {
             />
           )}
         </div>
+
+        {/* Pipeline Strip - Summary at bottom */}
+        {overviewData && (
+          <PipelineStrip
+            pipeline={overviewData.pipeline}
+            isLoading={isLoading}
+          />
+        )}
       </div>
     </div>
   )
