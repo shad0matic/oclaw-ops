@@ -339,15 +339,11 @@ function getPath(from: RoomKey, to: RoomKey): Point[] {
 - Walk cycle plays during movement
 - Easing at start/end of path segments
 
-#### 6.3 Collision/Queueing (Optional)
-- Multiple minions on same path = queue or offset
-- "Excuse me" animations when passing
-- Priority for active agents
-
-#### 6.4 Visual Elements
+#### 6.3 Visual Elements (Keep Simple)
+- Minions can overlap on paths (no collision system)
 - Faint path lines (optional, toggle)
-- Footstep dust particles
-- Door open/close animations at room entries
+- Footstep dust particles (optional)
+- Doors: TBD — may skip entirely for open-plan feel
 
 **Effort:** 4-6h (pathfinding) + 2-3h (polish)
 **Prerequisites:** Phases 1-5 complete
