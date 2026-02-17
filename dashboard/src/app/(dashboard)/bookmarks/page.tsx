@@ -27,6 +27,7 @@ export default function BookmarksPage() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 25, total: 0, pages: 0 });
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedXFolder, setSelectedXFolder] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
@@ -49,12 +50,13 @@ export default function BookmarksPage() {
           limit: pagination.limit.toString(),
         });
         if (selectedCategory) params.append("category", selectedCategory);
+        if (selectedXFolder) params.append("x_folder", selectedXFolder);
         if (debouncedSearch) params.append("search", debouncedSearch);
 
         const res = await fetch(`/api/bookmarks?${params.toString()}`);
         const data = await res.json();
-        setBookmarks(data.bookmarks);
-        setPagination(data.pagination);
+        setBookmarks(data.bookmarks || []);
+        setPagination(data.pagination || { page: 1, limit: 25, total: 0, pages: 0 });
       } catch (error) {
         console.error("Failed to fetch bookmarks", error);
       } finally {
@@ -62,7 +64,7 @@ export default function BookmarksPage() {
       }
     }
     fetchBookmarks();
-  }, [pagination.page, selectedCategory, debouncedSearch]);
+  }, [pagination.page, selectedCategory, selectedXFolder, debouncedSearch]);
 
   const handlePageChange = (newPage: number) => {
     setPagination({ ...pagination, page: newPage });
@@ -71,6 +73,13 @@ export default function BookmarksPage() {
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
+    setSelectedXFolder("");
+    setPagination({ ...pagination, page: 1 });
+  };
+
+  const handleXFolderSelect = (folder: string) => {
+    setSelectedXFolder(folder);
+    setSelectedCategory("");
     setPagination({ ...pagination, page: 1 });
   };
 
@@ -80,7 +89,9 @@ export default function BookmarksPage() {
       <div className="w-64 border-r border-border hidden md:block">
         <CategorySidebar 
           selectedCategory={selectedCategory} 
-          onSelectCategory={handleCategorySelect} 
+          onSelectCategory={handleCategorySelect}
+          selectedXFolder={selectedXFolder}
+          onSelectXFolder={handleXFolderSelect}
         />
       </div>
       {/* Main content */}

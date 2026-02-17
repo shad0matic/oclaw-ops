@@ -10,6 +10,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "25", 10);
     const offset = (page - 1) * limit;
     const category = searchParams.get("category") || "";
+    const xFolder = searchParams.get("x_folder") || "";
     const search = searchParams.get("search") || "";
 
     // Build query conditions
@@ -24,6 +25,12 @@ export async function GET(request: Request) {
     if (category) {
       conditions.push(`category = $${params.length + 1}`);
       params.push(category);
+    }
+
+    // Filter by X folder if provided
+    if (xFolder) {
+      conditions.push(`x_folder = $${params.length + 1}`);
+      params.push(xFolder);
     }
 
     // Full-text search if provided
