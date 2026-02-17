@@ -40,6 +40,16 @@ export interface QueueTask {
     updatedAt?: string;
   } | null;
   tags?: string[] | null;
+  comments?: TaskComment[];
+}
+
+export interface TaskComment {
+  id: string;
+  sender_id: string;
+  message: string;
+  created_at: string;
+  is_read?: boolean;
+  task_id: number;
 }
 
 export interface FeatureRequest {

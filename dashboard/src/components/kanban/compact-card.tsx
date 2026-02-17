@@ -4,7 +4,13 @@ import { motion } from "framer-motion";
 import { useDrag } from "react-dnd";
 import { useRef } from "react";
 import { ItemTypes } from "./item-types";
-import { QueueTask, Project, getPriorityColor } from "./types";
+import { QueueTask, Project, getPriorityColor, TaskComment } from "./types";
+import { ChatStatusIcon } from "@/components/ui/chat-status-icon";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+
+type CommentStatus = 'red' | 'yellow' | 'green' | 'gray';
+
 
 function timeAgo(dateStr: string | null | undefined): string | null {
   if (!dateStr) return null;
@@ -23,11 +29,6 @@ interface TaskCardProps {
   projects: Project[];
   onClick: () => void;
 }
-
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-
-// ... (imports remain the same)
 
 const spinnerAnimation = `
 @keyframes acked-spinner {
@@ -90,6 +91,35 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
   const epicProj = task.epic ? projects.find(p => p.id === task.epic) : null;
   const projectIcon = proj?.icon || "📦";
   const projectColor = proj?.color || "border-l-zinc-500";
+  
+  const getCommentStatus = (task: QueueTask): CommentStatus | null => {
+      if (!task.comments || task.comments.length === 0) {
+        return null;
+      }
+
+      const sortedComments = [...task.comments].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const lastComment = sortedComments[0];
+
+      const bossId = '1868676790';
+      const lastCommenterIsBoss = lastComment.sender_id === bossId;
+      
+      if (task.status === 'done' || task.status === 'review') {
+        return 'gray';
+      }
+
+      if (lastCommenterIsBoss) {
+        if (lastComment.is_read) {
+          return 'yellow';
+        } else {
+          return 'red';
+        }
+      } else {
+        return 'green';
+      }
+  }
+  
+  const commentStatus = getCommentStatus(task);
+
 
   return (
     <motion.div
@@ -128,22 +158,27 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
               <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />
               P{task.priority}
             </span>
-            {task.agent_id && (
-              <div className="flex items-center gap-1">
-                {task.status === 'running' && (
-                  task.acked 
-                    ? <span title="Acknowledged & Dispatched" className="text-emerald-500 text-xs">✓</span>
-                    : <span title="Awaiting Dispatch" className="acked-spinner"></span>
+            <div className="flex items-center gap-1">
+                {commentStatus && (
+                    <ChatStatusIcon status={commentStatus} commentCount={task.comments?.length || 0} />
                 )}
-                <img
-                  src={`/assets/minion-avatars/${task.agent_id}.webp`}
-                  alt={task.agent_name || task.agent_id}
-                  className="w-3.5 h-3.5 rounded-full"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
-                <span className="text-[11px] text-muted-foreground/80">{task.agent_name || task.agent_id}</span>
-              </div>
-            )}
+                {task.agent_id && (
+                  <>
+                    {task.status === 'running' && (
+                      task.acked 
+                        ? <span title="Acknowledged & Dispatched" className="text-emerald-500 text-xs">✓</span>
+                        : <span title="Awaiting Dispatch" className="acked-spinner"></span>
+                    )}
+                    <img
+                      src={`/assets/minion-avatars/${task.agent_id}.webp`}
+                      alt={task.agent_name || task.agent_id}
+                      className="w-3.5 h-3.5 rounded-full"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    />
+                    <span className="text-[11px] text-muted-foreground/80">{task.agent_name || task.agent_id}</span>
+                  </>
+                )}
+            </div>
           </div>
         </div>
       </div>
