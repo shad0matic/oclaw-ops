@@ -11,6 +11,7 @@ const navItems = [
     { href: "/", label: "Overview", icon: LayoutDashboard },
     { href: "/lab", label: "Lab", icon: FlaskConical },
     { href: "/tasks", label: "Kanban", icon: ListTodo },
+    { href: "/knowledge", label: "Knowledge", icon: Brain },
     { href: "/costs", label: "Costs", icon: DollarSign },
     { href: "/agents", label: "Agents", icon: Users },
     { href: "/events", label: "Events", icon: Activity },
