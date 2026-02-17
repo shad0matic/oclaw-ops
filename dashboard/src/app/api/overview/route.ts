@@ -18,6 +18,7 @@ interface TaskTree {
   spawnedBy: string | null
   children: TaskTree[]
   project?: string | null
+  projectIcon?: string | null
   source?: 'runs' | 'queue'
 }
 
@@ -48,6 +49,7 @@ export async function GET() {
       { rows: dailyCostRows },
       { rows: zombieEvents },
       { rows: suspectedZombies },
+      { rows: projectsRaw },
     ] = await Promise.all([
       // All agents with profiles
       pool.query("SELECT * FROM memory.agent_profiles ORDER BY agent_id ASC"),
@@ -94,10 +96,16 @@ export async function GET() {
         WHERE r.status = 'running'
           AND r.last_heartbeat IS NOT NULL
           AND r.last_heartbeat < NOW() - INTERVAL '15 minutes'
-      `)
+      `),
+
+      // Projects for icon lookup
+      pool.query("SELECT id, label, icon FROM ops.projects WHERE active = true"),
     ])
     
     const dailyCost = dailyCostRows[0]?.cost_usd || 0
+
+    // Build project map for icon lookup
+    const projectMap = new Map(projectsRaw.map((p: any) => [p.id, { icon: p.icon, label: p.label }]))
 
     // Build task trees from running runs + running queue tasks
     const nowMs = now.getTime()
@@ -137,6 +145,7 @@ export async function GET() {
         children: [],
         source: 'queue' as const,
         project: qt.project || null,
+        projectIcon: qt.project ? projectMap.get(qt.project)?.icon || '📦' : null,
       })
     }
 

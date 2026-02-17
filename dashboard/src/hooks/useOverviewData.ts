@@ -19,6 +19,7 @@ export interface TaskTree {
   children: TaskTree[]
   source?: string
   project?: string | null
+  projectIcon?: string | null
 }
 
 export interface AgentData {
