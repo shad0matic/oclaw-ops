@@ -97,23 +97,26 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
         return null;
       }
 
-      const sortedComments = [...task.comments].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      const lastComment = sortedComments[0];
-
-      const bossId = '1868676790';
-      const lastCommenterIsBoss = lastComment.sender_id === bossId;
-      
+      // Gray for done/review tasks
       if (task.status === 'done' || task.status === 'review') {
         return 'gray';
       }
 
+      const sortedComments = [...task.comments].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      const lastComment = sortedComments[0];
+      const lastCommenterIsBoss = lastComment.author === 'boss';
+
       if (lastCommenterIsBoss) {
-        if (lastComment.is_read) {
-          return 'yellow';
+        // Boss commented last - check if agent read it
+        if (lastComment.read_at) {
+          return 'yellow'; // Agent saw it
         } else {
-          return 'red';
+          return 'red'; // Awaiting agent
         }
       } else {
+        // Agent replied
         return 'green';
       }
   }

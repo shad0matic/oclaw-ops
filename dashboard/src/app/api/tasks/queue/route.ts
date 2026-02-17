@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic"
-import { db } from "@/lib/drizzle"
+import { db, pool } from "@/lib/drizzle"
 import { taskQueueInOps, agentProfilesInMemory } from "@/lib/schema"
 import { eq, and, asc, sql, SQL } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
@@ -25,6 +25,24 @@ export async function GET(request: NextRequest) {
       asc(taskQueueInOps.createdAt),
     )
 
+  const taskIds = rows.map(r => r.task.id)
+  
+  // Fetch comments for all tasks in one query
+  let commentsMap: Record<number, any[]> = {}
+  if (taskIds.length > 0) {
+    const { rows: commentRows } = await pool.query(
+      `SELECT id, task_id, author, message, created_at, read_at, read_by 
+       FROM ops.task_comments 
+       WHERE task_id = ANY($1) 
+       ORDER BY created_at DESC`,
+      [taskIds]
+    )
+    for (const c of commentRows) {
+      if (!commentsMap[c.task_id]) commentsMap[c.task_id] = []
+      commentsMap[c.task_id].push(c)
+    }
+  }
+
   const tasks = rows.map(({ task, agentName }) => ({
     ...task,
     id: Number(task.id),
@@ -41,6 +59,7 @@ export async function GET(request: NextRequest) {
     created_by: task.createdBy,
     progress: task.progress,
     tags: task.tags,
+    comments: commentsMap[Number(task.id)] || [],
   }))
 
   return NextResponse.json(tasks)

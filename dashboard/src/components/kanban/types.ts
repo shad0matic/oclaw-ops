@@ -44,12 +44,13 @@ export interface QueueTask {
 }
 
 export interface TaskComment {
-  id: string;
-  sender_id: string;
+  id: number;
+  task_id: number;
+  author: string;  // 'boss' or agent name
   message: string;
   created_at: string;
-  is_read?: boolean;
-  task_id: number;
+  read_at?: string | null;
+  read_by?: string | null;
 }
 
 export interface FeatureRequest {
