@@ -6,6 +6,7 @@ import { Button } from "../../../components/ui/button";
 import { CategorySidebar } from "../../../components/bookmarks/category-sidebar";
 import { BookmarkCard } from "../../../components/bookmarks/bookmark-card";
 import { CategoryChat } from "../../../components/bookmarks/category-chat";
+import { FolderContextBar } from "../../../components/bookmarks/folder-context-bar";
 
 interface Bookmark {
   id: string;
@@ -98,6 +99,14 @@ export default function BookmarksPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Bookmarks content */}
         <div className="flex-1 flex flex-col overflow-hidden border-r border-border">
+          {/* Folder context bar - shows when X folder is selected */}
+          {selectedXFolder && (
+            <FolderContextBar 
+              folderName={selectedXFolder}
+              bookmarkCount={pagination.total}
+              onClear={() => handleXFolderSelect("")}
+            />
+          )}
           {/* Search bar */}
           <div className="p-6 border-b border-border">
             <div className="relative max-w-lg">

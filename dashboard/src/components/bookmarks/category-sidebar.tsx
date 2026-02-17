@@ -16,6 +16,11 @@ interface XFolder {
   bookmark_count: string;
 }
 
+interface FolderMapping {
+  x_folder: string;
+  description: string | null;
+}
+
 interface CategorySidebarProps {
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
@@ -31,6 +36,7 @@ export function CategorySidebar({
 }: CategorySidebarProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [xFolders, setXFolders] = useState<XFolder[]>([]);
+  const [folderMappings, setFolderMappings] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [xFoldersExpanded, setXFoldersExpanded] = useState(true);
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
@@ -39,14 +45,28 @@ export function CategorySidebar({
     async function fetchData() {
       try {
         setLoading(true);
-        const [catRes, xRes] = await Promise.all([
+        const [catRes, xRes, mappingsRes] = await Promise.all([
           fetch("/api/bookmark-categories"),
-          fetch("/api/x-folders")
+          fetch("/api/x-folders"),
+          fetch("/api/x-folder-mappings")
         ]);
         const catData = await catRes.json();
         const xData = await xRes.json();
+        const mappingsData = await mappingsRes.json();
+        
         setCategories(Array.isArray(catData) ? catData : []);
         setXFolders(Array.isArray(xData) ? xData : []);
+        
+        // Build map of folder -> project for quick lookup
+        const mappingsMap = new Map<string, string>();
+        if (Array.isArray(mappingsData)) {
+          mappingsData.forEach((m: FolderMapping) => {
+            if (m.description) {
+              mappingsMap.set(m.x_folder, m.description);
+            }
+          });
+        }
+        setFolderMappings(mappingsMap);
       } catch (error) {
         console.error("Failed to fetch data", error);
       } finally {
@@ -129,18 +149,25 @@ export function CategorySidebar({
           </button>
           {xFoldersExpanded && (
             <div className="mt-1 space-y-0.5">
-              {xFolders.map((folder) => (
-                <Button
-                  key={folder.x_folder}
-                  variant="ghost"
-                  size="sm"
-                  className={`w-full justify-start h-7 pl-6 ${selectedXFolder === folder.x_folder ? "bg-accent" : ""}`}
-                  onClick={() => handleXFolderClick(folder.x_folder)}
-                >
-                  <span className="flex-1 text-left text-sm truncate">{folder.x_folder}</span>
-                  <span className="text-xs text-muted-foreground ml-1">{folder.bookmark_count}</span>
-                </Button>
-              ))}
+              {xFolders.map((folder) => {
+                const mappedProject = folderMappings.get(folder.x_folder);
+                return (
+                  <Button
+                    key={folder.x_folder}
+                    variant="ghost"
+                    size="sm"
+                    className={`w-full justify-start h-7 pl-6 ${selectedXFolder === folder.x_folder ? "bg-accent" : ""}`}
+                    onClick={() => handleXFolderClick(folder.x_folder)}
+                    title={mappedProject ? `Mapped to: ${mappedProject}` : undefined}
+                  >
+                    {mappedProject && (
+                      <span className="w-2 h-2 rounded-full bg-green-500 mr-2 flex-shrink-0" />
+                    )}
+                    <span className="flex-1 text-left text-sm truncate">{folder.x_folder}</span>
+                    <span className="text-xs text-muted-foreground ml-1">{folder.bookmark_count}</span>
+                  </Button>
+                );
+              })}
             </div>
           )}
         </div>
