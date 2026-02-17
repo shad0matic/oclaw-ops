@@ -13,6 +13,7 @@ export interface AgentTaskInfo {
   task: string
   elapsedSeconds?: number
   model?: string | null
+  project?: string | null
 }
 
 interface TreeNode {
@@ -33,12 +34,12 @@ function buildTree(agents: AgentData[], liveWork?: { count: number; tasks: TaskT
   // Collect tasks per agent
   for (const t of (liveWork?.tasks || [])) {
     const list = tasksByAgent.get(t.agentId) || []
-    list.push({ task: t.task, elapsedSeconds: t.elapsedSeconds, model: t.model })
+    list.push({ task: t.task, elapsedSeconds: t.elapsedSeconds, model: t.model, project: t.project })
     tasksByAgent.set(t.agentId, list)
     // Also children
     for (const c of (t.children || [])) {
       const cList = tasksByAgent.get(c.agentId) || []
-      cList.push({ task: c.task, elapsedSeconds: c.elapsedSeconds, model: c.model })
+      cList.push({ task: c.task, elapsedSeconds: c.elapsedSeconds, model: c.model, project: c.project })
       tasksByAgent.set(c.agentId, cList)
     }
   }
@@ -157,7 +158,12 @@ function AgentNode({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
               {tasks.map((t, i) => (
                 <div key={i} className="text-xs">
                   <p className="text-green-400 font-medium truncate">{t.task}</p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {t.project && (
+                      <span className="text-[10px] bg-purple-500/20 text-purple-400 rounded px-1.5 py-0.5">
+                        {t.project}
+                      </span>
+                    )}
                     {t.model && <ModelBadge model={t.model} />}
                     {t.elapsedSeconds !== undefined && t.elapsedSeconds > 0 && (
                       <span className="text-muted-foreground">{formatDuration(t.elapsedSeconds)}</span>

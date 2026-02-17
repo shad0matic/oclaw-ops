@@ -17,6 +17,7 @@ interface TaskTree {
   cost: number
   spawnedBy: string | null
   children: TaskTree[]
+  project?: string | null
   source?: 'runs' | 'queue'
 }
 
@@ -135,6 +136,7 @@ export async function GET() {
         spawnedBy: null,
         children: [],
         source: 'queue' as const,
+        project: qt.project || null,
       })
     }
 

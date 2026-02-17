@@ -18,6 +18,7 @@ export interface TaskTree {
   spawnedBy: string | null
   children: TaskTree[]
   source?: string
+  project?: string | null
 }
 
 export interface AgentData {
