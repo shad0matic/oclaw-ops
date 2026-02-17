@@ -1,10 +1,72 @@
-# Minion Character Generation — Midjourney Prompts
+# Minion Character Generation Prompts
 
 **Purpose:** Generate isometric minion characters for MC dashboard Lab page
 **Target size:** 40px height (resize after generation)
 **Style:** Clean vector isometric, consistent across all agents
 
 ---
+
+## 🍌 Nano Banana (Gemini 3 Pro Image) — RECOMMENDED
+
+### Key Learning
+**ALWAYS use:** `"a Minion from Despicable Me"` 
+**NEVER use:** `"Dave the Minion"` or `"[Name] the Minion"` — produces humanoid shapes with long legs
+
+### 8-Direction Sprite Sheet Template (Proven)
+```
+Sprite sheet: exactly 8 frames of a Minion from Despicable Me [COSTUME/DESCRIPTION], in a single horizontal row. Rotation: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°. Same pose, same size, white background, isometric game asset.
+```
+
+### Agent-Specific Prompts (Nano Banana)
+
+**Kevin** 🍌
+```
+Sprite sheet: exactly 8 frames of a Minion from Despicable Me in a black conductor tailcoat holding a baton, in a single horizontal row. Rotation: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°. Same pose, same size, white background, isometric game asset.
+```
+
+**Bob** 👷
+```
+Sprite sheet: exactly 8 frames of a Minion from Despicable Me wearing a yellow hardhat and builder overalls holding a wrench, in a single horizontal row. Rotation: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°. Same pose, same size, white background, isometric game asset.
+```
+
+**Nefario** 🔬
+```
+Sprite sheet: exactly 8 frames of a Minion from Despicable Me in white lab coat with oversized goggles riding a red three-wheeled mobility scooter, in a single horizontal row. Rotation: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°. Same pose, same size, white background, isometric game asset.
+```
+
+**Phil** 🐊
+```
+Sprite sheet: exactly 8 frames of a Minion from Despicable Me in plain blue overalls holding binoculars, in a single horizontal row. Rotation: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°. Same pose, same size, white background, isometric game asset.
+```
+
+**Echo** 🔊
+```
+Sprite sheet: exactly 8 frames of a Minion from Despicable Me wearing large headphones and holding a notepad, in a single horizontal row. Rotation: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°. Same pose, same size, white background, isometric game asset.
+```
+
+**Mel** 🔒
+```
+Sprite sheet: exactly 8 frames of a Minion from Despicable Me in security guard uniform with cap holding a flashlight, in a single horizontal row. Rotation: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°. Same pose, same size, white background, isometric game asset.
+```
+
+**Stuart** 🗄️
+```
+Sprite sheet: exactly 8 frames of a Minion from Despicable Me wearing glasses and a tie holding a small server icon, in a single horizontal row. Rotation: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°. Same pose, same size, white background, isometric game asset.
+```
+
+**Dave** 💰
+```
+Sprite sheet: exactly 8 frames of a Minion from Despicable Me wearing a green accountant visor holding a calculator, in a single horizontal row. Rotation: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°. Same pose, same size, white background, isometric game asset.
+```
+
+**Smaug** 🐉
+```
+Sprite sheet: exactly 8 frames of a Minion from Despicable Me dressed as a tiny dragon with small wings and horns sitting on gold coins, in a single horizontal row. Rotation: 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°. Same pose, same size, white background, isometric game asset.
+```
+
+---
+
+## Midjourney Prompts (Legacy)
 
 ## ✅ Working Prompt Template (Proven)
 
