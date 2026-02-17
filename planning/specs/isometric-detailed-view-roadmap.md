@@ -309,6 +309,51 @@ dashboard/
 
 ---
 
+---
+
+## Phase 6: Pathfinding & Walking (Long-term 🔮)
+
+**Goal:** Minions walk on actual paths between rooms, not teleport
+
+#### 6.1 Pathfinding System
+```typescript
+// Define walkable paths between rooms
+const PATHS = {
+  'lounge→nefario-lab': [
+    { x: 400, y: 500 },  // lounge exit
+    { x: 300, y: 400 },  // hallway
+    { x: 150, y: 300 },  // lab entrance
+  ],
+  // ... all room connections
+}
+
+// A* or simple waypoint system
+function getPath(from: RoomKey, to: RoomKey): Point[] {
+  return PATHS[`${from}→${to}`] || reversePath(PATHS[`${to}→${from}`])
+}
+```
+
+#### 6.2 Walking Animation
+- Character follows path point-by-point
+- Sprite direction updates based on movement vector
+- Walk cycle plays during movement
+- Easing at start/end of path segments
+
+#### 6.3 Collision/Queueing (Optional)
+- Multiple minions on same path = queue or offset
+- "Excuse me" animations when passing
+- Priority for active agents
+
+#### 6.4 Visual Elements
+- Faint path lines (optional, toggle)
+- Footstep dust particles
+- Door open/close animations at room entries
+
+**Effort:** 4-6h (pathfinding) + 2-3h (polish)
+**Prerequisites:** Phases 1-5 complete
+
+---
+
 ## Decision Points for Boss
 
 1. **Character generation method?**
