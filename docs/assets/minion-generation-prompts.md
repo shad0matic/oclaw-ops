@@ -2,18 +2,23 @@
 
 **Purpose:** Generate isometric minion characters for MC dashboard Lab page
 **Target size:** 40px height (resize after generation)
-**Style:** Cute, isometric, game sprite, consistent across all agents
+**Style:** Clean vector isometric, consistent across all agents
 
 ---
 
-## Base Prompt Template
+## ✅ Working Prompt Template (Proven)
 
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-[EYE_TYPE] goggles, blue overalls, [AGENT_TRAIT], 
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
+Isometric cute minion character, [COSTUME/TRAIT], 
+holding [PROP], [POSE] pose, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
+
+**After generation:** Apply **2 strong variations** to refine.
 
 ---
 
@@ -21,135 +26,126 @@ white background, Studio Ghibli cute aesthetic --v 6 --style raw
 
 ### Kevin 🍌 (Lead Minion / Conductor)
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-two-eye goggles, blue overalls, conductor costume with tails, 
-holding conductor wand/baton, confident leader pose,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
+Isometric cute minion character, black opera conductor costume, 
+holding conductor baton, confident pose, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
 
 ### Bob 💻 (Coder)
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-two-eye goggles, blue overalls, wearing headphones, 
-coding vibe, nerdy expression, maybe holding laptop,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
+Isometric cute minion character, blue overalls, wearing headphones, 
+holding small laptop, focused coding pose, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
 
 ### Nefario 🧪 (Scientist)
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-two-eye goggles, blue overalls, white lab coat, 
-mad scientist vibe, holding test tube or beaker,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
+Isometric cute minion character, white lab coat over blue overalls, 
+holding test tube, mad scientist pose, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
 
 ### Echo 🎙️ (Audio/Transcription)
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-two-eye goggles, blue overalls, holding microphone, 
-audio waves around head, podcaster vibe,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
+Isometric cute minion character, blue overalls with headset, 
+holding microphone, podcaster pose, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
 
 ### Mel 🚔 (Security/Watchdog)
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-two-eye goggles, blue overalls, police cap, 
-badge on chest, vigilant expression, security guard pose,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
+Isometric cute minion character, blue overalls with police cap, 
+holding walkie talkie, vigilant security pose, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
 
 ### Stuart 🎸 (One-eye, Musical)
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-ONE single eye goggle, blue overalls, 
-holding small ukulele or guitar, musical vibe,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
+Isometric cute minion character, ONE single eye goggle, blue overalls, 
+holding small ukulele, musical pose, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
 
 ### Dave 🤪 (Chaotic/Goofy)
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-two-eye goggles, blue overalls, messy spiky hair, 
-goofy excited expression, chaotic energy,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
+Isometric cute minion character, blue overalls, messy spiky hair, 
+arms raised excited, goofy chaotic pose, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
 
 ### Phil 🧢 (Casual)
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-two-eye goggles, blue overalls, baseball cap backwards, 
-casual relaxed pose, friendly expression,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
+Isometric cute minion character, blue overalls, baseball cap backwards, 
+relaxed standing pose, hands in pockets vibe, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
 
 ### Smaug 🐉 (Dragon/Bookmarks)
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-two-eye goggles, blue overalls, tiny dragon wings on back, 
-maybe small scales pattern, treasure hoarder vibe,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
+Isometric cute minion character, blue overalls, tiny dragon wings on back, 
+holding golden coin, treasure hoarder pose, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
 
 ### Oracle 🔮 (Wisdom/Life Coach)
 ```
-Isometric cute minion character, yellow pill-shaped body, 
-two-eye goggles, blue overalls, mystical hood or cape, 
-holding crystal ball, wise zen expression,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
-```
-
-### XReader 📰 (Deprecated, but just in case)
-```
-Isometric cute minion character, yellow pill-shaped body, 
-two-eye goggles, blue overalls, holding newspaper or tablet, 
-reader/researcher vibe, glasses over goggles,
-game sprite style, 45 degree angle, clean edges, 
-white background, Studio Ghibli cute aesthetic --v 6 --style raw
-```
-
----
-
-## Variation Prompts (Walking/States)
-
-### Walking Pose (for sprite sheets)
-Add to any agent prompt:
-```
-, walking pose, one foot forward, mid-stride
-```
-
-### Working Pose
-Add to any agent prompt:
-```
-, sitting at desk, focused working, typing pose
-```
-
-### Idle/Relaxed Pose
-Add to any agent prompt:
-```
-, standing relaxed, hands at sides, neutral happy expression
+Isometric cute minion character, mystical purple cape over blue overalls, 
+holding crystal ball, wise zen pose, 
+isometric projection, orthographic view, no perspective, 
+2D game sprite, flat isometric 30 degree angle, 
+clean vector illustration, smooth edges, vibrant colors, 
+playful Minions aesthetic, white background, 
+game asset, top-down isometric
 ```
 
 ---
 
 ## Post-Generation Workflow
 
-1. **Generate** 4 variations per agent (`--v 6`)
-2. **Select** best one, upscale if needed
-3. **Remove background** (Midjourney's white BG or use remove.bg)
-4. **Resize** to 80×80px source (for 40px display with 2x clarity)
-5. **Export** as WebP with transparency
-6. **Save** to `dashboard/public/assets/isometric/characters/minions/[agent]_idle.webp`
+1. **Generate** initial 4 variations
+2. **Select** best candidate
+3. **Apply 2 strong variations** (V button → Strong)
+4. **Pick** final version, upscale if needed
+5. **Remove background** (white BG is easy — use remove.bg or Figma)
+6. **Resize** to 80×80px source (displays at 40px with 2x clarity)
+7. **Export** as WebP with transparency
+8. **Save** to `dashboard/public/assets/isometric/characters/minions/[agent]_idle.webp`
 
 ---
 
@@ -158,22 +154,37 @@ Add to any agent prompt:
 ```
 assets/isometric/characters/minions/
 ├── kevin_idle.webp
-├── kevin_walk.webp      (sprite sheet, 4 frames)
-├── kevin_work.webp
+├── kevin_walk.webp      (sprite sheet, future)
 ├── bob_idle.webp
-├── bob_walk.webp
-└── ... etc
+├── nefario_idle.webp
+├── echo_idle.webp
+├── mel_idle.webp
+├── stuart_idle.webp
+├── dave_idle.webp
+├── phil_idle.webp
+├── smaug_idle.webp
+└── oracle_idle.webp
 ```
 
 ---
 
 ## Tips
 
-- **Consistency:** Once you get a style you like, use `--sref [image_url]` to maintain it
-- **Variations:** Use `V1-V4` buttons to get variations of good outputs
-- **Upscale:** Use `U1-U4` then "Upscale (Subtle)" for clean edges
-- **Batch:** Generate all idle poses first, then walking, to maintain style
+- **Consistency:** Use `--sref [URL]` with Kevin's final image to maintain style
+- **Variations:** Strong variations (2x) give best refinement
+- **No hat issues:** If unwanted hat appears, edit out in post (faster than fighting MJ)
+- **Batch:** Do all idle poses first to maintain style consistency
+
+---
+
+## ❌ What NOT to use
+
+- `pixel art style` — causes grainy/chunky output
+- `--no 3d render shadow depth` — confuses the model
+- `soft lighting` — makes it too 3D
+- Strict pixel dimensions in prompt — MJ ignores them
 
 ---
 
 *Last updated: 17/02/2026*
+*Proven working with Midjourney v6*
