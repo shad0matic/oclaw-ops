@@ -43,6 +43,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Helper function for date formatting
 const formatDate = (date: string | null | undefined) => {
@@ -251,30 +257,31 @@ function TaskDetailFooter({ task, taskMutation, updateField, onOpenChange }: {
   });
 
   const statusTransitions = useMemo(() => {
-    const buttons: { action: string; label: string; icon: React.ElementType, primary?: boolean }[] = [];
+    const buttons: { action: string; label: string; icon: React.ElementType; tooltip: string; primary?: boolean }[] = [];
     switch (task.status) {
         case 'queued':
         case 'backlog':
-            buttons.push({ action: 'run', label: 'Run Now', icon: Play, primary: true });
-            buttons.push({ action: 'plan', label: 'Plan', icon: Milestone });
+            buttons.push({ action: 'run', label: 'Run Now', icon: Play, tooltip: 'Start task immediately (assigns agent, moves to Running)', primary: true });
+            buttons.push({ action: 'plan', label: 'Plan', icon: Milestone, tooltip: 'Move to Planned column for scheduling' });
             break;
         case 'planned':
         case 'assigned':
-            buttons.push({ action: 'run', label: 'Run', icon: Play, primary: true });
-            buttons.push({ action: 'requeue', label: 'Back to Backlog', icon: ArrowRight });
+            buttons.push({ action: 'run', label: 'Run', icon: Play, tooltip: 'Start working on this task now', primary: true });
+            buttons.push({ action: 'requeue', label: 'Back to Backlog', icon: ArrowRight, tooltip: 'Move back to Backlog for later' });
             break;
         case 'running':
-            buttons.push({ action: 'review', label: 'Finish for Review', icon: Check, primary: true });
-            buttons.push({ action: 'human', label: 'Flag for Human', icon: User });
-            buttons.push({ action: 'fail', label: 'Mark as Failed', icon: X });
+            buttons.push({ action: 'review', label: 'Finish for Review', icon: Check, tooltip: 'Mark as complete, move to Review for validation', primary: true });
+            buttons.push({ action: 'human', label: 'Flag for Human', icon: User, tooltip: 'Needs human attention before continuing' });
+            buttons.push({ action: 'fail', label: 'Mark as Failed', icon: X, tooltip: 'Task failed, cannot be completed' });
             break;
         case 'review':
-            buttons.push({ action: 'approve', label: 'Approve', icon: Check, primary: true });
-            buttons.push({ action: 'reject', label: 'Reject & Requeue', icon: X });
+            buttons.push({ action: 'complete', label: 'Done', icon: Check, tooltip: 'Approve and mark as Done', primary: true });
+            buttons.push({ action: 'approve', label: 'Human TODO', icon: User, tooltip: 'Needs additional human action before Done' });
+            buttons.push({ action: 'reject', label: 'Reject', icon: X, tooltip: 'Reject and send back to Running with feedback' });
             break;
         case 'human_todo':
-            buttons.push({ action: 'complete', label: 'Complete', icon: Check, primary: true });
-            buttons.push({ action: 'requeue', label: 'Requeue', icon: ArrowRight });
+            buttons.push({ action: 'complete', label: 'Complete', icon: Check, tooltip: 'Human action done, mark as Done', primary: true });
+            buttons.push({ action: 'requeue', label: 'Requeue', icon: ArrowRight, tooltip: 'Send back to agent for more work' });
             break;
     }
     return buttons;
@@ -338,14 +345,24 @@ function TaskDetailFooter({ task, taskMutation, updateField, onOpenChange }: {
         </Select>
         
         {/* Action Buttons */}
-        {primaryAction && 
-          <Button 
-            onClick={() => handleAction(primaryAction.action)} 
-            className="h-11 min-h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3"
-          >
-            <primaryAction.icon className="w-4 h-4" />
-          </Button>
-        }
+        <TooltipProvider delayDuration={300}>
+          {primaryAction && 
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={() => handleAction(primaryAction.action)} 
+                  className="h-11 min-h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3"
+                >
+                  <primaryAction.icon className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p className="font-medium">{primaryAction.label}</p>
+                <p className="text-xs text-muted-foreground">{primaryAction.tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          }
+        </TooltipProvider>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -355,9 +372,12 @@ function TaskDetailFooter({ task, taskMutation, updateField, onOpenChange }: {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {secondaryActions.map(btn => (
-                <DropdownMenuItem key={btn.action} onClick={() => handleAction(btn.action)}>
-                    <btn.icon className="mr-2 h-4 w-4" />
-                    <span>{btn.label}</span>
+                <DropdownMenuItem key={btn.action} onClick={() => handleAction(btn.action)} className="flex flex-col items-start">
+                    <div className="flex items-center">
+                      <btn.icon className="mr-2 h-4 w-4" />
+                      <span>{btn.label}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground ml-6">{btn.tooltip}</span>
                 </DropdownMenuItem>
             ))}
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
