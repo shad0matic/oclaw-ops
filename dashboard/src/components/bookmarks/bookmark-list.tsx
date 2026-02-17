@@ -26,11 +26,12 @@ const BookmarkList = ({ folderId }: BookmarkListProps) => {
       fetch(`/api/bookmark-folder-items?folderId=${folderId}`)
         .then(res => res.json())
         .then(async (items) => {
-            const bookmarkIds = items.map((item: any) => item.bookmarkId);
+            const itemsArray = Array.isArray(items) ? items : [];
+            const bookmarkIds = itemsArray.map((item: any) => item.bookmarkId);
             if(bookmarkIds.length > 0) {
                 const bookmarksRes = await fetch(`/api/bookmarks?ids=${bookmarkIds.join(',')}`);
                 const bookmarksData = await bookmarksRes.json();
-                setBookmarks(bookmarksData);
+                setBookmarks(bookmarksData.bookmarks || []);
             } else {
                 setBookmarks([]);
             }

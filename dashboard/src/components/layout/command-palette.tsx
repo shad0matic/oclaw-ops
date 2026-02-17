@@ -48,7 +48,18 @@ export function CommandPalette() {
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + K (may conflict with browser)
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((open) => !open);
+      }
+      // Alternative: Ctrl/Cmd + / (works on Windows where Ctrl+K opens browser search)
+      if (e.key === "/" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((open) => !open);
+      }
+      // Alternative: Ctrl/Cmd + P (common in VS Code)
+      if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((open) => !open);
       }

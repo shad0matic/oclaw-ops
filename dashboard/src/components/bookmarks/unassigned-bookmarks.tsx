@@ -30,11 +30,11 @@ const UnassignedBookmarks = () => {
     // For now, we fetch all and assume the user knows which are unassigned.
     fetch('/api/bookmarks')
       .then(res => res.json())
-      .then(setBookmarks);
+      .then(data => setBookmarks(data.bookmarks || []));
 
     fetch('/api/bookmark-folders')
       .then(res => res.json())
-      .then(setFolders);
+      .then(data => setFolders(Array.isArray(data) ? data : []));
   }, []);
 
   const handleAssignBookmark = async (bookmarkId: string) => {
