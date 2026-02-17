@@ -2,7 +2,7 @@
 import { FC } from 'react';
 import { MessageCircle } from 'lucide-react';
 
-type CommentStatus = 'waiting' | 'attention' | 'gray';
+type CommentStatus = 'unread' | 'read' | 'attention' | 'gray';
 
 interface ChatStatusIconProps {
   status: CommentStatus;
@@ -10,9 +10,10 @@ interface ChatStatusIconProps {
 }
 
 const statusStyles: Record<CommentStatus, { color: string; pulse?: boolean }> = {
-  waiting: { color: 'text-blue-500' },           // Boss waiting for agent
+  unread: { color: 'text-blue-500' },            // Boss sent, agent hasn't read
+  read: { color: 'text-blue-300' },              // Boss sent, agent read (dim)
   attention: { color: 'text-amber-500', pulse: true },  // Agent replied, needs Boss
-  gray: { color: 'text-gray-400' },              // Resolved
+  gray: { color: 'text-gray-400' },              // Done
 };
 
 export const ChatStatusIcon: FC<ChatStatusIconProps> = ({ status, commentCount }) => {

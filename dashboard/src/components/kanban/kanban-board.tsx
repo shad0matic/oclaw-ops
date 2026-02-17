@@ -10,6 +10,7 @@ import Link from "next/link";
 import { KanbanColumn } from "@/components/kanban/column";
 import { TaskDetailSheet } from "@/components/kanban/task-detail-sheet";
 import { NewTaskSheet } from "@/components/kanban/new-task-sheet";
+import { KanbanLegend } from "@/components/kanban/kanban-legend";
 import { Project, QueueTask, FeatureRequest } from "@/components/kanban/types";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useTaskStream } from "@/hooks/use-task-stream";
@@ -371,6 +372,8 @@ export function KanbanBoard() {
             </div>
           </>
         )}
+        {/* Legend - expandable */}
+        <KanbanLegend />
       </div>
 
       <TaskDetailSheet 
