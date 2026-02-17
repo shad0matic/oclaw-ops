@@ -88,6 +88,21 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         status: 'running', reviewFeedback: body.reviewFeedback,
       }).where(where)
       break
+    case "toggle_todo": {
+      // Get current tags
+      const [currentTask] = await db.select().from(taskQueueInOps).where(where)
+      const currentTags: string[] = (currentTask?.tags as string[]) || []
+      const hasTodo = currentTags.includes('todo')
+      const newTags = hasTodo 
+        ? currentTags.filter(t => t !== 'todo')
+        : [...currentTags, 'todo']
+      await db.update(taskQueueInOps).set({ 
+        tags: newTags,
+        // Also ensure status is 'review' if coming from human_todo
+        status: 'review'
+      }).where(where)
+      break
+    }
     case "ack":
       await db.update(taskQueueInOps).set({ acked: true }).where(where)
       break

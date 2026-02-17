@@ -275,13 +275,10 @@ function TaskDetailFooter({ task, taskMutation, updateField, onOpenChange }: {
             buttons.push({ action: 'fail', label: 'Mark as Failed', icon: X, tooltip: 'Task failed, cannot be completed' });
             break;
         case 'review':
-            buttons.push({ action: 'complete', label: 'Done', icon: Check, tooltip: 'Approve and mark as Done', primary: true });
-            buttons.push({ action: 'approve', label: 'Human TODO', icon: User, tooltip: 'Needs additional human action before Done' });
-            buttons.push({ action: 'reject', label: 'Reject', icon: X, tooltip: 'Reject and send back to Running with feedback' });
-            break;
-        case 'human_todo':
-            buttons.push({ action: 'complete', label: 'Complete', icon: Check, tooltip: 'Human action done, mark as Done', primary: true });
-            buttons.push({ action: 'requeue', label: 'Requeue', icon: ArrowRight, tooltip: 'Send back to agent for more work' });
+        case 'human_todo': // Legacy - treat same as review
+            buttons.push({ action: 'complete', label: 'Done', icon: Check, tooltip: 'Mark as Done', primary: true });
+            buttons.push({ action: 'toggle_todo', label: task.tags?.includes('todo') ? 'Clear TODO' : 'Mark TODO', icon: User, tooltip: task.tags?.includes('todo') ? 'Remove TODO tag' : 'Mark as needing human action' });
+            buttons.push({ action: 'reject', label: 'Back to Agent', icon: ArrowRight, tooltip: 'Send back to Running for more work' });
             break;
     }
     return buttons;

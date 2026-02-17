@@ -147,6 +147,7 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
             <h3 className="text-xs font-semibold text-foreground truncate">
+              {task.tags?.includes('todo') && <span title="Requires human action" className="inline-block mr-1 text-[10px] bg-amber-500/20 text-amber-400 rounded px-1 font-medium">TODO</span>}
               {task.speced && <span title="Speced & ready to build" className="inline-block mr-1 text-[10px] bg-emerald-500/20 text-emerald-400 rounded px-1">✓ speced</span>}
               {task.title}
             </h3>

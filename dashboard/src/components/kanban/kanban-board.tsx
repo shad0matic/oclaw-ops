@@ -85,12 +85,11 @@ async function fetchAgents(): Promise<{ id: string; name: string; agent_id: stri
   return (Array.isArray(data) ? data : []).map((a: any) => ({ ...a, id: a.agent_id || a.id }));
 }
 
-const COLUMNS: Array<{ title: string; status: string }> = [
+const COLUMNS: Array<{ title: string; status: string | string[] }> = [
     { title: "📥 Backlog", status: "backlog" },
     { title: "📋 Planned", status: "planned" },
     { title: "⚡ Running", status: "running" },
-    { title: "🔄 Review", status: "review" },
-    { title: "👤 Human Todos", status: "human_todo" },
+    { title: "👀 Review", status: ["review", "human_todo"] }, // human_todo merged into review
     { title: "✅ Done", status: "done" },
 ];
 
@@ -164,18 +163,28 @@ export function KanbanBoard() {
 
   const actionMap: Record<string, string> = {
     backlog: "requeue", planned: "plan", running: "run",
-    review: "review", human_todo: "human", done: "complete",
+    review: "review", done: "complete",
   };
   
   const COLUMN_LIMIT = 10;
 
-  const toggleColumnExpanded = (status: string) => {
-    setExpandedColumns(prev => ({ ...prev, [status]: !prev[status] }));
+  // Helper to get the primary status (first in array or the string itself)
+  const getPrimaryStatus = (status: string | string[]): string => 
+    Array.isArray(status) ? status[0] : status;
+  
+  // Helper to check if a task status matches a column status
+  const matchesStatus = (taskStatus: string, columnStatus: string | string[]): boolean =>
+    Array.isArray(columnStatus) ? columnStatus.includes(taskStatus) : taskStatus === columnStatus;
+
+  const toggleColumnExpanded = (status: string | string[]) => {
+    const key = getPrimaryStatus(status);
+    setExpandedColumns(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const getColumnTasks = (status: string) => {
-    let tasksInColumn = filteredTasks.filter((t) => t.status === status);
-    if (status === 'done') {
+  const getColumnTasks = (status: string | string[]) => {
+    const statuses = Array.isArray(status) ? status : [status];
+    let tasksInColumn = filteredTasks.filter((t) => statuses.includes(t.status));
+    if (statuses.includes('done')) {
       // Sort by completed_at desc (most recent first)
       tasksInColumn = [...tasksInColumn].sort((a, b) => {
         const aDate = a.completed_at ? new Date(a.completed_at).getTime() : 0;
@@ -277,15 +286,16 @@ export function KanbanBoard() {
               {/* Mobile: tab-based column switcher */}
               <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
                 {COLUMNS.map((c) => {
-                  const count = c.status === 'backlog'
-                    ? filteredTasks.filter(t => t.status === c.status).length + (filteredBacklog?.length || 0)
-                    : filteredTasks.filter(t => t.status === c.status).length;
+                  const primaryStatus = getPrimaryStatus(c.status);
+                  const count = matchesStatus('backlog', c.status)
+                    ? filteredTasks.filter(t => matchesStatus(t.status, c.status)).length + (filteredBacklog?.length || 0)
+                    : filteredTasks.filter(t => matchesStatus(t.status, c.status)).length;
                   return (
                     <button
-                      key={c.status}
-                      onClick={() => setActiveColumn(c.status)}
+                      key={primaryStatus}
+                      onClick={() => setActiveColumn(primaryStatus)}
                       className={`flex-shrink-0 text-xs px-3 py-2 rounded-lg transition-colors ${
-                        activeColumn === c.status
+                        matchesStatus(activeColumn, c.status)
                           ? "bg-amber-500/20 text-amber-400"
                           : "bg-muted/50 text-muted-foreground"
                       }`}
@@ -295,20 +305,21 @@ export function KanbanBoard() {
                   );
                 })}
               </div>
-              {COLUMNS.filter(c => c.status === activeColumn).map((c) => {
+              {COLUMNS.filter(c => matchesStatus(activeColumn, c.status)).map((c) => {
+                const primaryStatus = getPrimaryStatus(c.status);
                 const allTasks = getColumnTasks(c.status);
-                const backlogItems = c.status === 'backlog' ? (filteredBacklog || []) : [];
+                const backlogItems = matchesStatus('backlog', c.status) ? (filteredBacklog || []) : [];
                 const totalItems = allTasks.length + backlogItems.length;
-                const isExpanded = expandedColumns[c.status] || false;
+                const isExpanded = expandedColumns[primaryStatus] || false;
                 const displayTasks = !isExpanded && allTasks.length > COLUMN_LIMIT ? allTasks.slice(0, COLUMN_LIMIT) : allTasks;
-                const displayBacklog = c.status === 'backlog' 
+                const displayBacklog = matchesStatus('backlog', c.status) 
                   ? (!isExpanded && totalItems > COLUMN_LIMIT ? backlogItems.slice(0, Math.max(0, COLUMN_LIMIT - displayTasks.length)) : backlogItems)
                   : [];
                 return (
-                  <div key={c.status}>
+                  <div key={primaryStatus}>
                     <KanbanColumn
                       title={c.title}
-                      status={c.status}
+                      status={primaryStatus}
                       tasks={displayTasks}
                       totalTasks={allTasks.length}
                       featureRequests={displayBacklog}
@@ -321,7 +332,7 @@ export function KanbanBoard() {
                         <button onClick={() => toggleColumnExpanded(c.status)} className="text-xs text-muted-foreground hover:text-foreground">
                           {isExpanded ? "Show less" : `Show ${COLUMN_LIMIT} of ${totalItems}`}
                         </button>
-                        {c.status === 'done' && (
+                        {matchesStatus('done', c.status) && (
                           <Link href="/tasks/archive" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                             <Archive className="w-3 h-3" /> View archive
                           </Link>
@@ -332,21 +343,22 @@ export function KanbanBoard() {
                 );
               })}
             </div>
-            <div className="hidden lg:grid gap-3 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="hidden lg:grid gap-3 grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {COLUMNS.map((c) => {
+                const primaryStatus = getPrimaryStatus(c.status);
                 const allTasks = getColumnTasks(c.status);
-                const backlogItems = c.status === 'backlog' ? (filteredBacklog || []) : [];
+                const backlogItems = matchesStatus('backlog', c.status) ? (filteredBacklog || []) : [];
                 const totalItems = allTasks.length + backlogItems.length;
-                const isExpanded = expandedColumns[c.status] || false;
+                const isExpanded = expandedColumns[primaryStatus] || false;
                 const displayTasks = !isExpanded && allTasks.length > COLUMN_LIMIT ? allTasks.slice(0, COLUMN_LIMIT) : allTasks;
-                const displayBacklog = c.status === 'backlog' 
+                const displayBacklog = matchesStatus('backlog', c.status) 
                   ? (!isExpanded && totalItems > COLUMN_LIMIT ? backlogItems.slice(0, Math.max(0, COLUMN_LIMIT - displayTasks.length)) : backlogItems)
                   : [];
                 return (
-                  <div key={c.status}>
+                  <div key={primaryStatus}>
                     <KanbanColumn
                       title={c.title}
-                      status={c.status}
+                      status={primaryStatus}
                       tasks={displayTasks}
                       totalTasks={allTasks.length}
                       featureRequests={displayBacklog}
@@ -359,7 +371,7 @@ export function KanbanBoard() {
                         <button onClick={() => toggleColumnExpanded(c.status)} className="text-xs text-muted-foreground hover:text-foreground">
                           {isExpanded ? "Show less" : `Show ${COLUMN_LIMIT} of ${totalItems}`}
                         </button>
-                        {c.status === 'done' && (
+                        {matchesStatus('done', c.status) && (
                           <Link href="/tasks/archive" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                             <Archive className="w-3 h-3" /> View archive
                           </Link>
