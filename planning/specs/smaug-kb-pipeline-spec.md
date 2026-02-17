@@ -2,7 +2,19 @@
 
 **Author:** Nefario (Gemini)
 **Date:** 17/02/2026
-**Status:** Draft
+**Status:** In Progress
+**Epic:** #48
+
+---
+
+## Milestones
+
+| Task | Title | Status |
+|------|-------|--------|
+| #83 | M1: KB Bookmarks UI (folders + browsing) | ✅ Done |
+| #85 | M2: KB Extraction Pipeline (summaries + embeddings) | 🟡 Running |
+| #92 | M3: Manual bookmark categorization UI | ⏳ Queued |
+| #94 | M4: AI auto-categorization | ⏳ Queued |
 
 ---
 
