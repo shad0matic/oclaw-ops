@@ -112,6 +112,16 @@ WHERE id = {task_id};
     except Exception as e:
         print(f"⚠️  Error updating task: {e}", file=sys.stderr)
 
+def save_total_count(total_in_db):
+    """Save the total bookmark count to reference file."""
+    ref_file = os.path.expanduser("~/.openclaw/smaug-bookmark-total.txt")
+    try:
+        with open(ref_file, 'w') as f:
+            f.write(str(total_in_db))
+        print(f"✓ Saved total count ({total_in_db}) to {ref_file}", file=sys.stderr)
+    except Exception as e:
+        print(f"⚠️  Failed to save total count: {e}", file=sys.stderr)
+
 def fetch_bookmarks(count=100):
     """Fetch bookmarks using birdx with a count limit."""
     print(f"📥 Fetching {count} bookmarks from X/Twitter...", file=sys.stderr)
@@ -271,6 +281,9 @@ def main():
         print(f"   - Fetched: {len(bookmarks)}", file=sys.stderr)
         print(f"   - Processed: {len(bookmarks)}", file=sys.stderr)
         print(f"   - Total in DB: {total_in_db}", file=sys.stderr)
+        
+        # Save total count to reference file
+        save_total_count(total_in_db)
         
         # Mark task as done
         if task_id:
