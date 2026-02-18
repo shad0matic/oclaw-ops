@@ -20,15 +20,35 @@
         .table-list { background: #16213e; padding: 15px; border-radius: 8px; margin: 20px 0; }
         .table-list h3 { margin-top: 0; color: #00d4ff; }
         .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
-        .table-item { background: #1f3460; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+        .table-item { background: #1f3460; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .table-item:hover { background: #2a4a7f; }
+        .table-item.expanded { background: #2a4a7f; border-radius: 4px 4px 0 0; }
         .schema-ops { border-left: 3px solid #4CAF50; }
         .schema-memory { border-left: 3px solid #2196F3; }
         .schema-kb { border-left: 3px solid #FF9800; }
+        .columns-panel { 
+            display: none; 
+            background: #0d1b2a; 
+            padding: 10px 12px; 
+            margin-top: -8px; 
+            margin-bottom: 8px;
+            border-radius: 0 0 4px 4px; 
+            font-size: 12px;
+            grid-column: 1 / -1;
+        }
+        .columns-panel.show { display: block; }
+        .col-row { display: flex; padding: 3px 0; border-bottom: 1px solid #1f3460; }
+        .col-row:last-child { border-bottom: none; }
+        .col-name { flex: 1; color: #00d4ff; font-family: monospace; }
+        .col-type { flex: 1; color: #888; font-family: monospace; }
+        .col-null { width: 60px; color: #666; font-size: 10px; text-align: right; }
+        .expand-icon { float: right; color: #666; transition: transform 0.2s; }
+        .table-item.expanded .expand-icon { transform: rotate(90deg); }
     </style>
 </head>
 <body>
     <h1>🗄️ OpenClaw Database Schema</h1>
-    <p class="meta">Generated 2026-02-18 11:11 · 44 tables</p>
+    <p class="meta">Generated 2026-02-18 · 44 tables · Click table names to see columns</p>
     
     <div class="stats">
         <div class="stat"><div class="stat-num">44</div><div class="stat-label">Total Tables</div></div>
@@ -217,58 +237,11 @@ erDiagram
     <div class="table-list">
         <h3>📋 All Tables by Schema</h3>
         <h4 style="color:#4CAF50">ops</h4>
-        <div class="table-grid">
-            <div class="table-item schema-ops">agent_events</div>
-            <div class="table-item schema-ops">agent_signals</div>
-            <div class="table-item schema-ops">api_usage</div>
-            <div class="table-item schema-ops">bookmark_folder_items</div>
-            <div class="table-item schema-ops">bookmark_folders</div>
-            <div class="table-item schema-ops">cost_estimates</div>
-            <div class="table-item schema-ops">cost_snapshots</div>
-            <div class="table-item schema-ops">cross_signals</div>
-            <div class="table-item schema-ops">file_claims</div>
-            <div class="table-item schema-ops">fx_rates</div>
-            <div class="table-item schema-ops">kb_processing_queue</div>
-            <div class="table-item schema-ops">live_sessions</div>
-            <div class="table-item schema-ops">oracle_founder_context</div>
-            <div class="table-item schema-ops">oracle_notes</div>
-            <div class="table-item schema-ops">priorities</div>
-            <div class="table-item schema-ops">projects</div>
-            <div class="table-item schema-ops">reactions</div>
-            <div class="table-item schema-ops">research_ideas</div>
-            <div class="table-item schema-ops">runs</div>
-            <div class="table-item schema-ops">steps</div>
-            <div class="table-item schema-ops">subscriptions</div>
-            <div class="table-item schema-ops">system_metrics</div>
-            <div class="table-item schema-ops">task_assignments</div>
-            <div class="table-item schema-ops">task_checklist</div>
-            <div class="table-item schema-ops">task_comments</div>
-            <div class="table-item schema-ops">task_events</div>
-            <div class="table-item schema-ops">task_queue</div>
-            <div class="table-item schema-ops">task_runs</div>
-            <div class="table-item schema-ops">tasks</div>
-            <div class="table-item schema-ops">telegram_messages</div>
-            <div class="table-item schema-ops">workflows</div>
-            <div class="table-item schema-ops">x_bookmark_categories</div>
-            <div class="table-item schema-ops">x_bookmarks</div>
-            <div class="table-item schema-ops">x_folder_mappings</div>
-            <div class="table-item schema-ops">zombie_events</div>
-        </div>
+        <div class="table-grid" id="ops-tables"></div>
         <h4 style="color:#2196F3; margin-top:15px">memory</h4>
-        <div class="table-grid">
-            <div class="table-item schema-memory">agent_profiles</div>
-            <div class="table-item schema-memory">compounds</div>
-            <div class="table-item schema-memory">daily_notes</div>
-            <div class="table-item schema-memory">entities</div>
-            <div class="table-item schema-memory">entity_relations</div>
-            <div class="table-item schema-memory">memories</div>
-            <div class="table-item schema-memory">mistakes</div>
-            <div class="table-item schema-memory">performance_reviews</div>
-        </div>
+        <div class="table-grid" id="memory-tables"></div>
         <h4 style="color:#FF9800; margin-top:15px">kb</h4>
-        <div class="table-grid">
-            <div class="table-item schema-kb">x_bookmarks</div>
-        </div>
+        <div class="table-grid" id="kb-tables"></div>
     </div>
 
     <script>
@@ -278,6 +251,2443 @@ erDiagram
             securityLevel: 'loose',
             er: { useMaxWidth: true }
         });
+
+        const schemaData = {
+  "kb.x_bookmarks": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "tweet_id",
+      "type": "character varying",
+      "nullable": false
+    },
+    {
+      "name": "author_id",
+      "type": "character varying",
+      "nullable": true
+    },
+    {
+      "name": "author_name",
+      "type": "character varying",
+      "nullable": true
+    },
+    {
+      "name": "tweet_text",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "full_json",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "url",
+      "type": "character varying",
+      "nullable": true
+    },
+    {
+      "name": "archived_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "memory.agent_profiles": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "level",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "trust_score",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "total_tasks",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "successful_tasks",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "role",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "reports_to",
+      "type": "text",
+      "nullable": true
+    }
+  ],
+  "memory.compounds": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "period_start",
+      "type": "date",
+      "nullable": false
+    },
+    {
+      "name": "period_end",
+      "type": "date",
+      "nullable": false
+    },
+    {
+      "name": "summary",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "key_learnings",
+      "type": "ARRAY",
+      "nullable": true
+    },
+    {
+      "name": "mistakes",
+      "type": "ARRAY",
+      "nullable": true
+    },
+    {
+      "name": "embedding",
+      "type": "USER-DEFINED",
+      "nullable": true
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "memory.daily_notes": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "note_date",
+      "type": "date",
+      "nullable": false
+    },
+    {
+      "name": "content",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "embedding",
+      "type": "USER-DEFINED",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "memory.entities": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "entity_type",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "aliases",
+      "type": "ARRAY",
+      "nullable": true
+    },
+    {
+      "name": "properties",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "embedding",
+      "type": "USER-DEFINED",
+      "nullable": true
+    },
+    {
+      "name": "first_seen_by",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "memory.entity_relations": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "source_id",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "target_id",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "relation_type",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "strength",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "context",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "memory.memories": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "content",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "embedding",
+      "type": "USER-DEFINED",
+      "nullable": true
+    },
+    {
+      "name": "tags",
+      "type": "ARRAY",
+      "nullable": true
+    },
+    {
+      "name": "importance",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "source_file",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "memory.mistakes": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "context",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "lesson_learned",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "severity",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "recurrence_count",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "last_occurred_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "resolved",
+      "type": "boolean",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "memory.performance_reviews": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "reviewer",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "output_summary",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "rating",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "level_before",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "level_after",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "feedback",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.agent_events": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "event_type",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "detail",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "session_key",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "tokens_used",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "cost_usd",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "context_id",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "task_id",
+      "type": "bigint",
+      "nullable": true
+    }
+  ],
+  "ops.agent_signals": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "from_agent",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "to_agent",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "signal_type",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "task_id",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "payload",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "read_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.api_usage": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "service",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "operation",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "model",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "units",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "unit_type",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "cost_usd",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "input_file",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "metadata",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.bookmark_folder_items": [
+    {
+      "name": "folder_id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "bookmark_id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "added_at",
+      "type": "timestamp with time zone",
+      "nullable": false
+    }
+  ],
+  "ops.bookmark_folders": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "name",
+      "type": "character varying",
+      "nullable": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "parent_id",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": false
+    }
+  ],
+  "ops.cost_estimates": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "task_run_id",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "predicted_input_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "predicted_output_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "predicted_cost_usd",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "actual_input_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "actual_output_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "actual_cost_usd",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "input_features",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "prediction_model_version",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "accuracy_pct",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.cost_snapshots": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "snapshot_hour",
+      "type": "timestamp with time zone",
+      "nullable": false
+    },
+    {
+      "name": "fixed_eur",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "variable_eur",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "total_eur",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "breakdown",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.cross_signals": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "priority_id",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "source",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "snippet",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "confidence",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.file_claims": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "file_path",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "claimed_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "released_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.fx_rates": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "rate_date",
+      "type": "date",
+      "nullable": false
+    },
+    {
+      "name": "usd_to_eur",
+      "type": "numeric",
+      "nullable": false
+    },
+    {
+      "name": "source",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.kb_processing_queue": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "bookmark_id",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "priority",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "attempts",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "last_error",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "started_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.live_sessions": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "session_key",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "session_id",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "kind",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "model",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "total_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "input_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "output_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "label",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "is_active",
+      "type": "boolean",
+      "nullable": true
+    },
+    {
+      "name": "polled_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.oracle_founder_context": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "section",
+      "type": "character varying",
+      "nullable": false
+    },
+    {
+      "name": "content",
+      "type": "jsonb",
+      "nullable": false
+    }
+  ],
+  "ops.oracle_notes": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "note_type",
+      "type": "character varying",
+      "nullable": false
+    },
+    {
+      "name": "content",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "context",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "importance",
+      "type": "integer",
+      "nullable": true
+    }
+  ],
+  "ops.priorities": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "entity",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "entity_type",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "priority",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "context",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "reported_by",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "confirmed_by",
+      "type": "ARRAY",
+      "nullable": true
+    },
+    {
+      "name": "signal_count",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "last_seen_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "resolved_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.projects": [
+    {
+      "name": "id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "label",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "icon",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "color",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "active",
+      "type": "boolean",
+      "nullable": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "owner",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.reactions": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "trigger_agent",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "trigger_event",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "trigger_filter",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "responder_agent",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "action",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "action_params",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "probability",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "enabled",
+      "type": "boolean",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.research_ideas": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "summary",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "sources",
+      "type": "ARRAY",
+      "nullable": true
+    },
+    {
+      "name": "next_steps",
+      "type": "ARRAY",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "character varying",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "goal_tags",
+      "type": "ARRAY",
+      "nullable": true
+    }
+  ],
+  "ops.runs": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "workflow_id",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "workflow_name",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "task",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "triggered_by",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "context",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "result",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "started_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "last_heartbeat",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "heartbeat_msg",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "timeout_seconds",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "session_key",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "source_feature_request",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "review_iteration",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "review_feedback",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "project",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "model",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "zombie_status",
+      "type": "text",
+      "nullable": true
+    }
+  ],
+  "ops.steps": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "run_id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "step_name",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "step_order",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "input",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "output",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "error",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "retries",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "max_retries",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "started_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.subscriptions": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "provider",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "monthly_price",
+      "type": "numeric",
+      "nullable": false
+    },
+    {
+      "name": "currency",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "used_in_openclaw",
+      "type": "boolean",
+      "nullable": true
+    },
+    {
+      "name": "active",
+      "type": "boolean",
+      "nullable": true
+    },
+    {
+      "name": "renewal_day",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "notes",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.system_metrics": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "ts",
+      "type": "timestamp with time zone",
+      "nullable": false
+    },
+    {
+      "name": "cpu_pct",
+      "type": "real",
+      "nullable": false
+    },
+    {
+      "name": "mem_used_bytes",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "mem_total_bytes",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "disk_used_bytes",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "disk_total_bytes",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "db_size_bytes",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "db_connections",
+      "type": "integer",
+      "nullable": true
+    }
+  ],
+  "ops.task_assignments": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "repo",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "branch",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "worktree_path",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "file_manifest",
+      "type": "ARRAY",
+      "nullable": false
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "parent_task_id",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "run_id",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "started_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.task_checklist": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "task_id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "step_order",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "completed_by",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "notes",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "metadata",
+      "type": "jsonb",
+      "nullable": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": false
+    }
+  ],
+  "ops.task_comments": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "task_id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "author",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "message",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "read_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "read_by",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "seen_by_boss",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.task_events": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "task_id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "event_type",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "from_status",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "to_status",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "actor",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "detail",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.task_queue": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "project",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "priority",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_by",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "result",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "started_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "review_count",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "reviewer_id",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "review_feedback",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "spec_url",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "speced",
+      "type": "boolean",
+      "nullable": false
+    },
+    {
+      "name": "epic",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "notes",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "session_key",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "model",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "last_heartbeat",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "heartbeat_msg",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "acked",
+      "type": "boolean",
+      "nullable": false
+    },
+    {
+      "name": "tags",
+      "type": "ARRAY",
+      "nullable": true
+    },
+    {
+      "name": "progress",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "parent_id",
+      "type": "integer",
+      "nullable": true
+    }
+  ],
+  "ops.task_runs": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "task_id",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "session_key",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "tier",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "initial_tier",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "model_used",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "model_alias",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "task_type",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "task_description",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "input_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "output_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "total_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "cost_usd",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "cost_eur",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "estimated_tier",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "estimated_tokens",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "estimated_cost_usd",
+      "type": "numeric",
+      "nullable": true
+    },
+    {
+      "name": "escalated_from",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "escalation_reason",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "escalation_history",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "duration_ms",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "started_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.tasks": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "task_type",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "payload",
+      "type": "jsonb",
+      "nullable": false
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "priority",
+      "type": "smallint",
+      "nullable": true
+    },
+    {
+      "name": "claimed_by",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "group_key",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "visible_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "run_id",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "step_id",
+      "type": "bigint",
+      "nullable": true
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": true
+    }
+  ],
+  "ops.telegram_messages": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "message_id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "topic_id",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "chat_id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "sender_id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "sender_name",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "content",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "ts",
+      "type": "timestamp with time zone",
+      "nullable": false
+    },
+    {
+      "name": "responded",
+      "type": "boolean",
+      "nullable": true
+    },
+    {
+      "name": "response_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "is_voice",
+      "type": "boolean",
+      "nullable": true
+    }
+  ],
+  "ops.workflows": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "yaml_definition",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "version",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "enabled",
+      "type": "boolean",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.x_bookmark_categories": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "parent_id",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "slug",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "emoji",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "sort_order",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.x_bookmarks": [
+    {
+      "name": "id",
+      "type": "integer",
+      "nullable": false
+    },
+    {
+      "name": "tweet_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "author",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "author_username",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "text",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "url",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "media_urls",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "bookmarked_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "raw_data",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "category",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "tags",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "summary",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "relevance_score",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "processed",
+      "type": "boolean",
+      "nullable": true
+    },
+    {
+      "name": "processed_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "source",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "video_processed",
+      "type": "boolean",
+      "nullable": true
+    },
+    {
+      "name": "video_transcript",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "video_analysis",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "x_folder",
+      "type": "text",
+      "nullable": true
+    }
+  ],
+  "ops.x_folder_mappings": [
+    {
+      "name": "id",
+      "type": "bigint",
+      "nullable": false
+    },
+    {
+      "name": "x_folder",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "category_id",
+      "type": "integer",
+      "nullable": true
+    },
+    {
+      "name": "analysis_prompt",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true
+    }
+  ],
+  "ops.zombie_events": [
+    {
+      "name": "id",
+      "type": "uuid",
+      "nullable": false
+    },
+    {
+      "name": "session_key",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "agent_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "detection_heuristic",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "details",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": false
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": false
+    }
+  ]
+};
+
+        const tables = {
+            ops: [],
+            memory: [],
+            kb: []
+        };
+
+        Object.keys(schemaData).forEach(key => {
+            const [schema, table] = key.split('.');
+            if (tables[schema]) {
+                tables[schema].push({ name: table, columns: schemaData[key] });
+            }
+        });
+
+        Object.keys(tables).forEach(schema => {
+            tables[schema].sort((a, b) => a.name.localeCompare(b.name));
+        });
+
+        function renderTables(schema, containerId, cssClass) {
+            const container = document.getElementById(containerId);
+            tables[schema].forEach(table => {
+                const item = document.createElement('div');
+                item.className = `table-item ${cssClass}`;
+                item.innerHTML = `${table.name} <span class="expand-icon">▶</span>`;
+                item.dataset.table = `${schema}.${table.name}`;
+                item.onclick = () => toggleColumns(item, table);
+                container.appendChild(item);
+            });
+        }
+
+        function toggleColumns(item, table) {
+            const existing = item.nextElementSibling;
+            if (existing && existing.classList.contains('columns-panel')) {
+                existing.remove();
+                item.classList.remove('expanded');
+                return;
+            }
+
+            document.querySelectorAll('.columns-panel').forEach(p => p.remove());
+            document.querySelectorAll('.table-item.expanded').forEach(i => i.classList.remove('expanded'));
+
+            item.classList.add('expanded');
+            const panel = document.createElement('div');
+            panel.className = 'columns-panel show';
+            
+            let html = '';
+            table.columns.forEach(col => {
+                const nullText = col.nullable ? 'NULL' : 'NOT NULL';
+                html += `<div class="col-row">
+                    <span class="col-name">${col.name}</span>
+                    <span class="col-type">${col.type}</span>
+                    <span class="col-null">${nullText}</span>
+                </div>`;
+            });
+            panel.innerHTML = html;
+            item.parentNode.insertBefore(panel, item.nextSibling);
+        }
+
+        renderTables('ops', 'ops-tables', 'schema-ops');
+        renderTables('memory', 'memory-tables', 'schema-memory');
+        renderTables('kb', 'kb-tables', 'schema-kb');
     </script>
 </body>
 </html>
