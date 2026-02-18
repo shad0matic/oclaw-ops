@@ -92,10 +92,13 @@ With this setup, OpenClaw's configuration and state will be stored in the home d
 *   **Configuration File:** `/home/openclaw/.openclaw/openclaw.json`
 *   **State Directory:** `/home/openclaw/.openclaw/state/`
 
-Ensure the user running the service has ownership of this directory:
+Ensure the user running the service has ownership of the home directory AND the config:
 
 ```bash
+sudo chown openclaw:openclaw /home/openclaw
 sudo chown -R openclaw:openclaw /home/openclaw/.openclaw
 ```
+
+> **Important:** The `adduser --system` command may leave `/home/openclaw` owned by root, causing "Missing config" errors. Always verify home directory ownership.
 
 By using this systemd service, the gateway will maintain a stable device token and configuration, resolving the daily mismatch errors.
