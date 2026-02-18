@@ -605,6 +605,7 @@ export const taskQueueInOps = ops.table("task_queue", {
 	lastHeartbeat: timestamp("last_heartbeat", { withTimezone: true, mode: 'string' }),
 	heartbeatMsg: text("heartbeat_msg"),
 	acked: boolean('acked').default(false).notNull(),
+	chatAckedAt: timestamp("chat_acked_at", { withTimezone: true, mode: 'string' }),
 	progress: jsonb().default({}),
 	tags: text().array().default([]),
 }, (table) => [

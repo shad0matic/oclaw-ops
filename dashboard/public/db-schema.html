@@ -9,6 +9,10 @@
         * { box-sizing: border-box; }
         body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #1a1a2e; color: #eee; }
         h1 { color: #00d4ff; margin-bottom: 5px; }
+        .header-row { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .rebuild-btn { background: #16213e; border: 1px solid #00d4ff; color: #00d4ff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .rebuild-btn:hover { background: #00d4ff; color: #1a1a2e; }
+        .rebuild-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         h2 { color: #aaa; font-size: 16px; margin: 30px 0 10px; }
         .meta { color: #888; font-size: 14px; margin-bottom: 20px; }
         .stats { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
@@ -47,7 +51,7 @@
     </style>
 </head>
 <body>
-    <h1>🗄️ OpenClaw Database Schema</h1>
+    <div class="header-row"><h1>🗄️ OpenClaw Database Schema</h1><button class="rebuild-btn" onclick="rebuildSchema()">🔄 Rebuild</button></div>
     <p class="meta">Generated 2026-02-18 · 44 tables · Click table names to see columns</p>
     
     <div class="stats">
@@ -2688,6 +2692,25 @@ erDiagram
         renderTables('ops', 'ops-tables', 'schema-ops');
         renderTables('memory', 'memory-tables', 'schema-memory');
         renderTables('kb', 'kb-tables', 'schema-kb');
+
+        async function rebuildSchema() {
+            const btn = document.querySelector('.rebuild-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Rebuilding...';
+            try {
+                const res = await fetch('/api/db-schema/rebuild', { method: 'POST' });
+                if (res.ok) {
+                    btn.textContent = '✅ Done!';
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    btn.textContent = '❌ Failed';
+                    setTimeout(() => { btn.textContent = '🔄 Rebuild'; btn.disabled = false; }, 2000);
+                }
+            } catch (e) {
+                btn.textContent = '❌ Error';
+                setTimeout(() => { btn.textContent = '🔄 Rebuild'; btn.disabled = false; }, 2000);
+            }
+        }
     </script>
 </body>
 </html>

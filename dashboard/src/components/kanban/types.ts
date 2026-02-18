@@ -40,6 +40,7 @@ export interface QueueTask {
     updatedAt?: string;
   } | null;
   tags?: string[] | null;
+  chat_acked_at?: string | null;
   comments?: TaskComment[];
 }
 

@@ -40,6 +40,11 @@ export async function POST(
     return NextResponse.json({ error: "Message required" }, { status: 400 })
   }
 
+  // Clear chat_acked_at when new comment added
+  await db.execute(sql`
+    UPDATE ops.task_queue SET chat_acked_at = NULL WHERE id = ${taskId}
+  `)
+
   const result = await db.execute(sql`
     INSERT INTO ops.task_comments (task_id, author, message)
     VALUES (${taskId}, ${author}, ${message.trim()})
@@ -47,6 +52,31 @@ export async function POST(
   `)
 
   return NextResponse.json(result.rows[0], { status: 201 })
+}
+
+// Thumbs up - ack chat without new message
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const taskId = parseInt(id, 10)
+  if (isNaN(taskId)) {
+    return NextResponse.json({ error: "Invalid task ID" }, { status: 400 })
+  }
+
+  await db.execute(sql`
+    UPDATE ops.task_queue SET chat_acked_at = NOW() WHERE id = ${taskId}
+  `)
+
+  // Also mark comments as read
+  await db.execute(sql`
+    UPDATE ops.task_comments
+    SET read_at = NOW(), read_by = 'boss'
+    WHERE task_id = ${taskId} AND author != 'boss' AND read_at IS NULL
+  `)
+
+  return NextResponse.json({ acked: true })
 }
 
 // Mark agent comments as read by boss

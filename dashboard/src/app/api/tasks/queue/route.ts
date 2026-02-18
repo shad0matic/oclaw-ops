@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
     created_by: task.createdBy,
     progress: task.progress,
     tags: task.tags,
+    chat_acked_at: task.chatAckedAt,
     comments: commentsMap[Number(task.id)] || [],
   }))
 

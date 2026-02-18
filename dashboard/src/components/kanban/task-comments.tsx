@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, ThumbsUp } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -81,6 +81,23 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
   useEffect(() => {
     hasMarkedRead.current = false;
   }, [taskId]);
+
+  // Thumbs up - ack chat without new message
+  const ackChat = useMutation({
+    mutationFn: async () => {
+      await fetch(`/api/tasks/${taskId}/comments`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["task-queue"] });
+    },
+  });
+
+  // Check if last comment is from agent (show thumbs up)
+  const lastComment = comments.length > 0 ? comments[comments.length - 1] : null;
+  const showThumbsUp = lastComment && lastComment.author !== "boss";
 
   const addComment = useMutation({
     mutationFn: async (msg: string) => {
@@ -180,6 +197,17 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
                 placeholder="Type a message..."
                 className="flex-1 text-sm bg-muted/50 border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
+              {showThumbsUp && (
+                <button
+                  type="button"
+                  onClick={() => ackChat.mutate()}
+                  disabled={ackChat.isPending}
+                  title="Acknowledge - no reply needed"
+                  className="bg-emerald-500/20 hover:bg-emerald-500/40 disabled:opacity-50 text-emerald-400 rounded-lg px-3 py-2 transition-colors border border-emerald-500/30"
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={!message.trim() || addComment.isPending}
