@@ -35,7 +35,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronsUpDown, Trash2, Edit3, MoreVertical, Play, ArrowRight, Check, X, Bot, User, Milestone } from "lucide-react";
+import { ChevronsUpDown, Trash2, Edit3, MoreVertical, Play, ArrowRight, Check, X, Bot, User, Milestone, Pause, Square, FileText } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   DropdownMenu,
@@ -262,6 +262,9 @@ function TaskDetailFooter({ task, taskMutation, updateField, onOpenChange }: {
         case 'queued':
         case 'backlog':
             buttons.push({ action: 'run', label: 'Run Now', icon: Play, tooltip: 'Start task immediately (assigns agent, moves to Running)', primary: true });
+            if (!task.speced) {
+                buttons.push({ action: 'spec', label: 'Spec This', icon: FileText, tooltip: 'Create a spec for this task' });
+            }
             buttons.push({ action: 'plan', label: 'Plan', icon: Milestone, tooltip: 'Move to Planned column for scheduling' });
             break;
         case 'planned':
@@ -271,8 +274,9 @@ function TaskDetailFooter({ task, taskMutation, updateField, onOpenChange }: {
             break;
         case 'running':
             buttons.push({ action: 'review', label: 'Finish for Review', icon: Check, tooltip: 'Mark as complete, move to Review for validation', primary: true });
+            buttons.push({ action: 'pause', label: 'Pause', icon: Pause, tooltip: 'Pause task, move back to Planned' });
             buttons.push({ action: 'human', label: 'Flag for Human', icon: User, tooltip: 'Needs human attention before continuing' });
-            buttons.push({ action: 'fail', label: 'Mark as Failed', icon: X, tooltip: 'Task failed, cannot be completed' });
+            buttons.push({ action: 'cancel', label: 'Cancel', icon: Square, tooltip: 'Cancel this task' });
             break;
         case 'review':
         case 'human_todo': // Legacy - treat same as review

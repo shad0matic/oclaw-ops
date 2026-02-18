@@ -11,6 +11,7 @@ async function notifyKevin(task: any, action: string) {
   let emoji = '📋' // Default
   if (action === 'run') emoji = '⚡'
   if (action === 'ack') emoji = '✅'
+  if (action === 'spec') emoji = '📝'
 
   const msg = `${emoji} Kanban: #${task.id} "${task.title}" → ${action}${task.agentId ? ` (assigned: ${task.agentId})` : ' (unassigned)'}\nProject: ${task.project || 'unknown'}\nDescription: ${(task.description || 'none').substring(0, 200)}`
   await fetch('http://127.0.0.1:18789/api/sessions/send', {
@@ -63,6 +64,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       break
     case "plan":
       await db.update(taskQueueInOps).set({ status: 'planned' }).where(where)
+      break
+    case "pause":
+      await db.update(taskQueueInOps).set({ status: 'planned', startedAt: null }).where(where)
+      break
+    case "spec":
+      // Mark task as needing spec, assign to agent for spec creation
+      await db.update(taskQueueInOps).set({ 
+        status: 'assigned',
+        agentId: body.agentId || 'kevin',
+        tags: sql`array_append(COALESCE(tags, '{}'), 'needs-spec')`,
+      }).where(where)
       break
     case "review":
       await db.update(taskQueueInOps).set({
@@ -130,7 +142,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const [task] = await db.select().from(taskQueueInOps).where(where)
   const result = { ...task, id: Number(task.id) }
 
-  if (action === 'run' || action === 'plan' || action === 'ack') {
+  if (action === 'run' || action === 'plan' || action === 'ack' || action === 'spec') {
     notifyKevin(result, action).catch(() => {})
   }
 
