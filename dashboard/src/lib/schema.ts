@@ -1,4 +1,4 @@
-import { pgTable, pgSchema, index, check, bigserial, text, vector, smallint, timestamp, unique, date, serial, foreignKey, jsonb, integer, numeric, bigint, boolean, real, uniqueIndex, varchar, uuid } from "drizzle-orm/pg-core"
+import { pgTable, pgSchema, index, check, bigserial, text, vector, smallint, timestamp, unique, date, serial, foreignKey, jsonb, integer, numeric, bigint, boolean, real, uniqueIndex, varchar, uuid, AnyPgColumn } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const memory = pgSchema("memory");
@@ -581,6 +581,7 @@ export const zombieEventsInOps = ops.table("zombie_events", {
 
 export const taskQueueInOps = ops.table("task_queue", {
 	id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+	parentId: bigint("parent_id", { mode: "number" }).references((): AnyPgColumn => taskQueueInOps.id),
 	title: text().notNull(),
 	description: text(),
 	project: text().default('infra').notNull(),
