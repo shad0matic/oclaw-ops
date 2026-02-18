@@ -3,6 +3,7 @@
 Incremental bookmark sync from X/Twitter to OpenClaw database.
 Fetches bookmarks and upserts them into kb.x_bookmarks table.
 Uses ON CONFLICT for safe incremental updates.
+Tracks sync runs in ops.task_queue.
 """
 
 import json
@@ -14,6 +15,102 @@ from datetime import datetime, timezone
 def get_db_connection():
     """Return psql command base."""
     return ["psql", "-U", "shad", "openclaw_db", "-t"]
+
+def create_task():
+    """Create a task in ops.task_queue and return the task id."""
+    now = datetime.now(timezone.utc).isoformat()
+    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    
+    sql = f"""
+INSERT INTO ops.task_queue 
+(title, description, status, agent_id, project, started_at)
+VALUES
+('Smaug: X bookmark sync [{date_str}]', 'Syncing X bookmarks...', 'running', 'smaug', 'smaug', NOW())
+RETURNING id;
+"""
+    
+    try:
+        result = subprocess.run(
+            ["psql", "-U", "shad", "openclaw_db", "-t"],
+            input=sql,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode != 0:
+            print(f"❌ Failed to create task: {result.stderr}", file=sys.stderr)
+            return None
+        
+        task_id = result.stdout.strip()
+        if task_id:
+            print(f"✓ Created task #{task_id}", file=sys.stderr)
+            return task_id
+        return None
+    except Exception as e:
+        print(f"❌ Error creating task: {e}", file=sys.stderr)
+        return None
+
+def update_task_success(task_id, fetched_count, total_in_db):
+    """Mark task as done with sync stats."""
+    if not task_id:
+        return
+    
+    description = f"Synced X bookmarks. Fetched: {fetched_count}, Total in DB: {total_in_db}"
+    # Escape description for SQL
+    safe_description = description.replace("'", "''")
+    
+    sql = f"""
+UPDATE ops.task_queue 
+SET status='done', completed_at=NOW(), description='{safe_description}'
+WHERE id = {task_id};
+"""
+    
+    try:
+        result = subprocess.run(
+            ["psql", "-U", "shad", "openclaw_db"],
+            input=sql,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode != 0:
+            print(f"⚠️  Failed to update task success: {result.stderr}", file=sys.stderr)
+        else:
+            print(f"✓ Task #{task_id} marked as done", file=sys.stderr)
+    except Exception as e:
+        print(f"⚠️  Error updating task: {e}", file=sys.stderr)
+
+def update_task_failed(task_id, error_msg):
+    """Mark task as failed."""
+    if not task_id:
+        return
+    
+    # Escape the error message for SQL
+    safe_msg = error_msg.replace("'", "''")
+    
+    sql = f"""
+UPDATE ops.task_queue 
+SET status='failed', completed_at=NOW(), description='Sync failed: {safe_msg}'
+WHERE id = {task_id};
+"""
+    
+    try:
+        result = subprocess.run(
+            ["psql", "-U", "shad", "openclaw_db"],
+            input=sql,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode != 0:
+            print(f"⚠️  Failed to update task failed: {result.stderr}", file=sys.stderr)
+        else:
+            print(f"✓ Task #{task_id} marked as failed", file=sys.stderr)
+    except Exception as e:
+        print(f"⚠️  Error updating task: {e}", file=sys.stderr)
 
 def fetch_bookmarks(count=100):
     """Fetch bookmarks using birdx with a count limit."""
@@ -100,6 +197,9 @@ def main():
     """Main sync function."""
     print(f"\n🔄 Starting X Bookmarks Sync at {datetime.now(timezone.utc).isoformat()}", file=sys.stderr)
     
+    # Create task in queue
+    task_id = create_task()
+    
     # Allow override via CLI: sync-x-bookmarks.py [count]
     count = 200
     if len(sys.argv) > 1:
@@ -107,21 +207,31 @@ def main():
             count = int(sys.argv[1])
         except ValueError:
             print(f"❌ Invalid count: {sys.argv[1]}", file=sys.stderr)
+            if task_id:
+                update_task_failed(task_id, "Invalid count argument")
             sys.exit(1)
     
     # Try to fetch bookmarks with specified limit
     bookmarks = fetch_bookmarks(count=count)
     if bookmarks is None:
+        error_msg = "Failed to fetch bookmarks from X/Twitter"
+        if task_id:
+            update_task_failed(task_id, error_msg)
         sys.exit(1)
     
     if not bookmarks:
         print("⚠️  No bookmarks to sync", file=sys.stderr)
+        if task_id:
+            update_task_success(task_id, 0, 0)
         sys.exit(0)
     
     # Generate SQL
     sql = generate_upsert_sql(bookmarks)
     if not sql:
-        print("❌ Failed to generate SQL", file=sys.stderr)
+        error_msg = "Failed to generate SQL"
+        print(f"❌ {error_msg}", file=sys.stderr)
+        if task_id:
+            update_task_failed(task_id, error_msg)
         sys.exit(1)
     
     print(f"💾 Upserting {len(bookmarks)} bookmarks...", file=sys.stderr)
@@ -137,23 +247,46 @@ def main():
         )
         
         if result.returncode != 0:
-            print(f"❌ Database error: {result.stderr}", file=sys.stderr)
+            error_msg = f"Database error: {result.stderr}"
+            print(f"❌ {error_msg}", file=sys.stderr)
+            if task_id:
+                update_task_failed(task_id, result.stderr)
             sys.exit(1)
         
         # Parse output to get total count
+        # The output includes INSERT result and SELECT COUNT result before COMMIT
         lines = result.stdout.strip().split('\n')
-        if lines:
-            total_in_db = lines[-1].strip()
-            print(f"\n✅ Sync complete!", file=sys.stderr)
-            print(f"   - Fetched: {len(bookmarks)}", file=sys.stderr)
-            print(f"   - Processed: {len(bookmarks)}", file=sys.stderr)
-            print(f"   - Total in DB: {total_in_db}", file=sys.stderr)
+        total_in_db = 0
+        for line in lines:
+            if line and line != 'COMMIT':
+                try:
+                    # Try to parse as integer (the count result)
+                    val = int(line.strip())
+                    total_in_db = val
+                except ValueError:
+                    # Skip non-integer lines (INSERT results, etc.)
+                    pass
+        
+        print(f"\n✅ Sync complete!", file=sys.stderr)
+        print(f"   - Fetched: {len(bookmarks)}", file=sys.stderr)
+        print(f"   - Processed: {len(bookmarks)}", file=sys.stderr)
+        print(f"   - Total in DB: {total_in_db}", file=sys.stderr)
+        
+        # Mark task as done
+        if task_id:
+            update_task_success(task_id, len(bookmarks), total_in_db)
         
     except subprocess.TimeoutExpired:
-        print("❌ Database operation timed out", file=sys.stderr)
+        error_msg = "Database operation timed out"
+        print(f"❌ {error_msg}", file=sys.stderr)
+        if task_id:
+            update_task_failed(task_id, error_msg)
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Unexpected error: {e}", file=sys.stderr)
+        error_msg = f"Unexpected error: {e}"
+        print(f"❌ {error_msg}", file=sys.stderr)
+        if task_id:
+            update_task_failed(task_id, str(e))
         sys.exit(1)
 
 if __name__ == "__main__":
