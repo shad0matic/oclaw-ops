@@ -97,7 +97,27 @@ const COLUMNS: Array<{ title: string; status: string | string[] }> = [
 export function KanbanBoard() {
   const queryClient = useQueryClient();
   useTaskStream(); // Real-time SSE updates
-  const [projectFilter, setProjectFilter] = useState<string[]>([]);
+  
+  // Load filters from localStorage on mount
+  const [projectFilter, setProjectFilter] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem('kanban-project-filter');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [agentFilter, setAgentFilter] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem('kanban-agent-filter');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  // Persist filters to localStorage
+  useEffect(() => {
+    localStorage.setItem('kanban-project-filter', JSON.stringify(projectFilter));
+  }, [projectFilter]);
+  useEffect(() => {
+    localStorage.setItem('kanban-agent-filter', JSON.stringify(agentFilter));
+  }, [agentFilter]);
+  
   const [showFilters, setShowFilters] = useState(false);
   const [activeColumn, setActiveColumn] = useState<string>("backlog");
   const [expandedColumns, setExpandedColumns] = useState<Record<string, boolean>>({});
@@ -105,7 +125,6 @@ export function KanbanBoard() {
   const [isNewTaskSheetOpen, setIsNewTaskSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const [agentFilter, setAgentFilter] = useState<string[]>([]);
 
   const { data: queueData, isLoading: isQueueLoading, error: queueError, isFetching: isQueueFetching } = useQuery({
     queryKey: ["task-queue"],
@@ -287,6 +306,17 @@ export function KanbanBoard() {
                 <img src={`/assets/minion-avatars/${a.id}.webp`} alt={a.name} className="w-6 h-6 rounded-full" />
               </button>
             ))}
+            {(projectFilter.length > 0 || agentFilter.length > 0) && (
+              <>
+                <div className="border-l h-5 border-border mx-2"></div>
+                <button
+                  onClick={() => { setProjectFilter([]); setAgentFilter([]); }}
+                  className="text-xs text-muted-foreground hover:text-red-400 transition-colors"
+                >
+                  ✕ Reset
+                </button>
+              </>
+            )}
           </div>
         )}
 
