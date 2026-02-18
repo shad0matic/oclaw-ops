@@ -651,6 +651,22 @@ export const telegramMessagesInOps = ops.table("telegram_messages", {
 	unique("telegram_messages_chat_id_message_id_key").on(table.messageId, table.chatId),
 ]);
 
+export const modelCatalogueInOps = ops.table("model_catalogue", {
+	id: serial().primaryKey().notNull(),
+	provider: varchar("provider", { length: 50 }).notNull(),
+	modelId: varchar("model_id", { length: 100 }).notNull(),
+	displayName: varchar("display_name", { length: 100 }),
+	contextWindow: integer("context_window"),
+	inputCostPer1k: numeric("input_cost_per_1k", { precision: 10, scale: 6 }),
+	outputCostPer1k: numeric("output_cost_per_1k", { precision: 10, scale: 6 }),
+	capabilities: text("capabilities").array(),
+	isActive: boolean("is_active").default(true),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	uniqueIndex("model_catalogue_model_id_key").on(table.modelId),
+]);
+
 // Note: bookmarkFolders and bookmarkFolderItems removed due to Drizzle self-reference issues
 // Use raw SQL via pool for these tables if needed
 
