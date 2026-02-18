@@ -139,8 +139,26 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: {
             />
           </div>
 
+          {/* Phase Progress */}
+          {isDbTask && (item as QueueTask).progress?.total && (item as QueueTask).progress!.total! > 0 && (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground">Progress</label>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-500 transition-all" 
+                    style={{ width: `${(((item as QueueTask).progress?.done || 0) / (item as QueueTask).progress!.total!) * 100}%` }}
+                  />
+                </div>
+                <span className="text-sm font-mono text-muted-foreground">
+                  {(item as QueueTask).progress?.done || 0}/{(item as QueueTask).progress?.total} phases
+                </span>
+              </div>
+            </div>
+          )}
+
           {taskId && <TaskChecklist taskId={taskId} />}
-      {taskId && <TaskComments taskId={taskId} />}
+          {taskId && <TaskComments taskId={taskId} />}
           
           {isDbTask && <NotesSection task={item as QueueTask} updateField={updateField} />}
           

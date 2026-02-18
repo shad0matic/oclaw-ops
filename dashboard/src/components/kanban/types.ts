@@ -31,6 +31,8 @@ export interface QueueTask {
   acked?: boolean;
   created_by?: string | null;
   progress?: {
+    done?: number;
+    total?: number;
     kpis?: Array<{
       label: string;
       value: number;

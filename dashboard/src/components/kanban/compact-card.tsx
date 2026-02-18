@@ -174,6 +174,17 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
             </span>
             <div className="flex items-center gap-1">
                 {task.status === 'running' && <ChecklistProgressBadge taskId={task.id} />}
+                {task.progress?.total && task.progress.total > 0 && (
+                    <span className="text-[10px] font-mono text-muted-foreground/70 flex items-center gap-0.5" title={`Progress: ${task.progress.done || 0}/${task.progress.total}`}>
+                      <span className="w-8 h-1.5 bg-muted rounded-full overflow-hidden">
+                        <span 
+                          className="h-full bg-emerald-500 block transition-all" 
+                          style={{ width: `${((task.progress.done || 0) / task.progress.total) * 100}%` }}
+                        />
+                      </span>
+                      <span className="text-[9px]">{task.progress.done || 0}/{task.progress.total}</span>
+                    </span>
+                )}
                 {commentStatus && (
                     <ChatStatusIcon status={commentStatus} commentCount={task.comments?.length || 0} />
                 )}
