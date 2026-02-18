@@ -10,7 +10,7 @@ import { ChatStatusIcon } from "@/components/ui/chat-status-icon";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
-type CommentStatus = 'unread' | 'read' | 'attention' | 'gray';
+type CommentStatus = 'unread' | 'read' | 'attention' | 'boss_read' | 'gray';
 
 
 function timeAgo(dateStr: string | null | undefined): string | null {
@@ -118,8 +118,11 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
           return 'unread';  // Bright blue - agent hasn't seen
         }
       } else {
-        // Agent replied - needs Boss attention (pulsing amber)
-        return 'attention';
+        // Agent replied - check if Boss has read it
+        if (lastComment.read_at && lastComment.read_by === 'boss') {
+          return 'boss_read';  // Dim amber - Boss saw agent's reply
+        }
+        return 'attention';    // Pulsing amber - needs Boss attention
       }
   }
   

@@ -48,3 +48,30 @@ export async function POST(
 
   return NextResponse.json(result.rows[0], { status: 201 })
 }
+
+// Mark agent comments as read by boss
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const taskId = parseInt(id, 10)
+  if (isNaN(taskId)) {
+    return NextResponse.json({ error: "Invalid task ID" }, { status: 400 })
+  }
+
+  const body = await request.json()
+  const { reader = "boss" } = body
+
+  // Mark all unread comments from OTHER authors as read
+  const result = await db.execute(sql`
+    UPDATE ops.task_comments
+    SET read_at = NOW(), read_by = ${reader}
+    WHERE task_id = ${taskId}
+      AND author != ${reader}
+      AND read_at IS NULL
+    RETURNING id
+  `)
+
+  return NextResponse.json({ marked: result.rows.length })
+}

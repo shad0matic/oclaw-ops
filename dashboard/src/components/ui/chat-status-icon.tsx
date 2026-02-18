@@ -2,7 +2,7 @@
 import { FC } from 'react';
 import { MessageCircle } from 'lucide-react';
 
-type CommentStatus = 'unread' | 'read' | 'attention' | 'gray';
+type CommentStatus = 'unread' | 'read' | 'attention' | 'boss_read' | 'gray';
 
 interface ChatStatusIconProps {
   status: CommentStatus;
@@ -13,6 +13,7 @@ const statusStyles: Record<CommentStatus, { color: string; pulse?: boolean }> = 
   unread: { color: 'text-blue-500' },            // Boss sent, agent hasn't read
   read: { color: 'text-blue-300' },              // Boss sent, agent read (dim)
   attention: { color: 'text-amber-500', pulse: true },  // Agent replied, needs Boss
+  boss_read: { color: 'text-amber-300' },        // Agent replied, Boss read (dim)
   gray: { color: 'text-gray-400' },              // Done
 };
 

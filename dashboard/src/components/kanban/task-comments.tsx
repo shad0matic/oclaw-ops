@@ -52,6 +52,28 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
     refetchInterval: isOpen ? 10000 : false,
   });
 
+  // Mark agent comments as read by boss when opening
+  const markAsRead = useMutation({
+    mutationFn: async () => {
+      await fetch(`/api/tasks/${taskId}/comments`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reader: "boss" }),
+      });
+    },
+    onSuccess: () => {
+      // Invalidate the queue to refresh chat icons
+      qc.invalidateQueries({ queryKey: ["task-queue"] });
+    },
+  });
+
+  // Mark as read on first open
+  useEffect(() => {
+    if (isOpen && comments.length > 0) {
+      markAsRead.mutate();
+    }
+  }, [isOpen, taskId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const addComment = useMutation({
     mutationFn: async (msg: string) => {
       const res = await fetch(`/api/tasks/${taskId}/comments`, {
