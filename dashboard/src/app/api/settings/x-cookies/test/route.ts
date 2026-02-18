@@ -1,19 +1,26 @@
 import { promises as fs } from 'fs';
 import { NextResponse } from 'next/server';
 import { execSync } from 'child_process';
+import { z } from 'zod';
 
 export const dynamic = "force-dynamic";
 
 const configPath = '/home/shad/.openclaw/phil-config.json';
 const birdCliPath = '/home/shad/.local/share/pnpm/bird';
 
-type PhilConfig = {
-  auth_token: string;
-  ct0: string;
-  last_tested: string | null;
-  status: 'valid' | 'expired' | 'missing';
-  username?: string;
-};
+const cookiesSchema = z.object({
+  auth_token: z.string(),
+  ct0: z.string(),
+});
+
+const configSchema = z.object({
+  cookies: cookiesSchema,
+  validated: z.boolean(),
+  username: z.string().optional(),
+  last_tested: z.string().optional(),
+});
+
+type PhilConfig = z.infer<typeof configSchema>;
 
 async function readConfig(): Promise<PhilConfig> {
   try {
@@ -22,10 +29,8 @@ async function readConfig(): Promise<PhilConfig> {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return {
-        auth_token: '',
-        ct0: '',
-        last_tested: null,
-        status: 'missing',
+        cookies: { auth_token: '', ct0: '' },
+        validated: false,
       };
     }
     throw error;
@@ -43,7 +48,6 @@ async function testCookies(auth_token: string, ct0: string): Promise<{ valid: bo
     try {
         const command = `${birdCliPath} --auth-token "${auth_token}" --ct0 "${ct0}" whoami --plain`;
         const result = execSync(command, { encoding: 'utf8', timeout: 15000 });
-        // Parse plain text output: "user: @handle (name)"
         const userMatch = result.match(/user:\s*@(\S+)/);
         if (userMatch) {
             return { valid: true, username: userMatch[1] };
@@ -58,17 +62,17 @@ async function testCookies(auth_token: string, ct0: string): Promise<{ valid: bo
 export async function POST() {
   const config = await readConfig();
 
-  if (config.status === 'missing' || !config.auth_token || !config.ct0) {
+  if (!config.cookies || !config.cookies.auth_token || !config.cookies.ct0) {
     return NextResponse.json({ valid: false, error: 'Cookies not configured' });
   }
 
-  const testResult = await testCookies(config.auth_token, config.ct0);
+  const testResult = await testCookies(config.cookies.auth_token, config.cookies.ct0);
 
   const newConfig: PhilConfig = {
     ...config,
-    last_tested: new Date().toISOString(),
-    status: testResult.valid ? 'valid' : 'expired',
+    validated: testResult.valid,
     username: testResult.username,
+    last_tested: new Date().toISOString(),
   };
 
   await writeConfig(newConfig);

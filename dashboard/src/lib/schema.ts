@@ -661,4 +661,22 @@ export const xBookmarks = ops.table("x_bookmarks", {
     author_handle: text('author_handle'),
     created_at: timestamp("created_at", { withTimezone: true, mode: 'string' }),
     media: jsonb('media'),
+    summary: text('summary'),
+    tags: jsonb('tags'),
+    relevance_score: integer('relevance_score'),
+    processed: boolean('processed').default(false),
+    video_transcript: text('video_transcript'),
+    video_analysis: text('video_analysis'),
+});
+
+export const kbProcessingQueue = ops.table("kb_processing_queue", {
+    id: serial('id').primaryKey(),
+    bookmarkId: text('bookmark_id').notNull().references(() => xBookmarks.id),
+    status: text('status').default('pending'),
+    priority: integer('priority').default(5),
+    attempts: integer('attempts').default(0),
+    lastError: text('last_error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    startedAt: timestamp('started_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
 });

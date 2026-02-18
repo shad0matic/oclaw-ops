@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import FolderTree from '@/components/bookmarks/folder-tree';
 import BookmarkList from '@/components/bookmarks/bookmark-list';
 import UnassignedBookmarks from '@/components/bookmarks/unassigned-bookmarks';
+import KnowledgeHeader from '@/components/bookmarks/knowledge-header';
 
 const KnowledgePage = () => {
   const [selectedFolderId, setSelectedFolderId] = useState<bigint | null>(null);
@@ -19,6 +20,7 @@ const KnowledgePage = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Knowledge Base</h1>
+      <KnowledgeHeader />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-1">
           <FolderTree onSelectFolder={handleFolderSelect} />

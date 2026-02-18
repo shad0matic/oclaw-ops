@@ -48,6 +48,7 @@ export function XTwitterSettings() {
     if (parsed.auth_token) setAuthToken(parsed.auth_token)
     if (parsed.ct0) setCt0(parsed.ct0)
   }
+
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -56,6 +57,10 @@ export function XTwitterSettings() {
         setStatus(data.status)
         setLastTested(data.lastTested)
         setUsername(data.username)
+        if (data.cookies) {
+          setAuthToken(data.cookies.auth_token || '');
+          setCt0(data.cookies.ct0 || '');
+        }
       } catch (error) {
         console.error("Failed to fetch status:", error)
       }
@@ -107,7 +112,6 @@ export function XTwitterSettings() {
         });
         setStatus('expired');
       }
-      // Refetch status to get the latest lastTested timestamp
       const statusResponse = await fetch("/api/settings/x-cookies");
       const statusData = await statusResponse.json();
       setLastTested(statusData.lastTested);
@@ -191,27 +195,21 @@ export function XTwitterSettings() {
         </Collapsible>
 
         <div className="space-y-2">
-          <Label htmlFor="raw-cookie">Paste cookie header</Label>
-          <textarea
-            id="raw-cookie"
-            value={rawCookie}
+          <Label>Raw Cookie Input</Label>
+          <Input 
+            placeholder="Paste full cookie string here"
             onChange={(e) => handlePaste(e.target.value)}
-            placeholder='Paste the full cookie: header value here (e.g. "des_opt_in=Y; auth_token=abc123; ct0=xyz789; ...")'
-            className="w-full min-h-[80px] text-xs font-mono bg-muted border rounded-md p-3 text-foreground placeholder:text-muted-foreground resize-y"
+            value={rawCookie}
           />
-          {(authToken || ct0) && (
-            <div className="text-xs space-y-1 p-3 bg-muted/50 rounded-md border">
-              <p className="font-semibold text-foreground mb-1">Parsed values:</p>
-              <p>
-                <span className="text-muted-foreground">auth_token:</span>{" "}
-                {authToken ? <span className="text-green-500">✅ {authToken.slice(0, 8)}...{authToken.slice(-4)}</span> : <span className="text-red-500">❌ not found</span>}
-              </p>
-              <p>
-                <span className="text-muted-foreground">ct0:</span>{" "}
-                {ct0 ? <span className="text-green-500">✅ {ct0.slice(0, 8)}...{ct0.slice(-4)}</span> : <span className="text-red-500">❌ not found</span>}
-              </p>
-            </div>
-          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="auth_token">auth_token</Label>
+          <Input id="auth_token" value={authToken} onChange={e => setAuthToken(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="ct0">ct0 (csrf token)</Label>
+          <Input id="ct0" value={ct0} onChange={e => setCt0(e.target.value)} />
         </div>
         
         <div className="flex items-center space-x-2">
@@ -226,11 +224,11 @@ export function XTwitterSettings() {
 
       </CardContent>
       <CardFooter className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={handleTest} disabled={isTesting}>
+        <Button variant="outline" onClick={handleTest} disabled={isTesting || !authToken || !ct0}>
             {isTesting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Test Connection
         </Button>
-        <Button onClick={handleSave} disabled={isLoading}>
+        <Button onClick={handleSave} disabled={isLoading || !authToken || !ct0}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save
         </Button>

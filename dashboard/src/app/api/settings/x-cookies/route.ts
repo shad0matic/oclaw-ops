@@ -2,25 +2,25 @@ import { promises as fs } from 'fs';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { execSync } from 'child_process';
-import { parseStringId } from '@/lib/validate';
 
 export const dynamic = "force-dynamic";
 
 const configPath = '/home/shad/.openclaw/phil-config.json';
 const birdCliPath = '/home/shad/.local/share/pnpm/bird';
 
-const configSchema = z.object({
+const cookiesSchema = z.object({
   auth_token: z.string(),
   ct0: z.string(),
 });
 
-type PhilConfig = {
-  auth_token: string;
-  ct0: string;
-  last_tested: string | null;
-  status: 'valid' | 'expired' | 'missing';
-  username?: string;
-};
+const configSchema = z.object({
+  cookies: cookiesSchema,
+  validated: z.boolean(),
+  username: z.string().optional(),
+  last_tested: z.string().optional(),
+});
+
+type PhilConfig = z.infer<typeof configSchema>;
 
 async function readConfig(): Promise<PhilConfig> {
   try {
@@ -29,10 +29,8 @@ async function readConfig(): Promise<PhilConfig> {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return {
-        auth_token: '',
-        ct0: '',
-        last_tested: null,
-        status: 'missing',
+        cookies: { auth_token: '', ct0: '' },
+        validated: false,
       };
     }
     throw error;
@@ -64,7 +62,7 @@ async function testCookies(auth_token: string, ct0: string): Promise<{ valid: bo
 export async function GET() {
   const config = await readConfig();
   return NextResponse.json({
-    status: config.status,
+    status: config.validated ? 'valid' : (config.cookies.auth_token ? 'expired' : 'missing'),
     lastTested: config.last_tested,
     username: config.username,
   });
@@ -72,8 +70,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  
-  const parsed = configSchema.safeParse(body);
+
+  const parsed = cookiesSchema.safeParse(body);
 
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
@@ -84,17 +82,16 @@ export async function POST(req: Request) {
   const testResult = await testCookies(auth_token, ct0);
 
   const newConfig: PhilConfig = {
-    auth_token,
-    ct0,
-    last_tested: new Date().toISOString(),
-    status: testResult.valid ? 'valid' : 'expired',
+    cookies: { auth_token, ct0 },
+    validated: testResult.valid,
     username: testResult.username,
+    last_tested: new Date().toISOString(),
   };
 
   await writeConfig(newConfig);
 
   return NextResponse.json({
-    status: newConfig.status,
+    status: newConfig.validated ? 'valid' : 'expired',
     lastTested: newConfig.last_tested,
     username: newConfig.username,
   });
