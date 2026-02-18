@@ -53,6 +53,8 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
   });
 
   // Mark agent comments as read by boss when opening
+  const hasMarkedRead = useRef(false);
+  
   const markAsRead = useMutation({
     mutationFn: async () => {
       await fetch(`/api/tasks/${taskId}/comments`, {
@@ -67,12 +69,18 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
     },
   });
 
-  // Mark as read on first open
+  // Mark as read once comments load
   useEffect(() => {
-    if (isOpen && comments.length > 0) {
+    if (isOpen && comments.length > 0 && !hasMarkedRead.current) {
+      hasMarkedRead.current = true;
       markAsRead.mutate();
     }
-  }, [isOpen, taskId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, comments.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  // Reset ref when task changes
+  useEffect(() => {
+    hasMarkedRead.current = false;
+  }, [taskId]);
 
   const addComment = useMutation({
     mutationFn: async (msg: string) => {
