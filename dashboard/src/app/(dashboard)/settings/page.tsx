@@ -35,6 +35,23 @@ export default function SettingsPage() {
                     <UploadAvatar onUpload={refresh} />
                 </div>
             </CollapsibleSection>
+            <CollapsibleSection title="Admin Infos" icon="🔧" defaultOpen={false}>
+                <div className="p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                        <span className="text-xl">🗄️</span>
+                        <div>
+                            <a 
+                                href="/db-schema.html" 
+                                target="_blank"
+                                className="text-cyan-400 hover:text-cyan-300 font-medium"
+                            >
+                                Database Schema
+                            </a>
+                            <p className="text-sm text-gray-400">Visual ERD of all tables and relationships</p>
+                        </div>
+                    </div>
+                </div>
+            </CollapsibleSection>
         </div>
     );
 }

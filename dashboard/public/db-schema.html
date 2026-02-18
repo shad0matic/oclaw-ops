@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw DB Schema</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #1a1a2e; color: #eee; }
+        h1 { color: #00d4ff; margin-bottom: 5px; }
+        h2 { color: #aaa; font-size: 16px; margin: 30px 0 10px; }
+        .meta { color: #888; font-size: 14px; margin-bottom: 20px; }
+        .stats { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        .stat { background: #16213e; padding: 15px 25px; border-radius: 8px; text-align: center; }
+        .stat-num { font-size: 28px; font-weight: bold; color: #00d4ff; }
+        .stat-label { font-size: 12px; color: #888; }
+        .diagram-box { background: #fff; border-radius: 10px; padding: 20px; margin: 20px 0; overflow-x: auto; }
+        .mermaid { background: #fff; }
+        .table-list { background: #16213e; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .table-list h3 { margin-top: 0; color: #00d4ff; }
+        .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+        .table-item { background: #1f3460; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+        .schema-ops { border-left: 3px solid #4CAF50; }
+        .schema-memory { border-left: 3px solid #2196F3; }
+        .schema-kb { border-left: 3px solid #FF9800; }
+    </style>
+</head>
+<body>
+    <h1>🗄️ OpenClaw Database Schema</h1>
+    <p class="meta">Generated 2026-02-18 11:11 · 44 tables</p>
+    
+    <div class="stats">
+        <div class="stat"><div class="stat-num">44</div><div class="stat-label">Total Tables</div></div>
+        <div class="stat"><div class="stat-num">35</div><div class="stat-label">ops</div></div>
+        <div class="stat"><div class="stat-num">8</div><div class="stat-label">memory</div></div>
+        <div class="stat"><div class="stat-num">1</div><div class="stat-label">kb</div></div>
+    </div>
+
+    <h2>📊 Core Relationships (Task Management)</h2>
+    <div class="diagram-box">
+        <pre class="mermaid">
+erDiagram
+    TASK_QUEUE {
+        bigint id PK
+        string title
+        string status
+        bigint parent_id FK
+    }
+    TASK_COMMENTS {
+        bigint id PK
+        bigint task_id FK
+        text content
+    }
+    TASK_CHECKLIST {
+        bigint id PK
+        bigint task_id FK
+    }
+    TASK_EVENTS {
+        bigint id PK
+        bigint task_id FK
+    }
+    AGENT_EVENTS {
+        bigint id PK
+        bigint task_id FK
+        string agent_id
+    }
+    TASK_QUEUE ||--o{ TASK_COMMENTS : has
+    TASK_QUEUE ||--o{ TASK_CHECKLIST : has
+    TASK_QUEUE ||--o{ TASK_EVENTS : logs
+    TASK_QUEUE ||--o{ AGENT_EVENTS : triggers
+        </pre>
+    </div>
+
+    <h2>⚙️ Workflow Engine</h2>
+    <div class="diagram-box">
+        <pre class="mermaid">
+erDiagram
+    WORKFLOWS {
+        bigint id PK
+        string name
+    }
+    RUNS {
+        bigint id PK
+        bigint workflow_id FK
+    }
+    STEPS {
+        bigint id PK
+        bigint run_id FK
+    }
+    TASKS {
+        bigint id PK
+        bigint run_id FK
+        bigint step_id FK
+    }
+    WORKFLOWS ||--o{ RUNS : executes
+    RUNS ||--o{ STEPS : has
+    RUNS ||--o{ TASKS : spawns
+    STEPS ||--o{ TASKS : contains
+        </pre>
+    </div>
+
+    <h2>🔖 X Bookmarks</h2>
+    <div class="diagram-box">
+        <pre class="mermaid">
+erDiagram
+    X_BOOKMARKS {
+        bigint id PK
+        string tweet_id
+        string author
+    }
+    BOOKMARK_FOLDERS {
+        int id PK
+        string name
+        int parent_id FK
+    }
+    BOOKMARK_FOLDER_ITEMS {
+        int folder_id FK
+        int bookmark_id FK
+    }
+    KB_PROCESSING_QUEUE {
+        bigint id PK
+        bigint bookmark_id FK
+    }
+    X_BOOKMARKS ||--o{ BOOKMARK_FOLDER_ITEMS : categorized
+    BOOKMARK_FOLDERS ||--o{ BOOKMARK_FOLDER_ITEMS : contains
+    X_BOOKMARKS ||--o{ KB_PROCESSING_QUEUE : queued
+        </pre>
+    </div>
+
+    <h2>🧠 Memory System</h2>
+    <div class="diagram-box">
+        <pre class="mermaid">
+erDiagram
+    ENTITIES {
+        bigint id PK
+        string name
+        string type
+    }
+    ENTITY_RELATIONS {
+        bigint id PK
+        bigint source_id FK
+        bigint target_id FK
+        string relation
+    }
+    AGENT_PROFILES {
+        int id PK
+        string agent_id
+        string reports_to FK
+    }
+    MEMORIES {
+        bigint id PK
+        text content
+        string agent_id
+    }
+    ENTITIES ||--o{ ENTITY_RELATIONS : source
+    ENTITIES ||--o{ ENTITY_RELATIONS : target
+        </pre>
+    </div>
+
+    <h2>💰 Cost Tracking</h2>
+    <div class="diagram-box">
+        <pre class="mermaid">
+erDiagram
+    TASK_RUNS {
+        bigint id PK
+    }
+    COST_ESTIMATES {
+        bigint id PK
+        bigint task_run_id FK
+        decimal cost
+    }
+    API_USAGE {
+        bigint id PK
+        string service
+        decimal cost_usd
+    }
+    COST_SNAPSHOTS {
+        bigint id PK
+        date snapshot_date
+    }
+    TASK_RUNS ||--o{ COST_ESTIMATES : tracks
+        </pre>
+    </div>
+
+    <h2>🔗 All Foreign Key Relationships</h2>
+    <div class="diagram-box">
+        <pre class="mermaid">
+erDiagram
+    AGENTEVENTS }|--|| RUNS : context
+    AGENTEVENTS }|--|| TASKQUEUE : task
+    AGENTPROFILES }|--|| AGENTPROFILES : reports_to
+    AGENTSIGNALS }|--|| RUNS : task
+    BOOKMARKFOLDERITEMS }|--|| XBOOKMARKS : bookmark
+    BOOKMARKFOLDERITEMS }|--|| BOOKMARKFOLDERS : folder
+    BOOKMARKFOLDERS }|--|| BOOKMARKFOLDERS : parent
+    COSTESTIMATES }|--|| TASKRUNS : task_run
+    CROSSSIGNALS }|--|| PRIORITIES : priority
+    ENTITYRELATIONS }|--|| ENTITIES : target
+    ENTITYRELATIONS }|--|| ENTITIES : source
+    KBPROCESSINGQUEUE }|--|| XBOOKMARKS : bookmark
+    RUNS }|--|| WORKFLOWS : workflow
+    STEPS }|--|| RUNS : run
+    TASKASSIGNMENTS }|--|| RUNS : run
+    TASKASSIGNMENTS }|--|| TASKASSIGNMENTS : parent_task
+    TASKCHECKLIST }|--|| TASKQUEUE : task
+    TASKCOMMENTS }|--|| TASKQUEUE : task
+    TASKEVENTS }|--|| TASKQUEUE : task
+    TASKQUEUE }|--|| TASKQUEUE : parent
+    TASKS }|--|| RUNS : run
+    TASKS }|--|| STEPS : step
+    XBOOKMARKCATEGORIES }|--|| XBOOKMARKCATEGORIES : parent
+    XFOLDERMAPPINGS }|--|| XBOOKMARKCATEGORIES : category
+        </pre>
+    </div>
+
+    <div class="table-list">
+        <h3>📋 All Tables by Schema</h3>
+        <h4 style="color:#4CAF50">ops</h4>
+        <div class="table-grid">
+            <div class="table-item schema-ops">agent_events</div>
+            <div class="table-item schema-ops">agent_signals</div>
+            <div class="table-item schema-ops">api_usage</div>
+            <div class="table-item schema-ops">bookmark_folder_items</div>
+            <div class="table-item schema-ops">bookmark_folders</div>
+            <div class="table-item schema-ops">cost_estimates</div>
+            <div class="table-item schema-ops">cost_snapshots</div>
+            <div class="table-item schema-ops">cross_signals</div>
+            <div class="table-item schema-ops">file_claims</div>
+            <div class="table-item schema-ops">fx_rates</div>
+            <div class="table-item schema-ops">kb_processing_queue</div>
+            <div class="table-item schema-ops">live_sessions</div>
+            <div class="table-item schema-ops">oracle_founder_context</div>
+            <div class="table-item schema-ops">oracle_notes</div>
+            <div class="table-item schema-ops">priorities</div>
+            <div class="table-item schema-ops">projects</div>
+            <div class="table-item schema-ops">reactions</div>
+            <div class="table-item schema-ops">research_ideas</div>
+            <div class="table-item schema-ops">runs</div>
+            <div class="table-item schema-ops">steps</div>
+            <div class="table-item schema-ops">subscriptions</div>
+            <div class="table-item schema-ops">system_metrics</div>
+            <div class="table-item schema-ops">task_assignments</div>
+            <div class="table-item schema-ops">task_checklist</div>
+            <div class="table-item schema-ops">task_comments</div>
+            <div class="table-item schema-ops">task_events</div>
+            <div class="table-item schema-ops">task_queue</div>
+            <div class="table-item schema-ops">task_runs</div>
+            <div class="table-item schema-ops">tasks</div>
+            <div class="table-item schema-ops">telegram_messages</div>
+            <div class="table-item schema-ops">workflows</div>
+            <div class="table-item schema-ops">x_bookmark_categories</div>
+            <div class="table-item schema-ops">x_bookmarks</div>
+            <div class="table-item schema-ops">x_folder_mappings</div>
+            <div class="table-item schema-ops">zombie_events</div>
+        </div>
+        <h4 style="color:#2196F3; margin-top:15px">memory</h4>
+        <div class="table-grid">
+            <div class="table-item schema-memory">agent_profiles</div>
+            <div class="table-item schema-memory">compounds</div>
+            <div class="table-item schema-memory">daily_notes</div>
+            <div class="table-item schema-memory">entities</div>
+            <div class="table-item schema-memory">entity_relations</div>
+            <div class="table-item schema-memory">memories</div>
+            <div class="table-item schema-memory">mistakes</div>
+            <div class="table-item schema-memory">performance_reviews</div>
+        </div>
+        <h4 style="color:#FF9800; margin-top:15px">kb</h4>
+        <div class="table-grid">
+            <div class="table-item schema-kb">x_bookmarks</div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            er: { useMaxWidth: true }
+        });
+    </script>
+</body>
+</html>

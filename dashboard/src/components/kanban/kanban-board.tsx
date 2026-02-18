@@ -97,7 +97,7 @@ const COLUMNS: Array<{ title: string; status: string | string[] }> = [
 export function KanbanBoard() {
   const queryClient = useQueryClient();
   useTaskStream(); // Real-time SSE updates
-  const [projectFilter, setProjectFilter] = useState("all");
+  const [projectFilter, setProjectFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [activeColumn, setActiveColumn] = useState<string>("backlog");
   const [expandedColumns, setExpandedColumns] = useState<Record<string, boolean>>({});
@@ -141,22 +141,32 @@ export function KanbanBoard() {
   
   const filteredTasks = useMemo(() => {
     let tasksToFilter = tasks;
-    if (projectFilter !== "all") {
-      tasksToFilter = tasksToFilter.filter((t) => (t.project || "other") === projectFilter);
+    if (projectFilter.length > 0) {
+      tasksToFilter = tasksToFilter.filter((t) => projectFilter.includes(t.project || "other"));
     }
     if (agentFilter.length > 0) {
       tasksToFilter = tasksToFilter.filter(t => t.agent_id && agentFilter.includes(t.agent_id));
     }
     if (debouncedSearchQuery) {
-      tasksToFilter = tasksToFilter.filter(t => t.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
+      const query = debouncedSearchQuery.toLowerCase();
+      const queryNum = parseInt(debouncedSearchQuery, 10);
+      tasksToFilter = tasksToFilter.filter(t => 
+        t.title.toLowerCase().includes(query) || 
+        (t.id && t.id === queryNum) ||
+        (t.id && String(t.id) === debouncedSearchQuery)
+      );
     }
     return tasksToFilter;
   }, [tasks, projectFilter, agentFilter, debouncedSearchQuery]);
 
   const filteredBacklog = useMemo(() => {
-    let projectFiltered = projectFilter === 'all' ? backlogData : backlogData?.filter(fr => (fr.project || 'other') === projectFilter);
+    let projectFiltered = projectFilter.length === 0 ? backlogData : backlogData?.filter(fr => projectFilter.includes(fr.project || 'other'));
     if (debouncedSearchQuery && projectFiltered) {
-      return projectFiltered.filter(fr => fr.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
+      const query = debouncedSearchQuery.toLowerCase();
+      return projectFiltered.filter(fr => 
+        fr.title.toLowerCase().includes(query) ||
+        (fr.id && String(fr.id) === debouncedSearchQuery)
+      );
     }
     return projectFiltered;
   }, [backlogData, projectFilter, debouncedSearchQuery]);
@@ -244,17 +254,19 @@ export function KanbanBoard() {
           <div className="flex gap-2 flex-wrap items-center">
              <span className="text-xs text-muted-foreground mr-2">Projects:</span>
             <button
-              onClick={() => setProjectFilter("all")}
+              onClick={() => setProjectFilter([])}
               className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 transition-colors border ${
-                projectFilter === "all" ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-muted/50 text-muted-foreground border-border hover:border-zinc-600"
+                projectFilter.length === 0 ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-muted/50 text-muted-foreground border-border hover:border-zinc-600"
               }`}
             >
               🌐 All
             </button>
             {projects.map((p) => (
-              <button key={p.id} onClick={() => setProjectFilter(p.id)}
+              <button key={p.id} onClick={() => setProjectFilter(prev => 
+                prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id]
+              )}
                 className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 transition-colors border ${
-                  projectFilter === p.id ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-muted/50 text-muted-foreground border-border hover:border-zinc-600"
+                  projectFilter.includes(p.id) ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-muted/50 text-muted-foreground border-border hover:border-zinc-600"
                 }`}
               >
                 <span>{p.icon}</span>{p.label}
