@@ -254,10 +254,14 @@ export function KanbanBoard() {
             </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground bg-muted rounded-lg px-3 py-1.5 transition-colors"
+              className={`flex items-center gap-1.5 text-xs rounded-lg px-3 py-1.5 transition-colors ${
+                projectFilter.length > 0 || agentFilter.length > 0
+                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                  : "text-muted-foreground hover:text-foreground bg-muted"
+              }`}
             >
               <Filter className="w-3.5 h-3.5" />
-              Filter
+              Filter{(projectFilter.length > 0 || agentFilter.length > 0) && ` (${projectFilter.length + agentFilter.length})`}
             </button>
             <RefreshCountdown
               isFetching={isQueueFetching}
