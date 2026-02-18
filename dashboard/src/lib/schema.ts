@@ -613,7 +613,7 @@ export const taskQueueInOps = ops.table("task_queue", {
 	index("idx_task_queue_project").using("btree", table.project.asc().nullsLast().op("text_ops"), table.status.asc().nullsLast().op("text_ops")),
 	index("idx_task_queue_status").using("btree", table.status.asc().nullsLast().op("text_ops"), table.priority.desc().nullsFirst().op("int2_ops")),
 	check("task_queue_priority_check", sql`(priority >= 1) AND (priority <= 10)`),
-	check("task_queue_status_check", sql`status = ANY (ARRAY['queued'::text, 'assigned'::text, 'planned'::text, 'running'::text, 'review'::text, 'human_todo'::text, 'done'::text, 'failed'::text, 'cancelled'::text])`),
+	check("task_queue_status_check", sql`status = ANY (ARRAY['queued'::text, 'backlog'::text, 'planned'::text, 'assigned'::text, 'running'::text, 'review'::text, 'human_todo'::text, 'done'::text, 'failed'::text, 'cancelled'::text])`),
 ]);
 
 export const taskEventsInOps = ops.table("task_events", {
@@ -697,4 +697,12 @@ export const kbProcessingQueue = ops.table("kb_processing_queue", {
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     startedAt: timestamp('started_at', { withTimezone: true }),
     completedAt: timestamp('completed_at', { withTimezone: true }),
+});
+
+// Agent settings table — key/value store for runtime configuration
+// e.g. key='concurrency' → {"maxAgents": 6, "perModel": {"gemini": 4, "sonnet": 3, "grok": 2, "opus": 1}}
+export const agentSettingsInOps = ops.table("agent_settings", {
+	key: text().primaryKey().notNull(),
+	value: jsonb().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 });
