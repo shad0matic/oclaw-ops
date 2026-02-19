@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
+import { AgentEntity } from "@/entities/agent"
 
 interface AgentAvatarProps {
     agentId: string
@@ -12,7 +13,7 @@ interface AgentAvatarProps {
 }
 
 export function AgentAvatar({ agentId, fallbackText, className, size }: AgentAvatarProps) {
-    const [src, setSrc] = useState(agentId ? `/assets/minion-avatars/${agentId}.webp` : "/assets/minion-avatars/default.webp")
+    const [src, setSrc] = useState(AgentEntity.avatarUrl(agentId))
 
     return (
         <Avatar className={cn("border border-border", className)} style={size ? { width: size, height: size } : undefined}>

@@ -9,6 +9,7 @@ import { ChecklistProgressBadge } from "./checklist-progress-badge";
 import { ChatStatusIcon } from "@/components/ui/chat-status-icon";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { AgentEntity } from "@/entities/agent";
 
 type CommentStatus = 'unread' | 'read' | 'attention' | 'boss_read' | 'gray';
 
@@ -196,10 +197,9 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
                         : <span title="Awaiting Dispatch" className="acked-spinner"></span>
                     )}
                     <img
-                      src={`/assets/minion-avatars/${task.agent_id}.webp`}
+                      src={AgentEntity.avatarUrl(task.agent_id)}
                       alt={task.agent_name || task.agent_id}
                       className="w-3.5 h-3.5 rounded-full"
-                      onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }}
                     />
                     <span className="text-[11px] text-muted-foreground/80">{task.agent_name || task.agent_id}</span>
                   </>

@@ -25,6 +25,12 @@ export const AGENT_META: Record<string, { name: string; emoji: string; role: str
 
 const DEFAULT_META = { name: "Minion", emoji: "🤖", role: "Agent", color: "#94a3b8" }
 
+// ─── Known avatar files (sync with public/assets/minion-avatars/) ──────
+const KNOWN_AVATARS = new Set([
+  'bob', 'dave', 'echo', 'kevin', 'main', 'mel', 
+  'nefario', 'phil', 'smaug', 'stuart', 'xreader'
+])
+
 // ─── Types ──────────────────────────────────────────────────────────────
 export type AgentStatus = 'active' | 'idle' | 'error' | 'zombie'
 
@@ -131,13 +137,21 @@ export class AgentEntity {
     return AGENT_META[agentId]?.name || agentId
   }
 
-  /** Resolve avatar URL for an agent ID (client-side, no fs check) */
+  /** Resolve avatar URL for an agent ID (checks against known avatars) */
   static avatarUrl(agentId: string): string {
-    return `/assets/minion-avatars/${agentId}.webp`
+    if (KNOWN_AVATARS.has(agentId)) {
+      return `/assets/minion-avatars/${agentId}.webp`
+    }
+    return AgentEntity.defaultAvatarUrl()
   }
 
   static defaultAvatarUrl(): string {
     return `/assets/minion-avatars/default.webp`
+  }
+
+  /** Check if agent has a custom avatar */
+  static hasAvatar(agentId: string): boolean {
+    return KNOWN_AVATARS.has(agentId)
   }
 
   /** Get agent info including ID — useful for iteration */

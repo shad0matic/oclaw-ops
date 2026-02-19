@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import useSWR from 'swr'
 import { motion, useAnimation, AnimatePresence } from 'framer-motion'
 import { IsometricDetailedView } from './isometric-detailed'
+import { AgentEntity } from '@/entities/agent'
 
 // --- Types ---
 type AgentStatus = 'idle' | 'active' | 'zombie' | 'dead'
@@ -42,7 +43,7 @@ interface AgentAnimState {
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 function getAvatarUrl(agentId: string): string {
-  return `/assets/minion-avatars/${agentId}.webp`
+  return AgentEntity.avatarUrl(agentId)
 }
 
 // --- Room definitions (isometric diamond shapes) ---

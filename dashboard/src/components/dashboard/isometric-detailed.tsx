@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import { AgentEntity } from '@/entities/agent'
 
 // --- Types ---
 type AgentStatus = 'idle' | 'active' | 'zombie' | 'dead'
@@ -92,7 +93,7 @@ function getAgentPosition(roomKey: RoomKey, index: number, total: number) {
 }
 
 function getAvatarUrl(agentId: string): string {
-  return `/assets/minion-avatars/${agentId}.webp`
+  return AgentEntity.avatarUrl(agentId)
 }
 
 // --- Agent Sprite Component ---

@@ -1,4 +1,6 @@
-"use client";
+"use client"
+
+import { AgentEntity } from "@/entities/agent";
 
 import { useRef, useState, useMemo } from "react";
 import { useDrop } from "react-dnd";

@@ -1,5 +1,6 @@
 
-"use client";
+"use client"
+import { AgentEntity } from "@/entities/agent";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
