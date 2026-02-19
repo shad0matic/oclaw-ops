@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import { LayoutDashboard, Users, Activity, Menu, LogOut, ListTodo, DollarSign, FlaskConical, Settings, Sun, Moon, Bookmark, Brain } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ResearchToggle } from "@/components/overview/desktop/research-toggle"
 import {
     Sheet,
     SheetContent,
@@ -90,6 +91,9 @@ export function MobileNav() {
                             )
                         })}
                         <div className="border-t border-border pt-4 mt-4">
+                            <div className="px-3 py-2">
+                                <ResearchToggle />
+                            </div>
                             <button
                                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                                 className="flex items-center gap-3 rounded-lg p-3 w-full text-base font-medium text-foreground/80 hover:bg-muted transition-colors"

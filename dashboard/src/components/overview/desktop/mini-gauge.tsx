@@ -79,7 +79,7 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
         </text>
       </svg>
       <span className="text-[9px] text-muted-foreground -mt-1 leading-none">{label}</span>
-      {detail && <span className="text-[8px] text-muted-foreground/70 leading-none">{detail}</span>}
+      {detail && <span className="text-[8px] text-muted-foreground/70 leading-none whitespace-nowrap max-w-[60px] overflow-hidden text-ellipsis">{detail}</span>}
     </div>
   )
 }

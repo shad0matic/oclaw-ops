@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut } from "@/auth"
 import { NavLinks } from "./nav-links"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { ResearchToggle } from "@/components/overview/desktop/research-toggle"
 
 export function Sidebar({ className }: { className?: string }) {
     return (
@@ -17,6 +18,9 @@ export function Sidebar({ className }: { className?: string }) {
                 <nav className="grid gap-1 px-2">
                     <NavLinks />
                 </nav>
+            </div>
+            <div className="border-t px-4 py-3">
+                <ResearchToggle />
             </div>
             <div className="border-t p-4">
                 <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent/50 p-3">

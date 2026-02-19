@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { AgentStatusDot } from "../shared/agent-status-dot"
 import { CostDisplay } from "../shared/cost-display"
-import { ResearchToggle } from "./research-toggle"
 import { cn } from "@/lib/utils"
 import { MiniGauge } from "./mini-gauge"
 
@@ -100,8 +99,15 @@ export interface StatusBarProps {
 
 function formatUptime(seconds: number): string {
   if (seconds < 60) return `${Math.floor(seconds)}s`;
-  const hours = Math.floor(seconds / 3600)
   const mins = Math.floor((seconds % 3600) / 60)
+  const hours = Math.floor(seconds / 3600)
+  const days = Math.floor(hours / 24)
+  
+  // >48h: show days only
+  if (hours >= 48) return `${days}d`
+  // >6h: show rounded hours only
+  if (hours >= 6) return `${hours}h`
+  // <6h: show hours and minutes
   if (hours > 0) return `${hours}h ${mins}m`
   return `${mins}m`
 }
@@ -262,7 +268,7 @@ export function StatusBar({
               <MiniGauge
                 value={latestData.memPercent}
                 label="RAM"
-                detail={`${formatBytes(latestData.memUsed)}/${formatBytes(latestData.memTotal)}`}
+                detail={`${formatBytes(latestData.memUsed, 0)}/${formatBytes(latestData.memTotal, 0)}`}
                 size={44}
               />
               <Sparkline data={memHistory} lastValue={latestData.memPercent} width={100} height={20}/>
@@ -270,10 +276,6 @@ export function StatusBar({
         </div>
       )}
 
-      <div className="h-4 w-px bg-border" />
-
-      {/* Research Toggle */}
-      <ResearchToggle />
     </div>
   )
 }
