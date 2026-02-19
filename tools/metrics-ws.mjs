@@ -6,7 +6,7 @@ import { readFileSync } from 'fs';
 import { cpus } from 'os';
 
 const PORT = 3101;
-const HOST = '0.0.0.0';
+const HOST = '127.0.0.1';  // localhost only - Tailscale serve proxies external traffic
 
 const wss = new WebSocketServer({ port: PORT, host: HOST });
 
