@@ -97,7 +97,7 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
       <TooltipProvider delayDuration={100}>
         <Tooltip open={open} onOpenChange={setOpen}>
           <TooltipTrigger asChild>
-            <div onClick={() => setOpen(prev => !prev)} className="cursor-pointer flex items-center h-full">
+            <div onClick={() => setOpen(prev => !prev)} className="cursor-pointer flex items-end h-full">
               {gauge}
             </div>
           </TooltipTrigger>
