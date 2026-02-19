@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import { WebSearch } from '@openclaw/sdk';
 
 async function main() {
-  const goals = await fs.readFile('/home/shad/.openclaw/workspace/planning/goals.md', 'utf-8');
+  const goals = await fs.readFile('/home/openclaw/.openclaw/workspace/planning/goals.md', 'utf-8');
   const goalLines = goals.split('\n').filter(line => line.trim().startsWith('- '));
 
   for (const line of goalLines) {

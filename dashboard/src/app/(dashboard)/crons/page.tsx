@@ -1,5 +1,5 @@
-
 import {CronClient} from '@/components/crons/cron-client'
+import {PageHeader} from '@/components/layout/page-header'
 import {
 	Card,
 	CardContent,
@@ -10,13 +10,17 @@ import {
 
 export default function CronPage() {
 	return (
-		<div className="space-y-4">
-			<h1 className="text-2xl font-bold">Cron Jobs</h1>
+		<div className="space-y-6">
+			<PageHeader
+				title="Cron Jobs"
+				subtitle="Schedule and manage automated tasks for your agents."
+			/>
 			<Card>
 				<CardHeader>
 					<CardTitle>Job Management</CardTitle>
 					<CardDescription>
-						Monitor and manage scheduled cron jobs.
+						Create, edit, and monitor scheduled cron jobs. Jobs can run at specific times,
+						intervals, or using cron expressions.
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
