@@ -224,7 +224,7 @@ export function StatusBar({
     <div
       role="status"
       aria-live="polite"
-      className="sticky top-0 z-50 flex h-12 items-center gap-4 border-b border-border bg-card/80 px-4 text-sm backdrop-blur-sm"
+      className="sticky top-0 z-50 flex h-12 items-center gap-4 border-b border-border bg-card/80 px-4 text-sm backdrop-blur-sm overflow-hidden"
     >
       {/* WS Connection Status */}
       <div className="flex h-full w-28 items-center justify-center border-r border-border pr-4">
@@ -259,19 +259,19 @@ export function StatusBar({
 
       {/* System Resources — Gauges + Sparklines */}
       {latestData && (
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <MiniGauge value={latestData.load[0]} label="Load" size={44} type="raw" max={latestData.cores} />
-              <Sparkline data={loadHistory} lastValue={(latestData.load[0] / latestData.cores) * 100} width={100} height={20}/>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground h-full">
+            <div className="flex items-center gap-1">
+              <MiniGauge value={latestData.load[0]} label="Load" size={36} type="raw" max={latestData.cores} />
+              <Sparkline data={loadHistory} lastValue={(latestData.load[0] / latestData.cores) * 100} width={80} height={16}/>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <MiniGauge
                 value={latestData.memPercent}
                 label="RAM"
                 detail={`${formatBytes(latestData.memUsed, 0)}/${formatBytes(latestData.memTotal, 0)}`}
-                size={44}
+                size={36}
               />
-              <Sparkline data={memHistory} lastValue={latestData.memPercent} width={100} height={20}/>
+              <Sparkline data={memHistory} lastValue={latestData.memPercent} width={80} height={16}/>
             </div>
         </div>
       )}
