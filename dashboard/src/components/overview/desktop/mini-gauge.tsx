@@ -25,9 +25,9 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
   const clamped = Math.min(100, Math.max(0, percentage))
   
   // Semi-circle arc from 180° to 0° (left to right, bottom half)
-  const radius = (size - 12) / 2  // smaller radius to fit
+  const radius = (size - 8) / 2  // larger radius to wrap around text
   const cx = size / 2
-  const cy = radius + 8  // push arc down with more padding at top
+  const cy = radius + 4  // center vertically with small top padding
   const startAngle = Math.PI      // 180° (left)
   const endAngle = 0              // 0° (right)
   const sweepAngle = startAngle - (startAngle - endAngle) * (clamped / 100)

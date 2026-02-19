@@ -224,7 +224,7 @@ export function StatusBar({
     <div
       role="status"
       aria-live="polite"
-      className="sticky top-0 z-50 flex h-14 items-center gap-4 border-b border-border bg-card/80 px-4 text-sm backdrop-blur-sm"
+      className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-border bg-card/80 px-4 text-sm backdrop-blur-sm"
     >
       {/* WS Connection Status */}
       <div className="flex h-full w-28 items-center justify-center border-r border-border pr-4">
@@ -262,7 +262,7 @@ export function StatusBar({
         <div className="flex items-end gap-3 text-xs text-muted-foreground pb-0.5">
             <div className="flex items-end gap-1">
               {/* TODO: remove hardcoded 80% after tuning */}
-              <MiniGauge value={80} label="Load" size={40} />
+              <MiniGauge value={80} label="Load" size={56} />
               <Sparkline data={loadHistory} lastValue={(latestData.load[0] / latestData.cores) * 100} width={80} height={16}/>
             </div>
             <div className="flex items-end gap-1">
@@ -270,7 +270,7 @@ export function StatusBar({
               <MiniGauge
                 value={80}
                 label="RAM"
-                size={40}
+                size={56}
               />
               <Sparkline data={memHistory} lastValue={latestData.memPercent} width={80} height={16}/>
             </div>
