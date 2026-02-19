@@ -224,7 +224,7 @@ export function StatusBar({
     <div
       role="status"
       aria-live="polite"
-      className="sticky top-0 z-50 flex h-14 items-center gap-4 border-b border-border bg-card/80 px-4 text-sm backdrop-blur-sm"
+      className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-border bg-card/80 px-4 text-sm backdrop-blur-sm"
     >
       {/* WS Connection Status */}
       <div className="flex h-full w-28 items-center justify-center border-r border-border pr-4">
