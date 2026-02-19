@@ -22,7 +22,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "filename and status required" }, { status: 400 });
   }
 
-  const dirPath = '/home/shad/.openclaw/workspace/planning/feature-requests/';
+  const dirPath = '/home/openclaw/.openclaw/workspace/planning/feature-requests/';
   const filePath = path.join(dirPath, filename);
 
   try {
@@ -39,7 +39,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function GET() {
-  const dirPath = '/home/shad/.openclaw/workspace/planning/feature-requests/';
+  const dirPath = '/home/openclaw/.openclaw/workspace/planning/feature-requests/';
   const items: any[] = [];
 
   try {

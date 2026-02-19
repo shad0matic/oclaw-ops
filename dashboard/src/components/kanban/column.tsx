@@ -253,7 +253,7 @@ function DoneTreeView({
                   src={`/assets/minion-avatars/${g.agentId}.webp`}
                   alt={g.agentName}
                   className="w-4 h-4 rounded-full shrink-0"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }}
                 />
               )}
               <span className="text-xs font-medium text-foreground truncate">{g.agentName}</span>

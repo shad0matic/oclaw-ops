@@ -41,25 +41,8 @@ interface AgentAnimState {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-// Available avatar mappings (agent id -> filename)
-const AVATAR_MAP: Record<string, string> = {
-  main: 'main.webp',
-  kevin: 'kevin.webp',
-  bob: 'bob.webp',
-  nefario: 'nefario.webp',
-  phil: 'phil.webp',
-  mel: 'mel.webp',
-  dave: 'dave.webp',
-  stuart: 'stuart.webp',
-  xreader: 'xreader.webp',
-  echo: 'echo.webp',
-  smaug: 'smaug.webp',
-  spy_minion: 'spy_minion.webp',
-}
-
 function getAvatarUrl(agentId: string): string {
-  const filename = AVATAR_MAP[agentId] || 'default.webp'
-  return `/assets/minion-avatars/${filename}`
+  return `/assets/minion-avatars/${agentId}.webp`
 }
 
 // --- Room definitions (isometric diamond shapes) ---

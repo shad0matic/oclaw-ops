@@ -199,7 +199,7 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
                       src={`/assets/minion-avatars/${task.agent_id}.webp`}
                       alt={task.agent_name || task.agent_id}
                       className="w-3.5 h-3.5 rounded-full"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }}
                     />
                     <span className="text-[11px] text-muted-foreground/80">{task.agent_name || task.agent_id}</span>
                   </>

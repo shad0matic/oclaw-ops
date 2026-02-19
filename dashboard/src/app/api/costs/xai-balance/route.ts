@@ -4,10 +4,10 @@ import fs from "fs"
 import path from "path"
 
 // Path to the balance check script
-const SCRIPT_PATH = "/home/shad/.openclaw/workspace/scripts/check-xai-balance.mjs"
+const SCRIPT_PATH = "/home/openclaw/.openclaw/workspace/scripts/check-xai-balance.mjs"
 
 // Load management key from .env.local (if needed for future real API calls)
-const ENV_PATH = path.join(process.env.HOME || "/home/shad", ".openclaw", ".env.local")
+const ENV_PATH = path.join(process.env.HOME || "/home/openclaw", ".openclaw", ".env.local")
 let MANAGEMENT_KEY = ""
 if (fs.existsSync(ENV_PATH)) {
   const envContent = fs.readFileSync(ENV_PATH, "utf-8")

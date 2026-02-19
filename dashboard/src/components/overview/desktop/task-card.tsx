@@ -68,7 +68,11 @@ export function TaskCard({
           aria-label={`View ${agentName}'s profile`}
         >
           <Avatar className="h-10 w-10 border-2 border-background">
-            <AvatarImage src={`/assets/minion-avatars/${agentId}.webp`} alt={agentName} />
+            <AvatarImage 
+              src={`/assets/minion-avatars/${agentId}.webp`} 
+              alt={agentName}
+              onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }}
+            />
             <AvatarFallback className="bg-muted text-muted-foreground text-xs">
               {initials}
             </AvatarFallback>

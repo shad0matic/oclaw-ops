@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { getAgent, getAgentAvatar, getAgentName } from "@/lib/agent-names"
+import { AgentEntity } from "@/entities/agent"
 
 interface Event {
     id: number
@@ -128,7 +128,7 @@ function statusBadge(status?: string): { label: string; className: string } | nu
 
 function formatSingleEvent(event: Event): { text: string; status?: string } {
     const { event_type, detail } = event
-    const name = getAgentName(event.agent_id)
+    const name = AgentEntity.getName(event.agent_id)
     const dur = formatDuration(detail?.duration)
     const durStr = dur ? ` in ${dur}` : ""
 
@@ -215,7 +215,7 @@ function ModelChip({ model }: { model?: string }) {
 
 function CommitGroup({ events, agent_id }: { events: Event[]; agent_id: string }) {
     const [expanded, setExpanded] = useState(false)
-    const agent = getAgent(agent_id)
+    const agent = AgentEntity.getAgent(agent_id)
     const repos = [...new Set(events.map((e) => e.detail?.repo).filter(Boolean))]
     const repoStr = repos.length > 0 ? ` in ${repos.join(", ")}` : ""
 
@@ -223,7 +223,7 @@ function CommitGroup({ events, agent_id }: { events: Event[]; agent_id: string }
         <div className="border-b border-border/50 pb-4 last:border-0">
             <div className="flex items-start gap-3 text-sm">
                 <Avatar className="h-8 w-8 border border-border mt-0.5 shrink-0">
-                    <AvatarImage src={getAgentAvatar(agent_id)} />
+                    <AvatarImage src={AgentEntity.avatarUrl(agent_id)} onError={(e) => { (e.target as HTMLImageElement).src = AgentEntity.defaultAvatarUrl() }} />
                     <AvatarFallback className="bg-muted text-muted-foreground text-xs">{agent.emoji}</AvatarFallback>
                 </Avatar>
                 <div className="grid gap-1 min-w-0 flex-1">
@@ -264,7 +264,7 @@ function CommitGroup({ events, agent_id }: { events: Event[]; agent_id: string }
 
 function TaskGroup({ events, agent_id }: { events: Event[]; agent_id: string }) {
     const [expanded, setExpanded] = useState(false)
-    const agent = getAgent(agent_id)
+    const agent = AgentEntity.getAgent(agent_id)
     const startEvent = events.find((e) => e.event_type === "task_start")
     const endEvent = events.find((e) => ["task_complete", "task_fail", "task_stalled"].includes(e.event_type))
     const commits = events.filter((e) => e.event_type === "commit")
@@ -277,7 +277,7 @@ function TaskGroup({ events, agent_id }: { events: Event[]; agent_id: string }) 
         <div className="border-b border-border/50 pb-4 last:border-0">
             <div className="flex items-start gap-3 text-sm">
                 <Avatar className="h-8 w-8 border border-border mt-0.5 shrink-0">
-                    <AvatarImage src={getAgentAvatar(agent_id)} />
+                    <AvatarImage src={AgentEntity.avatarUrl(agent_id)} onError={(e) => { (e.target as HTMLImageElement).src = AgentEntity.defaultAvatarUrl() }} />
                     <AvatarFallback className="bg-muted text-muted-foreground text-xs">{agent.emoji}</AvatarFallback>
                 </Avatar>
                 <div className="grid gap-1 min-w-0 flex-1">
@@ -330,7 +330,7 @@ function TaskGroup({ events, agent_id }: { events: Event[]; agent_id: string }) 
 }
 
 function SingleEvent({ event }: { event: Event }) {
-    const agent = getAgent(event.agent_id)
+    const agent = AgentEntity.getAgent(event.agent_id)
     const { text, status } = formatSingleEvent(event)
     const badge = statusBadge(status)
     const taskId = event.task_id || event.detail?.task_id
@@ -339,7 +339,7 @@ function SingleEvent({ event }: { event: Event }) {
     return (
         <div className="flex items-start gap-3 text-sm border-b border-border/50 pb-4 last:border-0">
             <Avatar className="h-8 w-8 border border-border mt-0.5 shrink-0">
-                <AvatarImage src={getAgentAvatar(event.agent_id)} />
+                <AvatarImage src={AgentEntity.avatarUrl(event.agent_id)} onError={(e) => { (e.target as HTMLImageElement).src = AgentEntity.defaultAvatarUrl() }} />
                 <AvatarFallback className="bg-muted text-muted-foreground text-xs">{agent.emoji}</AvatarFallback>
             </Avatar>
             <div className="grid gap-1 min-w-0">

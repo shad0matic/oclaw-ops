@@ -4,7 +4,7 @@ import { promisify } from "util"
 
 const execAsync = promisify(exec)
 
-const SCRIPT = "/home/shad/.openclaw/workspace/scripts/memory-integrity-check.mjs"
+const SCRIPT = "/home/openclaw/.openclaw/workspace/scripts/memory-integrity-check.mjs"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const args = quick ? "--quick" : ""
     const { stdout, stderr } = await execAsync(`node ${SCRIPT} ${args}`, {
       timeout: 30000,
-      env: { ...process.env, WORKSPACE: "/home/shad/.openclaw/workspace" },
+      env: { ...process.env, WORKSPACE: "/home/openclaw/.openclaw/workspace" },
     })
 
     if (stderr) {
@@ -34,15 +34,15 @@ export async function GET(request: Request) {
 // POST triggers a sync + recheck
 export async function POST() {
   try {
-    const SYNC = "/home/shad/.openclaw/workspace/scripts/memory-sync.mjs"
+    const SYNC = "/home/openclaw/.openclaw/workspace/scripts/memory-sync.mjs"
     await execAsync(`node ${SYNC}`, {
       timeout: 120000,
-      env: { ...process.env, WORKSPACE: "/home/shad/.openclaw/workspace" },
+      env: { ...process.env, WORKSPACE: "/home/openclaw/.openclaw/workspace" },
     })
 
     const { stdout } = await execAsync(`node ${SCRIPT}`, {
       timeout: 30000,
-      env: { ...process.env, WORKSPACE: "/home/shad/.openclaw/workspace" },
+      env: { ...process.env, WORKSPACE: "/home/openclaw/.openclaw/workspace" },
     })
 
     const report = JSON.parse(stdout)

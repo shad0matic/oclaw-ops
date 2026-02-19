@@ -9,17 +9,21 @@
  */
 
 // ─── Static metadata (not stored in DB) ────────────────────────────────
-export const AGENT_META: Record<string, { emoji: string; role: string; color: string }> = {
-  main:    { emoji: "🍌", role: "Lead",        color: "#facc15" }, // yellow
-  bob:     { emoji: "🎨", role: "UI/Frontend",  color: "#3b82f6" }, // blue
-  nefario: { emoji: "🔬", role: "Research",     color: "#a855f7" }, // purple
-  xreader: { emoji: "📰", role: "X/Twitter",    color: "#f97316" }, // orange
-  stuart:  { emoji: "🔒", role: "DB/Schema",    color: "#6b7280" }, // gray
-  mel:     { emoji: "🚔", role: "Security",     color: "#ef4444" }, // red
-  dave:    { emoji: "💰", role: "Cost Watch",   color: "#22c55e" }, // green
+export const AGENT_META: Record<string, { name: string; emoji: string; role: string; color: string }> = {
+  main:    { name: "Kevin",       emoji: "🍌", role: "Lead",        color: "#facc15" }, // yellow
+  bob:     { name: "Bob",         emoji: "🎨", role: "UI/Frontend", color: "#3b82f6" }, // blue
+  nefario: { name: "Dr. Nefario", emoji: "🔬", role: "Research",    color: "#a855f7" }, // purple
+  xreader: { name: "X Reader",    emoji: "📰", role: "X/Twitter",   color: "#f97316" }, // orange
+  stuart:  { name: "Stuart",      emoji: "🔒", role: "DB/Schema",   color: "#6b7280" }, // gray
+  mel:     { name: "Mel",         emoji: "🚔", role: "Security",    color: "#ef4444" }, // red
+  dave:    { name: "Dave",        emoji: "💰", role: "Cost Watch",  color: "#22c55e" }, // green
+  oracle:  { name: "Oracle",      emoji: "🔮", role: "Analysis",    color: "#8b5cf6" }, // violet
+  phil:    { name: "Phil",        emoji: "🎯", role: "QA",          color: "#06b6d4" }, // cyan
+  echo:    { name: "Echo",        emoji: "🎙️", role: "Voice",       color: "#ec4899" }, // pink
+  smaug:   { name: "Smaug",       emoji: "🐉", role: "Treasury",    color: "#f59e0b" }, // amber
 }
 
-const DEFAULT_META = { emoji: "🤖", role: "Agent", color: "#94a3b8" }
+const DEFAULT_META = { name: "Minion", emoji: "🤖", role: "Agent", color: "#94a3b8" }
 
 // ─── Types ──────────────────────────────────────────────────────────────
 export type AgentStatus = 'active' | 'idle' | 'error' | 'zombie'
@@ -118,8 +122,13 @@ export class AgentEntity {
   // ─── Static helpers ─────────────────────────────────────────────────
 
   /** Get metadata for an agent ID (even if not in DB) */
-  static getMeta(agentId: string) {
-    return AGENT_META[agentId] || DEFAULT_META
+  static getMeta(agentId: string): typeof DEFAULT_META {
+    return AGENT_META[agentId] || { ...DEFAULT_META, name: agentId }
+  }
+
+  /** Get display name for an agent ID */
+  static getName(agentId: string): string {
+    return AGENT_META[agentId]?.name || agentId
   }
 
   /** Resolve avatar URL for an agent ID (client-side, no fs check) */
@@ -129,6 +138,12 @@ export class AgentEntity {
 
   static defaultAvatarUrl(): string {
     return `/assets/minion-avatars/default.webp`
+  }
+
+  /** Get agent info including ID — useful for iteration */
+  static getAgent(agentId: string): { id: string; name: string; emoji: string; role: string; color: string } {
+    const meta = AgentEntity.getMeta(agentId)
+    return { id: agentId, ...meta }
   }
 
   /** Create from API response row */

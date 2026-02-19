@@ -70,7 +70,7 @@ export function AvatarLibrary({ refreshKey = 0, onDelete }: { refreshKey?: numbe
                         {avatars.map((avatar) => (
                             <div key={avatar.name} className="group flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors relative">
                                 <Avatar className="h-16 w-16 border border-border">
-                                    <AvatarImage src={`/assets/minion-avatars/${avatar.name}`} />
+                                    <AvatarImage src={`/assets/minion-avatars/${avatar.name}`} onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }} />
                                     <AvatarFallback className="text-xs">{avatar.name.substring(0, 3)}</AvatarFallback>
                                 </Avatar>
                                 <div className="text-xs text-muted-foreground text-center truncate w-full">{avatar.name}</div>

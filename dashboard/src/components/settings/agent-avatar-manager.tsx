@@ -93,6 +93,7 @@ export function AgentAvatarManager({ refreshKey = 0 }: { refreshKey?: number }) 
                                 <Avatar className="h-10 w-10 border border-border">
                                     <AvatarImage
                                         src={`/assets/minion-avatars/${currentAvatar(getAgentId(agent))}?v=${refreshKey}`}
+                                        onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }}
                                     />
                                     <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>

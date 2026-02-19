@@ -13,7 +13,7 @@ import Link from "next/link"
 import { AgentActions } from "@/components/agents/agent-actions"
 import { AgentDescriptionEditor } from "@/components/agents/agent-description-editor"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { getAgentName } from "@/lib/agent-names"
+import { AgentEntity } from "@/entities/agent"
 
 export default async function AgentDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth()

@@ -21,7 +21,7 @@ const getPool = (() => {
   return () => {
     if (!instance) {
       instance = new Pool({
-        user: 'shad',
+        user: 'openclaw',
         database: 'openclaw_db',
         host: '/var/run/postgresql',
         max: 20,

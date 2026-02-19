@@ -1,13 +1,20 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error('GEMINI_API_KEY is not set');
+// Lazy initialization to avoid build-time errors
+let genAI: GoogleGenerativeAI | null = null;
+let model: ReturnType<GoogleGenerativeAI['getGenerativeModel']> | null = null;
+
+function getModel() {
+  if (!model) {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not set');
+    }
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  }
+  return model;
 }
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
 
 const promptTemplate = `
 Analyze this X/Twitter post and extract:
@@ -37,7 +44,7 @@ Return the output as a JSON object with the following structure:
 export async function extractText(text: string, author: string) {
   const prompt = promptTemplate.replace('{text}', text).replace('{author}', author);
 
-  const result = await model.generateContent(prompt);
+  const result = await getModel().generateContent(prompt);
   const response = await result.response;
   const jsonText = response.text().replace('```json', '').replace('```', '').trim();
   

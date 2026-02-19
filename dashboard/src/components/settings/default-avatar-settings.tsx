@@ -34,7 +34,7 @@ export function DefaultAvatarSettings() {
             <CardContent>
                 <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12 border border-border">
-                        <AvatarImage src={`/assets/minion-avatars/${current}`} />
+                        <AvatarImage src={`/assets/minion-avatars/${current}`} onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }} />
                     </Avatar>
                     <div className="text-sm text-muted-foreground">
                         This avatar is used for agents without a custom one.

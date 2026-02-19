@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { NextRequest, NextResponse } from 'next/server';
 
-const STATUS_FILE = '/home/shad/.openclaw/workspace/research_agent_status.json';
+const STATUS_FILE = '/home/openclaw/.openclaw/workspace/research_agent_status.json';
 
 export async function POST(req: NextRequest) {
   const { status } = await req.json();

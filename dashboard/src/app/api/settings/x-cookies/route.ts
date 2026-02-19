@@ -5,8 +5,8 @@ import { execSync } from 'child_process';
 
 export const dynamic = "force-dynamic";
 
-const configPath = '/home/shad/.openclaw/phil-config.json';
-const birdCliPath = '/home/shad/.local/share/pnpm/bird';
+const configPath = '/home/openclaw/.openclaw/phil-config.json';
+const birdCliPath = '/home/openclaw/.local/share/pnpm/bird';
 
 const cookiesSchema = z.object({
   auth_token: z.string(),

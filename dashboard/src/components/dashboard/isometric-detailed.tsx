@@ -92,14 +92,7 @@ function getAgentPosition(roomKey: RoomKey, index: number, total: number) {
 }
 
 function getAvatarUrl(agentId: string): string {
-  const AVATAR_MAP: Record<string, string> = {
-    main: 'main.webp', kevin: 'kevin.webp', bob: 'bob.webp',
-    nefario: 'nefario.webp', phil: 'phil.webp', mel: 'mel.webp',
-    dave: 'dave.webp', stuart: 'stuart.webp', xreader: 'xreader.webp',
-    echo: 'echo.webp', smaug: 'smaug.webp',
-  }
-  const filename = AVATAR_MAP[agentId] || 'default.webp'
-  return `/assets/minion-avatars/${filename}`
+  return `/assets/minion-avatars/${agentId}.webp`
 }
 
 // --- Agent Sprite Component ---
@@ -166,6 +159,7 @@ function AgentSprite({
             alt={agent.name}
             className="w-full h-full object-cover"
             style={{ filter: isZombie ? 'saturate(0.3) brightness(0.6)' : 'none' }}
+            onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }}
           />
         </div>
         
