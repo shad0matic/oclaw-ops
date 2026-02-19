@@ -261,7 +261,7 @@ export function StatusBar({
       {latestData && (
         <div className="flex items-center gap-3 text-xs text-muted-foreground h-full">
             <div className="flex items-center gap-1">
-              <MiniGauge value={latestData.load[0]} label="Load" size={36} type="raw" max={latestData.cores} />
+              <MiniGauge value={latestData.load[0]} label="Load" size={40} type="raw" max={latestData.cores} />
               <Sparkline data={loadHistory} lastValue={(latestData.load[0] / latestData.cores) * 100} width={80} height={16}/>
             </div>
             <div className="flex items-center gap-1">
@@ -269,7 +269,7 @@ export function StatusBar({
                 value={latestData.memPercent}
                 label="RAM"
                 detail={`${formatBytes(latestData.memUsed, 0)}/${formatBytes(latestData.memTotal, 0)}`}
-                size={36}
+                size={40}
               />
               <Sparkline data={memHistory} lastValue={latestData.memPercent} width={80} height={16}/>
             </div>
