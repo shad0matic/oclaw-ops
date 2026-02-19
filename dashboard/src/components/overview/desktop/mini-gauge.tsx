@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import {
   Tooltip,
@@ -89,12 +90,16 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
     </div>
   )
 
+  const [open, setOpen] = useState(false)
+
   if (detail) {
     return (
       <TooltipProvider delayDuration={100}>
-        <Tooltip>
+        <Tooltip open={open} onOpenChange={setOpen}>
           <TooltipTrigger asChild>
-            {gauge}
+            <div onClick={() => setOpen(prev => !prev)} className="cursor-pointer">
+              {gauge}
+            </div>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">
             {detail}
