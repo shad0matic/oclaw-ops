@@ -1,4 +1,5 @@
 "use client"
+import { AgentEntity } from "@/entities/agent"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AgentStatusDot } from "../shared/agent-status-dot"
@@ -79,7 +80,7 @@ export function TeamStrip({ agents, onAgentClick }: TeamStripProps) {
                     agent.status === 'zombie' && "ring-red-500 motion-safe:animate-pulse"
                   )}
                 >
-                  <AvatarImage src={`/assets/minion-avatars/${agent.id}.webp`} alt={agent.name} onError={(e) => { (e.target as HTMLImageElement).src = "/assets/minion-avatars/default.webp" }} />
+                  <AvatarImage src={AgentEntity.avatarUrl(agent.id)} alt={agent.name} onError={(e) => { (e.target as HTMLImageElement).src = "/assets/minion-avatars/default.webp" }} />
                   <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                     {initials}
                   </AvatarFallback>

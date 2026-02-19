@@ -1,4 +1,5 @@
 "use client"
+import { AgentEntity } from "@/entities/agent"
 
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -69,7 +70,7 @@ export function TaskCard({
         >
           <Avatar className="h-10 w-10 border-2 border-background">
             <AvatarImage 
-              src={`/assets/minion-avatars/${agentId}.webp`} 
+              src={AgentEntity.avatarUrl(agentId)} 
               alt={agentName}
               onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }}
             />

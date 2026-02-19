@@ -1,4 +1,5 @@
 "use client"
+import { AgentEntity } from "@/entities/agent"
 
 import { useEffect } from "react"
 import Link from "next/link"
@@ -63,7 +64,7 @@ export function AgentBottomSheet({ agent, onClose }: AgentBottomSheetProps) {
           <div className="flex items-center gap-4 mb-4">
             <div className="relative">
               <Avatar className="h-16 w-16 ring-2 ring-border">
-                <AvatarImage src={`/assets/minion-avatars/${agent.id}.webp`} alt={agent.name} onError={(e) => { (e.target as HTMLImageElement).src = "/assets/minion-avatars/default.webp" }} />
+                <AvatarImage src={AgentEntity.avatarUrl(agent.id)} alt={agent.name} onError={(e) => { (e.target as HTMLImageElement).src = "/assets/minion-avatars/default.webp" }} />
                 <AvatarFallback className="bg-muted text-muted-foreground">
                   {initials}
                 </AvatarFallback>

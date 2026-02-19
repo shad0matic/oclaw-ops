@@ -252,7 +252,7 @@ function DoneTreeView({
               }
               {g.agentId && (
                 <img
-                  src={`/assets/minion-avatars/${g.agentId}.webp`}
+                  src={AgentEntity.avatarUrl(g.agentId)}
                   alt={g.agentName}
                   className="w-4 h-4 rounded-full shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }}

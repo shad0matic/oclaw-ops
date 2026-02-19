@@ -308,7 +308,7 @@ export function KanbanBoard() {
                   agentFilter.includes(a.id) ? "border-amber-500/30" : "border-transparent"
                 }`}
               >
-                <img src={`/assets/minion-avatars/${a.id}.webp`} alt={a.name} className="w-6 h-6 rounded-full" onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }} />
+                <img src={AgentEntity.avatarUrl(a.id)} alt={a.name} className="w-6 h-6 rounded-full" onError={(e) => { (e.target as HTMLImageElement).src = '/assets/minion-avatars/default.webp' }} />
               </button>
             ))}
             {(projectFilter.length > 0 || agentFilter.length > 0) && (

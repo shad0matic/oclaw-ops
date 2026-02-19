@@ -1,4 +1,5 @@
 "use client"
+import { AgentEntity } from "@/entities/agent"
 
 import { useMemo, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -131,7 +132,7 @@ function AgentNode({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
         )}
 
         <Avatar className="h-8 w-8 shrink-0">
-          <AvatarImage src={`/assets/minion-avatars/${agent.id}.webp`} alt={agent.name}
+          <AvatarImage src={AgentEntity.avatarUrl(agent.id)} alt={agent.name}
             onError={(e) => { (e.target as HTMLImageElement).src = "/assets/minion-avatars/default.webp" }} />
           <AvatarFallback>{agent.name.slice(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>

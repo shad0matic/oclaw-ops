@@ -1,4 +1,5 @@
 "use client"
+import { AgentEntity } from "@/entities/agent"
 
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -75,7 +76,7 @@ export function AgentCard({
     >
       <div className="flex items-start gap-3">
         <Avatar className="h-10 w-10 shrink-0">
-          <AvatarImage src={`/assets/minion-avatars/${id}.webp`} alt={name} onError={(e) => { (e.target as HTMLImageElement).src = "/assets/minion-avatars/default.webp" }} />
+          <AvatarImage src={AgentEntity.avatarUrl(id)} alt={name} onError={(e) => { (e.target as HTMLImageElement).src = "/assets/minion-avatars/default.webp" }} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
 
