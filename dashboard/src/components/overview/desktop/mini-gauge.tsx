@@ -25,9 +25,9 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
   const clamped = Math.min(100, Math.max(0, percentage))
   
   // Semi-circle arc from 180° to 0° (left to right, bottom half)
-  const radius = (size - 6) / 2
+  const radius = (size - 10) / 2  // smaller radius to fit
   const cx = size / 2
-  const cy = size / 2 + 2
+  const cy = radius + 4  // push arc down so it's fully visible
   const startAngle = Math.PI      // 180° (left)
   const endAngle = 0              // 0° (right)
   const sweepAngle = startAngle - (startAngle - endAngle) * (clamped / 100)
@@ -56,7 +56,7 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
 
   const gauge = (
     <div className={cn("flex flex-col items-center justify-center h-full", className)}>
-      <svg width={size} height={size / 2 + 8} viewBox={`0 0 ${size} ${size / 2 + 8}`}>
+      <svg width={size} height={size / 2 + 4} viewBox={`0 0 ${size} ${size / 2 + 4}`}>
         {/* Background track */}
         <path
           d={bgPath}
