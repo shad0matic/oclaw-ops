@@ -3,7 +3,7 @@
 # Use this instead of raw `next build && systemctl restart`
 set -e
 
-DASH_DIR="/home/shad/projects/oclaw-ops/dashboard"
+DASH_DIR="/home/openclaw/projects/oclaw-ops/dashboard"
 cd "$DASH_DIR"
 
 echo "Stopping dashboard..."

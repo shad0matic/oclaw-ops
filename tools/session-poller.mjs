@@ -11,13 +11,13 @@ import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const pg = require('/home/shad/projects/oclaw-ops/dashboard/node_modules/pg');
+const pg = require('/home/openclaw/projects/oclaw-ops/dashboard/node_modules/pg');
 
-const AGENTS_DIR = '/home/shad/.openclaw/agents';
+const AGENTS_DIR = '/home/openclaw/.openclaw/agents';
 const ACTIVE_MINUTES = 5; // consider sessions active if updated in last 15 min
 
 const pool = new pg.Pool({
-  connectionString: 'postgresql://shad@localhost:5432/openclaw_db?host=/var/run/postgresql',
+  connectionString: 'postgresql://openclaw@localhost:5432/openclaw_db?host=/var/run/postgresql',
 });
 
 async function ensureTable() {

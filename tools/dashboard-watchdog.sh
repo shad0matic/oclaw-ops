@@ -3,7 +3,7 @@
 # Run via crontab every minute
 
 LOCK="/tmp/dashboard-watchdog.lock"
-DASH_DIR="/home/shad/projects/oclaw-ops/dashboard"
+DASH_DIR="/home/openclaw/projects/oclaw-ops/dashboard"
 
 # Prevent concurrent runs
 if [ -f "$LOCK" ]; then

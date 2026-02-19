@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-cd /home/shad/projects/oclaw-ops/dashboard
+cd /home/openclaw/projects/oclaw-ops/dashboard
 
 echo "🔨 Rebuilding dashboard..."
 npx next build 2>&1
@@ -10,6 +10,6 @@ systemctl --user restart oclaw-dashboard
 sleep 10
 
 echo "🔍 Running smoke test..."
-bash /home/shad/projects/oclaw-ops/tools/smoke-test.sh
+bash /home/openclaw/projects/oclaw-ops/tools/smoke-test.sh
 
 echo "✅ Nightly build complete"

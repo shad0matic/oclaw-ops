@@ -14,7 +14,7 @@
 
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const pg = require('/home/shad/projects/oclaw-ops/dashboard/node_modules/pg');
+const pg = require('/home/openclaw/projects/oclaw-ops/dashboard/node_modules/pg');
 const { Pool } = pg;
 
 const pool = new Pool({

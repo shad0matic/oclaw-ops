@@ -139,6 +139,22 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: {
             />
           </div>
 
+          {/* Spec Link */}
+          {isDbTask && (item as QueueTask).spec_url && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Spec</label>
+              <a 
+                href={(item as QueueTask).spec_url!} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-blue-500 hover:text-blue-400 hover:underline"
+              >
+                <FileText className="h-4 w-4" />
+                View spec on GitHub
+              </a>
+            </div>
+          )}
+
           {/* Phase Progress */}
           {isDbTask && (item as QueueTask).progress?.total && (item as QueueTask).progress!.total! > 0 && (
             <div className="space-y-2">

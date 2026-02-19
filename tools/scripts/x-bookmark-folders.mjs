@@ -31,7 +31,7 @@ import os from 'os';
 const { Pool } = pg;
 
 // Config path for Phil's X cookies
-const philConfigPath = '/home/shad/.openclaw/phil-config.json';
+const philConfigPath = '/home/openclaw/.openclaw/phil-config.json';
 
 // Parse CLI args
 const args = process.argv.slice(2);
