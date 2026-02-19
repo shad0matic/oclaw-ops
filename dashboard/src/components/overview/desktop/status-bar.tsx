@@ -261,12 +261,14 @@ export function StatusBar({
       {latestData && (
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-1 h-10">
-              <MiniGauge value={latestData.load[0]} label="Load" size={40} type="raw" max={latestData.cores} />
+              {/* TODO: remove hardcoded 80% after tuning */}
+              <MiniGauge value={80} label="Load" size={40} />
               <Sparkline data={loadHistory} lastValue={(latestData.load[0] / latestData.cores) * 100} width={80} height={16}/>
             </div>
             <div className="flex items-center gap-1 h-10">
+              {/* TODO: remove hardcoded 80% after tuning */}
               <MiniGauge
-                value={latestData.memPercent}
+                value={80}
                 label="RAM"
                 size={40}
               />
