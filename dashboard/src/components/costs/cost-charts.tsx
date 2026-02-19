@@ -135,7 +135,7 @@ export function CostByAgentChart({ data }: CostByAgentProps) {
                         <XAxis type="number" tickFormatter={(v) => `$${v.toFixed(0)}`} fontSize={10} />
                         <YAxis type="category" dataKey="name" width={60} fontSize={10} />
                         <Tooltip
-                            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Cost']}
+                            formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Cost']}
                             contentStyle={{ 
                                 backgroundColor: 'hsl(var(--popover))', 
                                 border: '1px solid hsl(var(--border))',
@@ -207,7 +207,7 @@ export function DailyCostTrendChart({ data }: DailyCostTrendProps) {
                             width={50}
                         />
                         <Tooltip
-                            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Cost']}
+                            formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Cost']}
                             contentStyle={{ 
                                 backgroundColor: 'hsl(var(--popover))', 
                                 border: '1px solid hsl(var(--border))',
