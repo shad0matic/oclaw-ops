@@ -54,9 +54,12 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
     ? "stroke-orange-500"
     : "stroke-green-500"
 
+  // Calculate exact SVG dimensions to prevent clipping
+  const svgHeight = cy + 4  // cy is the bottom of the arc, add small margin
+  
   const gauge = (
-    <div className={cn("flex flex-col items-center justify-center h-full", className)}>
-      <svg width={size} height={size / 2 + 12} viewBox={`0 0 ${size} ${size / 2 + 12}`}>
+    <div className={cn("flex flex-col items-center", className)}>
+      <svg width={size} height={svgHeight} viewBox={`0 0 ${size} ${svgHeight}`}>
         {/* Background track */}
         <path
           d={bgPath}
@@ -97,7 +100,7 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
       <TooltipProvider delayDuration={100}>
         <Tooltip open={open} onOpenChange={setOpen}>
           <TooltipTrigger asChild>
-            <div onClick={() => setOpen(prev => !prev)} className="cursor-pointer flex items-end h-full">
+            <div onClick={() => setOpen(prev => !prev)} className="cursor-pointer">
               {gauge}
             </div>
           </TooltipTrigger>
