@@ -1,4 +1,4 @@
-# Refactor Hardcoded Paths to Env Vars
+# Refactor Hardcoded Paths — Self-Locating Scripts
 
 **Status:** Draft  
 **Author:** Kevin 🍌  
@@ -17,37 +17,47 @@ Scripts throughout the workspace have hardcoded `/home/openclaw` paths, making t
 
 ## Solution
 
-Replace hardcoded paths with a combination of:
-1. **Self-locating scripts** — derive paths from script location
-2. **`$HOME` variable** — for user-relative paths
-3. **Optional `OPENCLAW_HOME`** — override if non-standard location
+Replace hardcoded paths with **self-locating scripts + `$HOME`**:
+1. Scripts derive paths from their own location
+2. Use `$HOME` for user-relative paths
+3. No env vars to manage, no config files to maintain
 
 ---
 
-## Pattern
+## Patterns
 
-### For bash scripts:
+### Bash scripts:
 ```bash
 #!/bin/bash
-# Self-locate
+# Self-locate — script knows where it lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
-OPENCLAW_DIR="${OPENCLAW_HOME:-$HOME/.openclaw}"
+OPENCLAW_DIR="$HOME/.openclaw"
 
 # Derived paths
 BACKUP_DIR="$HOME/backups/openclaw"
 PROJECTS_DIR="$HOME/projects"
 ```
 
-### For Node.js scripts:
+### Node.js (ESM):
 ```javascript
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { homedir } from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const WORKSPACE_DIR = dirname(__dirname);
-const OPENCLAW_DIR = process.env.OPENCLAW_HOME || join(process.env.HOME, '.openclaw');
+const OPENCLAW_DIR = join(homedir(), '.openclaw');
+```
+
+### Node.js (CommonJS):
+```javascript
+const { join } = require('path');
+const { homedir } = require('os');
+
+const WORKSPACE_DIR = join(__dirname, '..');
+const OPENCLAW_DIR = join(homedir(), '.openclaw');
 ```
 
 ---
@@ -55,7 +65,6 @@ const OPENCLAW_DIR = process.env.OPENCLAW_HOME || join(process.env.HOME, '.openc
 ## Files to Update
 
 ### Workspace scripts (`~/.openclaw/workspace/scripts/`)
-- [x] task-ack-watcher.sh (already fixed)
 - [ ] cost-estimator.mjs
 - [ ] spec-generator.mjs
 - [ ] task-ack-loop.sh
@@ -80,18 +89,15 @@ const OPENCLAW_DIR = process.env.OPENCLAW_HOME || join(process.env.HOME, '.openc
 ## Acceptance Criteria
 
 - [ ] No hardcoded `/home/<user>` paths in any script
+- [ ] Scripts use self-location (`SCRIPT_DIR`) or `$HOME`
 - [ ] Scripts work regardless of username
-- [ ] `OPENCLAW_HOME` env var optionally overrides default location
 - [ ] All scripts tested after refactor
 
 ---
 
-## Testing
+## Benefits
 
-```bash
-# Verify no hardcoded paths remain
-grep -r "/home/openclaw" ~/.openclaw/workspace/scripts/ 
-grep -r "/home/openclaw" ~/projects/oclaw-ops/tools/
-
-# Should return empty or only comments explaining the pattern
-```
+- **Zero configuration** — no env vars to set up
+- **Portable** — works for any user on any machine
+- **Resilient** — scripts always know where they are
+- **Simple** — standard Unix patterns, easy to understand
