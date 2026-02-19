@@ -1,11 +1,17 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface MiniGaugeProps {
   value: number       // 0-100 for percentage, raw value otherwise
   label: string       // "CPU" or "RAM"
-  detail?: string     // e.g. "3.2/22GB"
+  detail?: string     // e.g. "18GB/22GB" — shown on hover
   size?: number       // diameter in px
   className?: string
   type?: 'percentage' | 'raw'
@@ -16,6 +22,7 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
   const displayValue = type === 'percentage' ? `${Math.round(value)}%` : value.toFixed(2)
   const percentage = type === 'percentage' ? value : (value / max) * 100
   const clamped = Math.min(100, Math.max(0, percentage))
+  
   // Semi-circle arc from 180° to 0° (left to right, bottom half)
   const radius = (size - 6) / 2
   const cx = size / 2
@@ -46,7 +53,7 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
     ? "stroke-orange-500"
     : "stroke-green-500"
 
-  return (
+  const gauge = (
     <div className={cn("flex flex-col items-center", className)}>
       <svg width={size} height={size / 2 + 8} viewBox={`0 0 ${size} ${size / 2 + 8}`}>
         {/* Background track */}
@@ -79,7 +86,23 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
         </text>
       </svg>
       <span className="text-[9px] text-muted-foreground -mt-1 leading-none">{label}</span>
-      {detail && <span className="text-[8px] text-muted-foreground/70 leading-none whitespace-nowrap max-w-[60px] overflow-hidden text-ellipsis">{detail}</span>}
     </div>
   )
+
+  if (detail) {
+    return (
+      <TooltipProvider delayDuration={100}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {gauge}
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">
+            {detail}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
+
+  return gauge
 }
