@@ -268,7 +268,6 @@ export function StatusBar({
               <MiniGauge
                 value={latestData.memPercent}
                 label="RAM"
-                detail={`${formatBytes(latestData.memUsed, 0)}/${formatBytes(latestData.memTotal, 0)}`}
                 size={40}
               />
               <Sparkline data={memHistory} lastValue={latestData.memPercent} width={80} height={16}/>
