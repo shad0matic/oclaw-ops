@@ -55,7 +55,7 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
     : "stroke-green-500"
 
   const gauge = (
-    <div className={cn("flex flex-col items-center", className)}>
+    <div className={cn("flex flex-col items-center justify-center h-full", className)}>
       <svg width={size} height={size / 2 + 8} viewBox={`0 0 ${size} ${size / 2 + 8}`}>
         {/* Background track */}
         <path
@@ -97,7 +97,7 @@ export function MiniGauge({ value, label, detail, size = 48, className, type = '
       <TooltipProvider delayDuration={100}>
         <Tooltip open={open} onOpenChange={setOpen}>
           <TooltipTrigger asChild>
-            <div onClick={() => setOpen(prev => !prev)} className="cursor-pointer">
+            <div onClick={() => setOpen(prev => !prev)} className="cursor-pointer flex items-center h-full">
               {gauge}
             </div>
           </TooltipTrigger>
