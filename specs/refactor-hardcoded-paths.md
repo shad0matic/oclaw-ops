@@ -1,8 +1,9 @@
 # Refactor Hardcoded Paths — Self-Locating Scripts
 
-**Status:** Draft  
+**Status:** Done  
 **Author:** Kevin 🍌  
 **Date:** 2026-02-19  
+**Completed:** 2026-02-20 by Bob  
 
 ---
 
@@ -65,33 +66,35 @@ const OPENCLAW_DIR = join(homedir(), '.openclaw');
 ## Files to Update
 
 ### Workspace scripts (`~/.openclaw/workspace/scripts/`)
-- [ ] cost-estimator.mjs
-- [ ] spec-generator.mjs
-- [ ] task-ack-loop.sh
-- [ ] generate-db-schema.sh
-- [ ] memory-rotate.sh
-- [ ] generate-db-schema-html.sh
-- [ ] kanban-watcher.mjs
-- [ ] backup-openclaw.sh
-- [ ] smaug-watchdog.sh
+- [x] cost-estimator.mjs
+- [x] spec-generator.mjs
+- [x] task-ack-loop.sh
+- [x] generate-db-schema.sh
+- [x] memory-rotate.sh
+- [x] generate-db-schema-html.sh
+- [x] kanban-watcher.mjs
+- [x] backup-openclaw.sh
+- [x] smaug-watchdog.sh
+- [x] smaug-fetch-bookmarks.mjs (additional)
+- [x] task-ack-watcher.sh (additional)
 
 ### oclaw-ops tools (`~/projects/oclaw-ops/tools/`)
-- [ ] session-poller.mjs
-- [ ] spawn-wrapper.mjs
-- [ ] dashboard-deploy.sh
-- [ ] dashboard-watchdog.sh
-- [ ] nightly-build.sh
-- [ ] scripts/media-watcher.sh
-- [ ] scripts/x-bookmark-folders.mjs
+- [x] session-poller.mjs
+- [x] spawn-wrapper.mjs
+- [x] dashboard-deploy.sh
+- [x] dashboard-watchdog.sh
+- [x] nightly-build.sh
+- [x] scripts/media-watcher.sh
+- [x] scripts/x-bookmark-folders.mjs
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] No hardcoded `/home/<user>` paths in any script
-- [ ] Scripts use self-location (`SCRIPT_DIR`) or `$HOME`
-- [ ] Scripts work regardless of username
-- [ ] All scripts tested after refactor
+- [x] No hardcoded `/home/<user>` paths in any script
+- [x] Scripts use self-location (`SCRIPT_DIR`) or `$HOME`
+- [x] Scripts work regardless of username
+- [x] All scripts tested after refactor (syntax checks passed, dashboard build succeeded)
 
 ---
 
