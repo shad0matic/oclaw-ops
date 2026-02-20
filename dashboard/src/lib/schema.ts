@@ -686,6 +686,9 @@ export const xBookmarks = ops.table("x_bookmarks", {
     processed: boolean('processed').default(false),
     video_transcript: text('video_transcript'),
     video_analysis: text('video_analysis'),
+    ai_suggested_category_id: integer('ai_suggested_category_id'),
+    ai_confidence: real('ai_confidence'),
+    ai_reasoning: text('ai_reasoning'),
 });
 
 export const kbProcessingQueue = ops.table("kb_processing_queue", {

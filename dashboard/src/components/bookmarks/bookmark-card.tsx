@@ -1,5 +1,6 @@
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Checkbox } from "../ui/checkbox";
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
@@ -14,9 +15,13 @@ interface Bookmark {
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
-export function BookmarkCard({ bookmark }: BookmarkCardProps) {
+export function BookmarkCard({ bookmark, selectionMode = false, isSelected = false, onToggleSelect }: BookmarkCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
   // Truncate text to a reasonable length
   const truncatedText = bookmark.text.length > 150 
     ? bookmark.text.substring(0, 150) + "..." 
@@ -86,8 +91,31 @@ export function BookmarkCard({ bookmark }: BookmarkCardProps) {
     return options;
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey) {
+      e.preventDefault();
+      onToggleSelect?.(bookmark.id);
+    }
+  };
+
   return (
-    <div className="border rounded-lg p-4 hover:shadow-sm transition-shadow duration-200 flex flex-col gap-3 bg-card">
+    <div 
+      className={`border rounded-lg p-4 hover:shadow-sm transition-all duration-200 flex flex-col gap-3 bg-card relative ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
+    >
+      {/* Checkbox */}
+      {(selectionMode || isHovered) && onToggleSelect && (
+        <div className="absolute top-2 right-2">
+          <Checkbox 
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelect(bookmark.id)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+      
       <div className="flex items-center gap-3">
         <Avatar className="h-10 w-10">
           <AvatarFallback>{initials}</AvatarFallback>
@@ -110,7 +138,10 @@ export function BookmarkCard({ bookmark }: BookmarkCardProps) {
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => window.open(bookmark.url, "_blank")}
+          onClick={(e) => {
+            e.stopPropagation();
+            window.open(bookmark.url, "_blank");
+          }}
         >
           View
         </Button>

@@ -2,8 +2,9 @@
 
 > Per-agent cost tracking, budget enforcement, and spend reporting
 
-**Status:** Draft  
+**Status:** In Progress (Phase 2 Complete)  
 **Created:** 2026-02-20  
+**Updated:** 2026-02-20  
 **MC Task:** #124  
 **Priority:** P0 (prerequisite for autonomous KB enrichment)
 
@@ -24,17 +25,17 @@ Currently, we have no visibility into:
 ## 2. Goals
 
 ### Must Have (P0)
-- [ ] Track cost per API call (input tokens, output tokens, model)
-- [ ] Attribute costs to specific agents (Kevin, Nefario, Phil, Echo, Smaug, etc.)
-- [ ] Daily spend totals per agent
-- [ ] Hard budget caps with automatic stops
-- [ ] Alerts before hitting limits (80% threshold)
+- [x] Track cost per API call (input tokens, output tokens, model) ✅ Phase 1
+- [x] Attribute costs to specific agents (Kevin, Nefario, Phil, Echo, Smaug, etc.) ✅ Phase 2
+- [x] Daily spend totals per agent ✅ Phase 1+2
+- [ ] Hard budget caps with automatic stops (Phase 3)
+- [ ] Alerts before hitting limits (80% threshold) (Phase 3)
 
 ### Should Have (P1)
-- [ ] Weekly/monthly aggregations
+- [x] Weekly/monthly aggregations ✅ Phase 1
 - [ ] Cost breakdown by task type (research, transcription, enrichment)
-- [ ] Dashboard widget showing spend trends
-- [ ] Configurable alert channels (Telegram topic, DM)
+- [ ] Dashboard widget showing spend trends (Phase 4)
+- [ ] Configurable alert channels (Telegram topic, DM) (Phase 3)
 
 ### Nice to Have (P2)
 - [ ] Cost predictions ("at this rate, you'll hit budget in X days")
@@ -313,21 +314,30 @@ Response:
 
 ## 5. Implementation Plan
 
-### Phase 1: Core Tracking (MVP)
-**Estimate:** 4-6 hours
+### Phase 1: Core Tracking (MVP) ✅ COMPLETE
+**Completed:** 2026-02-20 by Bob
 
-1. Create DB tables (agent_costs, agent_budgets, agent_daily_spend)
-2. Build cost calculation module (pricing.yaml → cost_cents)
-3. Manual cost logging endpoint (for testing)
-4. Basic `/cost today` command via Kevin
+1. ✅ Created DB tables (agent_costs, agent_budgets, agent_daily_spend)
+2. ✅ Built cost calculation module (`/lib/dave/pricing.ts`, `cost-calculator.ts`)
+3. ✅ API endpoints (`/api/dave/costs`, `/api/dave/budgets`, `/api/dave/summary`)
+4. ✅ Database operations module (`/lib/dave/db.ts`)
 
-### Phase 2: Gateway Integration
-**Estimate:** 6-8 hours
+### Phase 2: Gateway Integration ✅ COMPLETE
+**Completed:** 2026-02-20 by Bob
 
-1. Identify OpenClaw hook point for response interception
-2. Implement middleware to capture usage data
-3. Auto-attribute to agent via session/context
-4. Test with real API calls
+1. ✅ Identified hook point: Session JSONL files contain usage data per API call
+2. ✅ Created `tools/cost-logger.mjs` — watches session files with chokidar
+3. ✅ Auto-attributes to agent via session file path (`agents/{agentId}/sessions/`)
+4. ✅ Created `tools/cost-backfill.mjs` — backfills historical data
+5. ✅ Systemd service file: `tools/oclaw-cost-logger.service`
+
+**Installation:**
+```bash
+sudo cp tools/oclaw-cost-logger.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable oclaw-cost-logger
+sudo systemctl start oclaw-cost-logger
+```
 
 ### Phase 3: Budget Enforcement
 **Estimate:** 4-6 hours
@@ -349,41 +359,41 @@ Response:
 
 ---
 
-## 6. Open Questions
+## 6. Open Questions (Resolved)
 
 1. **Where does Dave live?**
-   - Option A: Part of oclaw-ops dashboard backend
-   - Option B: Separate microservice
-   - Option C: OpenClaw plugin/extension
-   - **Recommendation:** A (dashboard) for simplicity, with clean module boundaries
+   - ✅ **Answer:** Part of oclaw-ops dashboard backend (`/lib/dave/`) + standalone Node.js services (`tools/cost-logger.mjs`)
 
 2. **How to intercept OpenClaw API calls?**
-   - Need to investigate OpenClaw's provider handling
-   - May need upstream contribution or local patch
+   - ✅ **Answer:** Session JSONL files contain full usage data per assistant message. We watch these files with chokidar and log to DB on change. No upstream patches needed!
 
 3. **Initial budget limits?**
-   - Suggested defaults:
-     - Kevin: €10/day (main chat, always available)
-     - Nefario: €5/day (research, escalation only)
-     - Smaug: €2/day (bulk processing, cheap models)
-     - MiniMax crons: €1/day
-   - Boss to confirm
+   - ✅ **Answer:** Configured in Phase 1 via `/api/dave/budgets`:
+     - kevin: $10/day
+     - nefario: $5/day
+     - smaug: $2/day
+   - Enforcement coming in Phase 3
 
 4. **Historical data?**
-   - Do we want to backfill from provider dashboards?
-   - Or start fresh from implementation date?
+   - ✅ **Answer:** `tools/cost-backfill.mjs` can backfill from session logs. Initial backfill done for last 2 days: 1,916 API calls totaling $715.66
 
 ---
 
 ## 7. Success Criteria
 
 Dave is complete when:
-- [ ] Every API call's cost is logged with agent attribution
-- [ ] Can query "how much did Nefario spend yesterday?"
-- [ ] Budget limits stop agents before overspend
-- [ ] Alerts fire at 80% threshold
-- [ ] Dashboard shows real-time spend
+- [x] Every API call's cost is logged with agent attribution ✅ Phase 2
+- [x] Can query "how much did Nefario spend yesterday?" ✅ Phase 1 APIs
+- [ ] Budget limits stop agents before overspend (Phase 3)
+- [ ] Alerts fire at 80% threshold (Phase 3)
+- [ ] Dashboard shows real-time spend (Phase 4)
 - [ ] Boss feels confident running autonomous pipelines overnight
+
+**Current Data (as of Phase 2 backfill):**
+- main: $707.53 (1,809 calls)
+- bob: $8.13 (107 calls)
+- nefario: $1.13 (1 call)
+- Total tracked: $715.66+ across 1,916+ API calls
 
 ---
 

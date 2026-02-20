@@ -7,6 +7,8 @@ import { CategorySidebar } from "../../../components/bookmarks/category-sidebar"
 import { BookmarkCard } from "../../../components/bookmarks/bookmark-card";
 import { CategoryChat } from "../../../components/bookmarks/category-chat";
 import { FolderContextBar } from "../../../components/bookmarks/folder-context-bar";
+import { BulkActionsToolbar } from "../../../components/bookmarks/bulk-actions-toolbar";
+import { AutoCategorizeModal } from "../../../components/bookmarks/auto-categorize-modal";
 
 interface Bookmark {
   id: string;
@@ -32,6 +34,14 @@ export default function BookmarksPage() {
   const [search, setSearch] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
+  
+  // Auto-categorize state
+  const [uncategorizedCount, setUncategorizedCount] = useState<number>(0);
+  const [showAutoCategorizeModal, setShowAutoCategorizeModal] = useState<boolean>(false);
 
   // Debounce search input
   useEffect(() => {
@@ -43,27 +53,6 @@ export default function BookmarksPage() {
 
   // Fetch bookmarks based on filters
   useEffect(() => {
-    async function fetchBookmarks() {
-      try {
-        setLoading(true);
-        const params = new URLSearchParams({
-          page: pagination.page.toString(),
-          limit: pagination.limit.toString(),
-        });
-        if (selectedCategory) params.append("category", selectedCategory);
-        if (selectedXFolder) params.append("x_folder", selectedXFolder);
-        if (debouncedSearch) params.append("search", debouncedSearch);
-
-        const res = await fetch(`/api/bookmarks?${params.toString()}`);
-        const data = await res.json();
-        setBookmarks(data.bookmarks || []);
-        setPagination(data.pagination || { page: 1, limit: 25, total: 0, pages: 0 });
-      } catch (error) {
-        console.error("Failed to fetch bookmarks", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchBookmarks();
   }, [pagination.page, selectedCategory, selectedXFolder, debouncedSearch]);
 
@@ -83,6 +72,77 @@ export default function BookmarksPage() {
     setSelectedCategory("");
     setPagination(prev => ({ ...prev, page: 1 }));
   };
+
+  // Selection handlers
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      if (next.size === 0) {
+        setSelectionMode(false);
+      } else {
+        setSelectionMode(true);
+      }
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    const allIds = new Set(bookmarks.map(b => b.id));
+    setSelectedIds(allIds);
+    setSelectionMode(true);
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+  };
+
+  const handleBulkComplete = () => {
+    // Refetch bookmarks after bulk operation
+    fetchBookmarks();
+  };
+
+  const fetchBookmarks = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+      });
+      if (selectedCategory) params.append("category", selectedCategory);
+      if (selectedXFolder) params.append("x_folder", selectedXFolder);
+      if (debouncedSearch) params.append("search", debouncedSearch);
+
+      const res = await fetch(`/api/bookmarks?${params.toString()}`);
+      const data = await res.json();
+      setBookmarks(data.bookmarks || []);
+      setPagination(data.pagination || { page: 1, limit: 25, total: 0, pages: 0 });
+    } catch (error) {
+      console.error("Failed to fetch bookmarks", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUncategorizedCount = async () => {
+    try {
+      const params = new URLSearchParams({ category: "", limit: "1" });
+      const res = await fetch(`/api/bookmarks?${params.toString()}`);
+      const data = await res.json();
+      setUncategorizedCount(data.pagination?.total || 0);
+    } catch (error) {
+      console.error("Failed to fetch uncategorized count", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUncategorizedCount();
+  }, []);
 
   return (
     <div className="flex h-screen bg-background">
@@ -107,15 +167,46 @@ export default function BookmarksPage() {
               onClear={() => handleXFolderSelect("")}
             />
           )}
+          {/* Bulk actions toolbar */}
+          {selectionMode && selectedIds.size > 0 && (
+            <BulkActionsToolbar
+              selectedCount={selectedIds.size}
+              selectedIds={selectedIds}
+              onClearSelection={clearSelection}
+              onBulkComplete={handleBulkComplete}
+            />
+          )}
+          
           {/* Search bar */}
           <div className="p-6 border-b border-border">
-            <div className="relative max-w-lg">
-              <Input
-                placeholder="Search bookmarks..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full"
-              />
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 max-w-lg">
+                <Input
+                  placeholder="Search bookmarks..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              {uncategorizedCount > 0 && !selectedCategory && (
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => setShowAutoCategorizeModal(true)}
+                  className="whitespace-nowrap"
+                >
+                  🤖 Auto-Categorize ({uncategorizedCount})
+                </Button>
+              )}
+              {bookmarks.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={selectedIds.size === bookmarks.length ? clearSelection : selectAll}
+                >
+                  {selectedIds.size === bookmarks.length ? "Deselect All" : "Select All"}
+                </Button>
+              )}
             </div>
           </div>
           {/* Bookmarks list */}
@@ -127,7 +218,13 @@ export default function BookmarksPage() {
           ) : (
             <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
               {bookmarks.map((bookmark) => (
-                <BookmarkCard key={bookmark.id} bookmark={bookmark} />
+                <BookmarkCard 
+                  key={bookmark.id} 
+                  bookmark={bookmark}
+                  selectionMode={selectionMode}
+                  isSelected={selectedIds.has(bookmark.id)}
+                  onToggleSelect={toggleSelect}
+                />
               ))}
             </div>
           )}
@@ -162,6 +259,17 @@ export default function BookmarksPage() {
           </div>
         )}
       </div>
+
+      {/* Auto-Categorize Modal */}
+      <AutoCategorizeModal
+        isOpen={showAutoCategorizeModal}
+        onClose={() => setShowAutoCategorizeModal(false)}
+        uncategorizedCount={uncategorizedCount}
+        onComplete={() => {
+          fetchBookmarks();
+          fetchUncategorizedCount();
+        }}
+      />
     </div>
   );
 }
