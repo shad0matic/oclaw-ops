@@ -75,7 +75,6 @@ export function KanbanLegend() {
             <div className="flex items-center gap-2">📋 Planned</div>
             <div className="flex items-center gap-2">⚡ Running</div>
             <div className="flex items-center gap-2">🔄 Review</div>
-            <div className="flex items-center gap-2">👤 Human Todo</div>
             <div className="flex items-center gap-2">✅ Done</div>
           </div>
 

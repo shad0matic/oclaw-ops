@@ -2,8 +2,13 @@
 # Dashboard watchdog — checks if dashboard responds, rebuilds + restarts if down
 # Run via crontab every minute
 
+# Self-locating paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+OPENCLAW_DIR="$HOME/.openclaw"
+
 LOCK="/tmp/dashboard-watchdog.lock"
-DASH_DIR="/home/openclaw/projects/oclaw-ops/dashboard"
+DASH_DIR="$PROJECT_DIR/dashboard"
 
 # Prevent concurrent runs
 if [ -f "$LOCK" ]; then

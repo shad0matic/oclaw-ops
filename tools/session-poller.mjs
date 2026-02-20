@@ -8,12 +8,22 @@
  */
 
 import { readFileSync, readdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { homedir } from 'os';
 import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const pg = require('/home/openclaw/projects/oclaw-ops/dashboard/node_modules/pg');
 
-const AGENTS_DIR = '/home/openclaw/.openclaw/agents';
+// Self-locating paths
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const TOOLS_DIR = __dirname;
+const PROJECT_DIR = dirname(__dirname);
+const OPENCLAW_DIR = join(homedir(), '.openclaw');
+
+const require = createRequire(import.meta.url);
+const pg = require(join(PROJECT_DIR, 'dashboard', 'node_modules', 'pg'));
+
+const AGENTS_DIR = join(OPENCLAW_DIR, 'agents');
 const ACTIVE_MINUTES = 5; // consider sessions active if updated in last 15 min
 
 const pool = new pg.Pool({

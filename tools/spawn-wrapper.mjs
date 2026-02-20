@@ -13,8 +13,18 @@
  */
 
 import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { homedir } from 'os';
+
+// Self-locating paths
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const PROJECT_DIR = dirname(__dirname);
+const OPENCLAW_DIR = join(homedir(), '.openclaw');
+
 const require = createRequire(import.meta.url);
-const pg = require('/home/openclaw/projects/oclaw-ops/dashboard/node_modules/pg');
+const pg = require(join(PROJECT_DIR, 'dashboard', 'node_modules', 'pg'));
 const { Pool } = pg;
 
 const pool = new Pool({

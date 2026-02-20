@@ -3,7 +3,12 @@
 # Use this instead of raw `next build && systemctl restart`
 set -e
 
-DASH_DIR="/home/openclaw/projects/oclaw-ops/dashboard"
+# Self-locating paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+OPENCLAW_DIR="$HOME/.openclaw"
+
+DASH_DIR="$PROJECT_DIR/dashboard"
 cd "$DASH_DIR"
 
 echo "Stopping dashboard..."

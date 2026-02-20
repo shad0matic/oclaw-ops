@@ -27,11 +27,17 @@ import pg from 'pg';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { fileURLToPath } from 'url';
+
+// Self-locating paths
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const OPENCLAW_DIR = path.join(os.homedir(), '.openclaw');
 
 const { Pool } = pg;
 
 // Config path for Phil's X cookies
-const philConfigPath = '/home/openclaw/.openclaw/phil-config.json';
+const philConfigPath = path.join(OPENCLAW_DIR, 'phil-config.json');
 
 // Parse CLI args
 const args = process.argv.slice(2);
