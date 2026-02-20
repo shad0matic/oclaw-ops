@@ -1,6 +1,18 @@
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
-import { ChevronDown, ChevronRight, FolderOpen, Twitter } from "lucide-react";
+import { ChevronDown, ChevronRight, FolderOpen, Twitter, RefreshCw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
+import { toast } from "sonner";
 
 interface Category {
   id: number;
@@ -40,6 +52,30 @@ export function CategorySidebar({
   const [loading, setLoading] = useState(true);
   const [xFoldersExpanded, setXFoldersExpanded] = useState(true);
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
+  const [fetching, setFetching] = useState(false);
+
+  const handleFetchBookmarks = async () => {
+    setFetching(true);
+    try {
+      const res = await fetch("/api/x-bookmarks/fetch", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(`Fetched ${data.fetched || 0} new bookmarks`, {
+          description: data.message || "Sync complete"
+        });
+        // Refresh folders list
+        const xRes = await fetch("/api/x-folders");
+        const xData = await xRes.json();
+        setXFolders(Array.isArray(xData) ? xData : []);
+      } else {
+        toast.error("Fetch failed", { description: data.error || "Unknown error" });
+      }
+    } catch (err) {
+      toast.error("Fetch failed", { description: "Network error" });
+    } finally {
+      setFetching(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -138,14 +174,35 @@ export function CategorySidebar({
       {/* X Folders Section */}
       {xFolders.length > 0 && (
         <div className="mb-4">
-          <button 
-            className="flex items-center w-full text-left text-sm font-medium text-muted-foreground hover:text-foreground py-1"
-            onClick={() => setXFoldersExpanded(!xFoldersExpanded)}
-          >
-            {xFoldersExpanded ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronRight className="h-4 w-4 mr-1" />}
-            <Twitter className="h-4 w-4 mr-2" />
-            X Folders ({xFolders.length})
-          </button>
+          <div className="flex items-center justify-between py-1">
+            <button 
+              className="flex items-center text-left text-sm font-medium text-muted-foreground hover:text-foreground"
+              onClick={() => setXFoldersExpanded(!xFoldersExpanded)}
+            >
+              {xFoldersExpanded ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronRight className="h-4 w-4 mr-1" />}
+              <Twitter className="h-4 w-4 mr-2" />
+              X Folders ({xFolders.length})
+            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6" disabled={fetching}>
+                  <RefreshCw className={`h-3 w-3 ${fetching ? 'animate-spin' : ''}`} />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Fetch X Bookmarks?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will fetch new bookmarks from X/Twitter. It may take a moment and uses API credits.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleFetchBookmarks}>Fetch</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
           {xFoldersExpanded && (
             <div className="mt-1 space-y-0.5">
               {xFolders.map((folder) => {

@@ -287,7 +287,7 @@ function DoneTreeView({
                         <div className="flex-1 min-w-0">
                           <p className="text-foreground/90 truncate">{t.title}</p>
                         </div>
-                        <span className="text-[10px] text-green-500/70 shrink-0 whitespace-nowrap">
+                        <span className="text-[10px] text-green-500/70 shrink-0 whitespace-nowrap" suppressHydrationWarning>
                           {timeAgo(t.completed_at)}
                         </span>
                       </div>
@@ -297,7 +297,7 @@ function DoneTreeView({
             )}
             {!isExpanded && (
               <div className="px-2.5 pb-2 -mt-0.5">
-                <p className="text-[10px] text-muted-foreground/60 truncate">
+                <p className="text-[10px] text-muted-foreground/60 truncate" suppressHydrationWarning>
                   Latest: {g.tasks[0]?.title} · {timeAgo(g.latestCompleted)}
                 </p>
               </div>

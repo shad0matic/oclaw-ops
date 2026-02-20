@@ -176,7 +176,7 @@ export default function TaskDetailView({ taskId }: { taskId: number }) {
                       <span className="text-[11px] text-muted-foreground">•</span>
                       <span className="text-xs text-muted-foreground">{labelEventType(ev.eventType)}</span>
                       <span className="text-[11px] text-muted-foreground">•</span>
-                      <span className="text-xs text-muted-foreground">{relativeTime(ev.createdAt)}</span>
+                      <span className="text-xs text-muted-foreground" suppressHydrationWarning>{relativeTime(ev.createdAt)}</span>
                     </div>
 
                     {ev.detail && (
@@ -238,7 +238,7 @@ export default function TaskDetailView({ taskId }: { taskId: number }) {
                       </>
                     )}
                     <span className="text-[11px]">•</span>
-                    <span>{relativeTime(s.at)}</span>
+                    <span suppressHydrationWarning>{relativeTime(s.at)}</span>
                   </div>
                 </div>
                 <Link

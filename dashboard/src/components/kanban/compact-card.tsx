@@ -164,7 +164,7 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
               <span>{projectIcon}</span>
               <span className="truncate font-medium">{proj?.acronym || proj?.label || task.project}</span>
               {task.status === 'done' && task.completed_at && (
-                <span className="text-green-500/70">✓ {timeAgo(task.completed_at)}</span>
+                <span className="text-green-500/70" suppressHydrationWarning>✓ {timeAgo(task.completed_at)}</span>
               )}
             </div>
           </div>
