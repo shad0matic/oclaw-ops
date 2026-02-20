@@ -96,7 +96,15 @@ Before any autonomous agents run unsupervised, we need:
 - Clear reporting ("last night's run cost €X")
 - Budget alerts before hitting limits
 
-**Task:** #124 — Spec Dave (Accountant Agent) Requirements
+**Spec:** SPEC-124 ✅ — [SPEC-124-dave-accountant.md](https://github.com/shad0matic/oclaw-ops/blob/main/specs/SPEC-124-dave-accountant.md)
+
+**Implementation Tasks (Epic: `dave-accountant`):**
+- #125 — Phase 1: Core cost tracking (MVP) — DB + pricing module + /cost command
+- #126 — Phase 2: Gateway integration — auto-logging via OpenClaw middleware
+- #127 — Phase 3: Budget enforcement — pre-flight checks + alerts + /budget commands
+- #128 — Phase 4: Dashboard & reports — API endpoints + widget + charts
+
+**Related:** #27 (full cost management — subscriptions + metered)
 
 ### Phase 2: Nightly Light Processing
 - MiniMax on bookmarks, capped budget
