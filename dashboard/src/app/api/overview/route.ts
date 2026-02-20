@@ -316,7 +316,8 @@ export async function GET() {
         cores: getCoreCount()
       },
       liveWork: {
-        count: taskTrees.reduce((sum, t) => sum + 1 + t.children.length, 0),
+        // Only count truly running tasks (exclude planned/assigned from count)
+        count: taskTrees.filter(t => t.source === 'runs' || !t.heartbeatMsg?.startsWith('Status:')).reduce((sum, t) => sum + 1 + t.children.length, 0),
         tasks: taskTrees
       },
       team: enrichedAgents,
