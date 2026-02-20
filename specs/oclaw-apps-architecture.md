@@ -253,10 +253,17 @@ CREATE TABLE app_polymarket.strategies (...);
 ## Monitoring & Alerts
 
 ### Telegram Alerts
-All apps send alerts to dedicated topic:
-- Info: New positions, strategy changes
-- Warning: Near risk limits, API errors
-- Critical: Emergency stop, unexpected losses
+
+**Topic Structure:**
+- **Topic 4706** — Kanban (task management)
+- **Topic 7757** — Polymarket Bot (all bot alerts/updates)
+- **Topic TBD** — Apps Infrastructure (deployment/infra updates)
+- Future apps get their own dedicated topics
+
+**Alert Types per App:**
+- Info: New positions, strategy changes, daily summaries
+- Warning: Near risk limits, API errors, slow performance
+- Critical: Emergency stop, unexpected losses, system failures
 
 ### Dashboard Alerts
 - Visual notifications in UI
