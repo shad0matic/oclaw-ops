@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Button } from "../ui/button";
 import { TaskChecklist } from "./task-checklist";
 import { TaskComments } from "./task-comments";
+import { DependencyTree } from "./dependency-tree";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -173,6 +174,11 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: {
             </div>
           )}
 
+          {taskId && <DependencyTree taskId={taskId} onTaskClick={(id) => {
+            // Open clicked task by updating URL (parent component handles)
+            window.history.pushState({}, '', `?task=${id}`);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }} />}
           {taskId && <TaskChecklist taskId={taskId} />}
           {taskId && <TaskComments taskId={taskId} />}
           
