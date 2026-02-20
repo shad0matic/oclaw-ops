@@ -15,6 +15,7 @@ import { KanbanLegend } from "@/components/kanban/kanban-legend";
 import { Project, QueueTask, FeatureRequest } from "@/components/kanban/types";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useTaskStream } from "@/hooks/use-task-stream";
+import { MelStatusIndicator } from "./mel-status-indicator";
 
 const REFRESH_INTERVAL = 10_000; // 10s
 
@@ -257,6 +258,9 @@ export function KanbanBoard() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 pr-3 py-1.5 text-xs bg-muted rounded-lg w-48 focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
+          </div>
+          <div className="hidden md:flex">
+            <MelStatusIndicator />
           </div>
           <div className="flex items-center gap-3">
             <button
