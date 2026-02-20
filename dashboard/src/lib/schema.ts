@@ -706,3 +706,43 @@ export const agentSettingsInOps = ops.table("agent_settings", {
 	value: jsonb().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 });
+
+// Browser bookmarks import pipeline
+// Stores imported bookmarks from Chrome/Firefox exports for processing
+export const browserBookmarksInOps = ops.table("browser_bookmarks", {
+	id: serial().primaryKey().notNull(),
+	url: text().notNull(),
+	title: text(),
+	folderPath: text("folder_path"),                    // Original browser folder hierarchy
+	addedAt: timestamp("added_at", { withTimezone: true, mode: 'string' }),  // When bookmarked in browser
+	importedAt: timestamp("imported_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	
+	// Validation
+	status: text().default('pending'),                  // pending, alive, dead, redirect, error
+	httpCode: integer("http_code"),
+	checkedAt: timestamp("checked_at", { withTimezone: true, mode: 'string' }),
+	
+	// Scraping
+	scrapedAt: timestamp("scraped_at", { withTimezone: true, mode: 'string' }),
+	content: text(),                                    // Raw extracted content
+	contentType: text("content_type"),                  // article, video, tweet, pdf, etc.
+	
+	// Summarization (L1)
+	summary: text(),
+	summarizedAt: timestamp("summarized_at", { withTimezone: true, mode: 'string' }),
+	summaryModel: text("summary_model"),                // haiku, flash, etc.
+	
+	// Organization
+	kbFolderId: integer("kb_folder_id"),
+	tags: text().array(),
+	bossCategorized: boolean("boss_categorized").default(false),
+	
+	// Metadata
+	faviconUrl: text("favicon_url"),
+	ogImage: text("og_image"),
+	ogDescription: text("og_description"),
+}, (table) => [
+	index("idx_browser_bookmarks_status").using("btree", table.status.asc().nullsLast().op("text_ops")),
+	index("idx_browser_bookmarks_folder").using("btree", table.kbFolderId.asc().nullsLast().op("int4_ops")).where(sql`(kb_folder_id IS NOT NULL)`),
+	unique("browser_bookmarks_url_key").on(table.url),
+]);
