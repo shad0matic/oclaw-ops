@@ -36,9 +36,9 @@ wss.on('connection', (ws) => {
         const data = {
           ts: Date.now(),
           cpu: parseFloat(cpuLoad.currentLoad.toFixed(2)),
-          memUsed: mem.used,
+          memUsed: mem.active,  // active memory (excludes cache/buffers)
           memTotal: mem.total,
-          memPercent: parseFloat(((mem.used / mem.total) * 100).toFixed(2)),
+          memPercent: parseFloat(((mem.active / mem.total) * 100).toFixed(2)),
           load,
           cores,
         };
