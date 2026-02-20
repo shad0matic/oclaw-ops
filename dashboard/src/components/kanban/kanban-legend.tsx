@@ -27,7 +27,11 @@ export function KanbanLegend() {
             </div>
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-blue-300" />
-              <span>Agent read / Acked</span>
+              <span>Agent read (no reply)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 text-muted-foreground">—</span>
+              <span>Acked (icon hidden)</span>
             </div>
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-amber-500 animate-pulse" />

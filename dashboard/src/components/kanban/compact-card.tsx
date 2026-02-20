@@ -99,9 +99,10 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
         return null;
       }
 
-      // Chat was acked with thumbs up (trigger clears this on new comments)
+      // Chat was acked with thumbs up - hide icon entirely
+      // (trigger clears chat_acked_at on new comments, so icon reappears then)
       if (task.chat_acked_at) {
-        return 'read';  // text-blue-300 = light blue
+        return null;
       }
 
       // Gray only for truly closed tasks (done)
