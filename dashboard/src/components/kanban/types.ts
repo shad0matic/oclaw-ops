@@ -2,6 +2,7 @@ export interface Project {
   id: string;
   label: string;
   icon: string;
+  acronym?: string;
   color: string;
   description?: string;
 }

@@ -52,21 +52,17 @@ export async function PATCH(
 
   try {
     const body = await request.json()
-    const { label, description, icon, color, active, owner, status } = body
+    const { label, description, icon, acronym, color, active, owner, status } = body
 
     const updatedFields: Partial<typeof projectsInOps.$inferInsert> = {}
     if (label) updatedFields.label = label
-    if (description) updatedFields.description = description
+    if (description !== undefined) updatedFields.description = description
     if (icon) updatedFields.icon = icon
+    if (acronym !== undefined) (updatedFields as any).acronym = acronym
     if (color) updatedFields.color = color
     if (active !== undefined) updatedFields.active = active
-    
-    // The spec uses owner and status, but the schema doesn't have them.
-    // I will add them to the update object if they exist in the body,
-    // assuming the schema might be out of date. The DB will throw an
-    // error if the columns don't exist, which is fine for now.
-    if (owner) (updatedFields as any).owner = owner
-    if (status) (updatedFields as any).status = status
+    if (owner !== undefined) (updatedFields as any).owner = owner
+    if (status !== undefined) (updatedFields as any).status = status
 
     if (Object.keys(updatedFields).length === 0) {
       return NextResponse.json(

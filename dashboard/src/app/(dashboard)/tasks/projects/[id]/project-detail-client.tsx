@@ -18,6 +18,7 @@ interface Project {
   id: string
   label: string
   icon: string
+  acronym: string | null
   description: string | null
   color: string
   active: boolean
@@ -68,6 +69,7 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
         label: project.label,
         description: project.description,
         icon: project.icon,
+        acronym: project.acronym,
         owner: project.owner,
         status: project.status,
       })
@@ -128,7 +130,10 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
         <Card>
             <CardContent className="p-6 grid grid-cols-2 gap-4">
                 <Input name="label" value={formData.label || ''} onChange={handleInputChange} placeholder="Project Name" />
-                <Input name="icon" value={formData.icon || ''} onChange={handleInputChange} placeholder="Icon (emoji)" />
+                <div className="flex gap-2">
+                  <Input name="icon" value={formData.icon || ''} onChange={handleInputChange} placeholder="Icon (emoji)" className="w-20" />
+                  <Input name="acronym" value={formData.acronym || ''} onChange={handleInputChange} placeholder="Acronym (e.g. TB)" className="flex-1" />
+                </div>
                 <Textarea name="description" value={formData.description || ''} onChange={handleInputChange} placeholder="Description" className="col-span-2" />
                 <Input name="owner" value={formData.owner || ''} onChange={handleInputChange} placeholder="Owner" />
                 <Input name="status" value={formData.status || ''} onChange={handleInputChange} placeholder="Status (e.g. active)" />

@@ -162,7 +162,7 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
             </h3>
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
               <span>{projectIcon}</span>
-              <span className="truncate">{proj?.label || task.project}</span>
+              <span className="truncate font-medium">{proj?.acronym || proj?.label || task.project}</span>
               {task.status === 'done' && task.completed_at && (
                 <span className="text-green-500/70">✓ {timeAgo(task.completed_at)}</span>
               )}
