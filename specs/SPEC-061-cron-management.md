@@ -3,8 +3,9 @@
 **Task ID:** #61  
 **Type:** Feature  
 **Priority:** P8  
-**Status:** Planned  
+**Status:** Complete  
 **Requested By:** Boss (13/02/2026)  
+**Completed:** 20/02/2026  
 
 ---
 
@@ -212,9 +213,9 @@ All endpoints proxy to Gateway `cron` tool.
 
 ## Success Criteria
 
-- [ ] Can create new cron job from UI
-- [ ] Can edit existing job
-- [ ] Can delete job with confirmation
-- [ ] Visual cron builder works
-- [ ] Run history shows logs
-- [ ] At least 3 job templates available
+- [x] Can create new cron job from UI
+- [x] Can edit existing job
+- [x] Can delete job with confirmation
+- [x] Visual cron builder works
+- [x] Run history shows logs
+- [x] At least 3 job templates available
