@@ -257,7 +257,7 @@ CREATE TABLE app_polymarket.strategies (...);
 **Topic Structure:**
 - **Topic 4706** — Kanban (task management)
 - **Topic 7757** — Polymarket Bot (all bot alerts/updates)
-- **Topic TBD** — Apps Infrastructure (deployment/infra updates)
+- **Topic 7762** — Apps Infrastructure (deployment/infra updates)
 - Future apps get their own dedicated topics
 
 **Alert Types per App:**
