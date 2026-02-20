@@ -98,7 +98,14 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
   // Check if last comment is from agent (show thumbs up)
   // Hide thumbs up when user is typing - they're clearly replying, not just acking
   const lastComment = comments.length > 0 ? comments[comments.length - 1] : null;
-  const showThumbsUp = lastComment && lastComment.author !== "boss" && !message.trim();
+  const [justSubmitted, setJustSubmitted] = useState(false);
+  useEffect(() => {
+    if (justSubmitted) {
+      const timer = setTimeout(() => setJustSubmitted(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [justSubmitted]);
+  const showThumbsUp = lastComment && lastComment.author !== "boss" && !message.trim() && !justSubmitted;
 
   const addComment = useMutation({
     mutationFn: async (msg: string) => {
@@ -113,6 +120,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["task-comments", taskId] });
       setMessage("");
+      setJustSubmitted(true);
     },
   });
 
