@@ -58,31 +58,37 @@ function sendTelegramMessage(text) {
 }
 
 function formatNotification(payload) {
-  const { task_id, status, prev_status, agent_id, title, event } = payload;
+  const { task_id, status, prev_status, agent_id, title, project, event } = payload;
+  const projectTag = project ? ` [${project}]` : '';
+  const agentTag = agent_id ? ` by <b>${agent_id}</b>` : '';
   
   if (event === 'created') {
-    return `📋 <b>New Task #${task_id}</b>\n${title}\nStatus: <code>${status}</code>`;
+    return `📋 <b>New Task #${task_id}</b>${projectTag}\n${title}`;
   }
   
   // Status change
+  if (status === 'assigned') {
+    return `📌 <b>#${task_id}</b>${projectTag} assigned${agentTag}\n${title}`;
+  }
+  
   if (status === 'planned') {
-    return `📝 <b>Task #${task_id} → Planned</b>\n${title}${agent_id ? `\nAssigned: ${agent_id}` : ''}`;
+    return `📝 <b>#${task_id}</b>${projectTag} → Planned${agentTag}\n${title}`;
   }
   
   if (status === 'running') {
-    return `🚀 <b>Task #${task_id} → Running</b>\n${title}${agent_id ? `\nAgent: ${agent_id}` : ''}`;
+    return `🚀 <b>#${task_id}</b>${projectTag} started${agentTag}\n${title}`;
   }
   
   if (status === 'review') {
-    return `👀 <b>Task #${task_id} → Review</b>\n${title}`;
+    return `👀 <b>#${task_id}</b>${projectTag} ready for review\n${title}`;
   }
   
   if (status === 'done') {
-    return `✅ <b>Task #${task_id} → Done</b>\n${title}`;
+    return `✅ <b>#${task_id}</b>${projectTag} completed\n${title}`;
   }
   
   if (status === 'failed') {
-    return `❌ <b>Task #${task_id} → Failed</b>\n${title}`;
+    return `❌ <b>#${task_id}</b>${projectTag} failed\n${title}`;
   }
   
   // Other status changes — skip notification
@@ -94,6 +100,14 @@ async function main() {
     console.error('Missing TELEGRAM_BOT_TOKEN environment variable');
     process.exit(1);
   }
+
+  // Use a pool for ack queries, separate from listen client
+  const pool = new pg.Pool({
+    database: process.env.PGDATABASE || 'openclaw_db',
+    user: process.env.PGUSER || 'openclaw',
+    host: '/var/run/postgresql',
+    max: 2
+  });
 
   const client = new pg.Client({
     database: process.env.PGDATABASE || 'openclaw_db',
@@ -130,24 +144,35 @@ async function main() {
       if (message) {
         await sendTelegramMessage(message);
         console.log('Sent notification for task', payload.task_id);
+        
+        // Mark as chat-acked so sweep doesn't duplicate
+        try {
+          await pool.query(
+            'UPDATE ops.task_queue SET chat_acked_at = NOW() WHERE id = $1',
+            [payload.task_id]
+          );
+        } catch (ackErr) {
+          console.error('Failed to ack task:', ackErr.message);
+        }
       }
     } catch (err) {
       console.error('Error processing notification:', err);
     }
   });
 
-  // Keep alive
-  process.on('SIGINT', async () => {
-    console.log('Shutting down...');
-    await client.end();
-    process.exit(0);
-  });
+  // Keep alive with periodic ping
+  setInterval(() => client.query('SELECT 1'), 30000);
 
-  process.on('SIGTERM', async () => {
+  // Graceful shutdown
+  const shutdown = async () => {
     console.log('Shutting down...');
     await client.end();
+    await pool.end();
     process.exit(0);
-  });
+  };
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 
 main().catch((err) => {
