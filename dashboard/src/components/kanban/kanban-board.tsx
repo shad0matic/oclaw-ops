@@ -99,17 +99,19 @@ export function KanbanBoard() {
   const queryClient = useQueryClient();
   useTaskStream(); // Real-time SSE updates
   
-  // Load filters from localStorage on mount
-  const [projectFilter, setProjectFilter] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return [];
-    const saved = localStorage.getItem('kanban-project-filter');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [agentFilter, setAgentFilter] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return [];
-    const saved = localStorage.getItem('kanban-agent-filter');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Filters - initialize empty, then load from localStorage client-side only
+  const [projectFilter, setProjectFilter] = useState<string[]>([]);
+  const [agentFilter, setAgentFilter] = useState<string[]>([]);
+  const [filtersLoaded, setFiltersLoaded] = useState(false);
+
+  // Load filters from localStorage on mount (client-side only)
+  useEffect(() => {
+    const savedProject = localStorage.getItem('kanban-project-filter');
+    const savedAgent = localStorage.getItem('kanban-agent-filter');
+    if (savedProject) setProjectFilter(JSON.parse(savedProject));
+    if (savedAgent) setAgentFilter(JSON.parse(savedAgent));
+    setFiltersLoaded(true);
+  }, []);
   
   // Persist filters to localStorage
   useEffect(() => {
