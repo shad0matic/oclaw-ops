@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import AutoCategorizeModal from './auto-categorize-modal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,6 +25,7 @@ const UnassignedBookmarks = () => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<bigint | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     // This is a simplified approach. In a real app, you'd fetch only unassigned bookmarks.
@@ -69,6 +71,16 @@ const UnassignedBookmarks = () => {
             </SelectContent>
           </Select>
         </div>
+        <div className="mb-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setIsModalOpen(true)} 
+            disabled={bookmarks.length === 0}
+          >
+            Auto-Categorize ({bookmarks.length})
+          </Button>
+        </div>
         <ul className="space-y-2">
           {bookmarks.map(bookmark => (
             <li key={bookmark.id} className="border p-2 rounded flex justify-between items-center">
@@ -84,6 +96,13 @@ const UnassignedBookmarks = () => {
         </ul>
       </CardContent>
     </Card>
+    <AutoCategorizeModal 
+      open={isModalOpen} 
+      onOpenChange={setIsModalOpen} 
+      uncategorizedCount={bookmarks.length} 
+      selectedBookmarkIds={[]} 
+      onApply={() => { /* Refresh bookmarks after apply */ fetch('/api/bookmarks').then(res => res.json()).then(data => setBookmarks(data.bookmarks || [])); }}
+    />
   );
 };
 

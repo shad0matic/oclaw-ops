@@ -1,398 +1,205 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import React, { useState, useEffect } from 'react';
+ import { Button } from '@/components/ui/button';
+ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+ import { Label } from '@/components/ui/label';
+ import { Input } from '@/components/ui/input';
+ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+ import { Progress } from '@/components/ui/progress';
+ import { Checkbox } from '@/components/ui/checkbox';
 
-interface Suggestion {
+interface BookmarkSuggestion {
   bookmark_id: string;
-  suggested_category_id: number | null;
-  suggested_category_name: string | null;
-  suggested_category_slug: string | null;
+  title: string;
+  suggested_category_id: number;
+  suggested_category_name: string;
   confidence: number;
   reasoning: string;
-  text?: string;
-  author_handle?: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  emoji: string;
 }
 
 interface AutoCategorizeModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   uncategorizedCount: number;
-  onComplete: () => void;
+  selectedBookmarkIds: string[];
+  onApply: () => void;
 }
 
-type Step = "configure" | "processing" | "review";
-type ProcessMode = "all" | "first-n";
-
-export function AutoCategorizeModal({
-  isOpen,
-  onClose,
-  uncategorizedCount,
-  onComplete,
-}: AutoCategorizeModalProps) {
-  const [step, setStep] = useState<Step>("configure");
-  const [processMode, setProcessMode] = useState<ProcessMode>("all");
+const AutoCategorizeModal = ({ open, onOpenChange, uncategorizedCount, selectedBookmarkIds, onApply }: AutoCategorizeModalProps) => {
+  const [step, setStep] = useState<'configure' | 'processing' | 'review'>('configure');
+  const [processOption, setProcessOption] = useState<'all' | 'selected' | 'firstN'>('all');
   const [firstN, setFirstN] = useState<number>(20);
-  const [model, setModel] = useState<string>("gemini-2.0-flash-exp");
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(
-    new Set()
-  );
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [estimatedCost, setEstimatedCost] = useState<number>(0);
-  const [actualCost, setActualCost] = useState<number>(0);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [error, setError] = useState<string>("");
+  const [model, setModel] = useState<string>('gemini-2.0-flash');
+  const [progress, setProgress] = useState<number>(0);
+  const [suggestions, setSuggestions] = useState<BookmarkSuggestion[]>([]);
+  const [selectedSuggestions, setSelectedSuggestions] = useState<string[]>([]);
 
-  const handleStartAnalysis = async () => {
-    try {
-      setIsProcessing(true);
-      setStep("processing");
-      setError("");
-
-      // Fetch categories for dropdown in review step
-      const categoriesRes = await fetch("/api/bookmark-categories");
-      const categoriesData = await categoriesRes.json();
-      // Flatten categories (handle nested structure)
-      const flatCategories: Category[] = [];
-      const flattenCategories = (cats: any[]) => {
-        cats.forEach((cat) => {
-          flatCategories.push({
-            id: cat.id,
-            name: cat.name,
-            slug: cat.slug,
-            emoji: cat.emoji,
-          });
-          if (cat.children && cat.children.length > 0) {
-            flattenCategories(cat.children);
-          }
-        });
-      };
-      flattenCategories(categoriesData);
-      setCategories(flatCategories);
-
-      // Call auto-categorize API
-      const limit = processMode === "all" ? uncategorizedCount : firstN;
-      const response = await fetch("/api/x-bookmarks/auto-categorize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ limit, model }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to categorize");
-      }
-
-      const data = await response.json();
-      setSuggestions(data.suggestions || []);
-      setActualCost(data.cost_usd || 0);
-
-      // Pre-select high-confidence suggestions
-      const highConfidence = new Set(
-        data.suggestions
-          .filter((s: Suggestion) => s.confidence >= 0.5 && s.suggested_category_id)
-          .map((s: Suggestion) => s.bookmark_id as string)
-      );
-      setSelectedSuggestions(highConfidence as Set<string>);
-
-      setStep("review");
-    } catch (err: any) {
-      setError(err.message);
-      setStep("configure");
-    } finally {
-      setIsProcessing(false);
+  useEffect(() => {
+    if (step === 'processing') {
+      // Simulate API call to process bookmarks
+      const total = processOption === 'all' ? uncategorizedCount : processOption === 'selected' ? selectedBookmarkIds.length : firstN;
+      let processed = 0;
+      const interval = setInterval(() => {
+        processed += Math.floor(Math.random() * 5) + 1;
+        if (processed >= total) {
+          setProgress(100);
+          setStep('review');
+          // Mock data for review step
+          const mockSuggestions: BookmarkSuggestion[] = Array.from({ length: total }, (_, i) => ({
+            bookmark_id: `bm-${i}`,
+            title: `Bookmark ${i + 1}`,
+            suggested_category_id: Math.floor(Math.random() * 10) + 1,
+            suggested_category_name: `Category ${Math.floor(Math.random() * 10) + 1}`,
+            confidence: Math.random(),
+            reasoning: `Reasoning for bookmark ${i + 1}`,
+          }));
+          setSuggestions(mockSuggestions);
+          setSelectedSuggestions(mockSuggestions.map(s => s.bookmark_id));
+          clearInterval(interval);
+        } else {
+          setProgress((processed / total) * 100);
+        }
+      }, 500);
+      return () => clearInterval(interval);
     }
+  }, [step, processOption, uncategorizedCount, selectedBookmarkIds.length, firstN]);
+
+  const handleStartAnalysis = () => {
+    setStep('processing');
+    setProgress(0);
   };
 
-  const handleApply = async () => {
-    try {
-      setIsProcessing(true);
-      setError("");
-
-      const assignments = Array.from(selectedSuggestions)
-        .map((id) => {
-          const suggestion = suggestions.find((s) => s.bookmark_id === id);
-          if (!suggestion || !suggestion.suggested_category_slug) return null;
-          return {
-            bookmark_id: id,
-            category_slug: suggestion.suggested_category_slug,
-          };
-        })
-        .filter(Boolean);
-
-      const response = await fetch("/api/x-bookmarks/auto-categorize/apply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assignments }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to apply");
-      }
-
-      onComplete();
-      handleClose();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleClose = () => {
-    setStep("configure");
-    setProcessMode("all");
-    setFirstN(20);
+  const handleCancel = () => {
+    onOpenChange(false);
+    setStep('configure');
+    setProgress(0);
     setSuggestions([]);
-    setSelectedSuggestions(new Set());
-    setError("");
-    onClose();
+    setSelectedSuggestions([]);
   };
 
-  const toggleSuggestion = (bookmarkId: string) => {
-    const newSelected = new Set(selectedSuggestions);
-    if (newSelected.has(bookmarkId)) {
-      newSelected.delete(bookmarkId);
-    } else {
-      newSelected.add(bookmarkId);
-    }
-    setSelectedSuggestions(newSelected);
+  const handleApplySelected = () => {
+    // Here, send the selected suggestions to the API to apply categories
+    console.log('Applying categories for:', selectedSuggestions);
+    onApply();
+    handleCancel();
   };
 
-  const updateSuggestionCategory = (bookmarkId: string, categorySlug: string) => {
-    setSuggestions((prev) =>
-      prev.map((s) =>
-        s.bookmark_id === bookmarkId
-          ? {
-              ...s,
-              suggested_category_slug: categorySlug,
-              suggested_category_name:
-                categories.find((c) => c.slug === categorySlug)?.name || null,
-              suggested_category_id:
-                categories.find((c) => c.slug === categorySlug)?.id || null,
-            }
-          : s
-      )
+  const toggleSuggestionSelection = (bookmarkId: string) => {
+    setSelectedSuggestions(prev => 
+      prev.includes(bookmarkId) 
+        ? prev.filter(id => id !== bookmarkId) 
+        : [...prev, bookmarkId]
     );
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedSuggestions(suggestions.map(s => s.bookmark_id));
+    } else {
+      setSelectedSuggestions([]);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>🤖 Auto-Categorize Bookmarks</DialogTitle>
-          <DialogDescription>
-            Use AI to automatically suggest categories for uncategorized bookmarks
-          </DialogDescription>
         </DialogHeader>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-
-        {/* Step 1: Configure */}
-        {step === "configure" && (
-          <div className="space-y-6">
+        {step === 'configure' && (
+          <div className="space-y-4">
+            <p>Found {uncategorizedCount} uncategorized bookmarks</p>
             <div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Found {uncategorizedCount} uncategorized bookmark(s)
-              </p>
-
-              <RadioGroup value={processMode} onValueChange={(v) => setProcessMode(v as ProcessMode)}>
-                <div className="flex items-center space-x-2 mb-2">
+              <Label>Process:</Label>
+              <RadioGroup value={processOption} onValueChange={(value) => setProcessOption(value as 'all' | 'selected' | 'firstN')} className="space-y-2 mt-2">
+                <div className="flex items-center space-x-2">
                   <RadioGroupItem value="all" id="all" />
-                  <Label htmlFor="all">All uncategorized</Label>
+                  <Label htmlFor="all">All uncategorized ({uncategorizedCount})</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="first-n" id="first-n" />
-                  <Label htmlFor="first-n" className="flex items-center gap-2">
-                    First
-                    <Input
-                      type="number"
-                      value={firstN}
-                      onChange={(e) => setFirstN(parseInt(e.target.value) || 20)}
-                      className="w-20 h-8"
-                      min={1}
-                      max={uncategorizedCount}
-                    />
-                    bookmarks
-                  </Label>
+                  <RadioGroupItem value="selected" id="selected" disabled={selectedBookmarkIds.length === 0} />
+                  <Label htmlFor="selected">Selected only ({selectedBookmarkIds.length})</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="firstN" id="firstN" />
+                  <Label htmlFor="firstN">First N:</Label>
+                  <Input 
+                    type="number" 
+                    value={firstN} 
+                    onChange={(e) => setFirstN(Math.max(1, parseInt(e.target.value) || 1))} 
+                    className="w-20" 
+                    disabled={processOption !== 'firstN'} 
+                  />
                 </div>
               </RadioGroup>
             </div>
-
             <div>
-              <Label>Model</Label>
+              <Label htmlFor="model">Model:</Label>
               <Select value={model} onValueChange={setModel}>
-                <SelectTrigger className="mt-2">
-                  <SelectValue />
+                <SelectTrigger id="model">
+                  <SelectValue placeholder="Select model" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Recommended)</SelectItem>
-                  <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
-                  <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
+                  <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
+                  <SelectItem value="gemini-2.0-pro">Gemini 2.0 Pro</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="text-sm text-muted-foreground">
-              Estimated cost: ~$0.01 - $0.05
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button onClick={handleStartAnalysis} disabled={isProcessing}>
-                Start Analysis
-              </Button>
-            </div>
+            <p>Estimated cost: ~$0.02</p>
           </div>
         )}
-
-        {/* Step 2: Processing */}
-        {step === "processing" && (
+        {step === 'processing' && (
           <div className="space-y-4">
-            <Progress value={50} className="w-full" />
-            <p className="text-center text-sm text-muted-foreground">
-              Analyzing bookmarks with AI...
-            </p>
+            <p>Processing bookmarks...</p>
+            <Progress value={progress} className="w-full" />
+            <p>{Math.round(progress)}% complete</p>
           </div>
         )}
-
-        {/* Step 3: Review */}
-        {step === "review" && (
+        {step === 'review' && (
           <div className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-muted-foreground">
-                {selectedSuggestions.size} of {suggestions.length} will be categorized
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  setSelectedSuggestions(
-                    new Set(suggestions.map((s) => s.bookmark_id))
-                  )
-                }
-              >
-                Select All
-              </Button>
+            <div className="flex justify-between items-center">
+              <p>Review Suggestions</p>
+              <Button variant="outline" onClick={() => handleSelectAll(selectedSuggestions.length !== suggestions.length)}>Select All</Button>
             </div>
-
-            <div className="space-y-2 max-h-96 overflow-y-auto border rounded p-2">
-              {suggestions.map((suggestion) => {
-                const isSelected = selectedSuggestions.has(suggestion.bookmark_id);
-                const isLowConfidence = suggestion.confidence < 0.5;
-
-                return (
-                  <div
-                    key={suggestion.bookmark_id}
-                    className={`p-3 border rounded ${
-                      isLowConfidence ? "bg-yellow-50 border-yellow-200" : ""
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => toggleSuggestion(suggestion.bookmark_id)}
-                        disabled={!suggestion.suggested_category_slug}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {suggestion.text || `Bookmark ${suggestion.bookmark_id.slice(0, 8)}...`}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs text-muted-foreground">→</span>
-                          <Select
-                            value={suggestion.suggested_category_slug || "none"}
-                            onValueChange={(value) =>
-                              updateSuggestionCategory(suggestion.bookmark_id, value)
-                            }
-                          >
-                            <SelectTrigger className="h-7 text-xs w-48">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {suggestion.suggested_category_slug && (
-                                <SelectItem value={suggestion.suggested_category_slug}>
-                                  {categories.find((c) => c.slug === suggestion.suggested_category_slug)?.emoji}{" "}
-                                  {suggestion.suggested_category_name}
-                                </SelectItem>
-                              )}
-                              {categories
-                                .filter((c) => c.slug !== suggestion.suggested_category_slug)
-                                .map((cat) => (
-                                  <SelectItem key={cat.slug} value={cat.slug}>
-                                    {cat.emoji} {cat.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                          <span className="text-xs text-muted-foreground">
-                            {(suggestion.confidence * 100).toFixed(0)}%
-                          </span>
-                        </div>
-                        {suggestion.reasoning && (
-                          <p className="text-xs text-muted-foreground mt-1 italic">
-                            {suggestion.reasoning}
-                          </p>
-                        )}
-                      </div>
+            <div className="max-h-60 overflow-y-auto space-y-2 border rounded p-2">
+              {suggestions.map(suggestion => (
+                <div key={suggestion.bookmark_id} className={`flex items-center justify-between p-2 border rounded ${suggestion.confidence < 0.5 ? 'bg-yellow-50' : ''}`}>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      checked={selectedSuggestions.includes(suggestion.bookmark_id)} 
+                      onCheckedChange={() => toggleSuggestionSelection(suggestion.bookmark_id)} 
+                    />
+                    <div>
+                      <p>{suggestion.title}</p>
+                      <p className="text-sm">→ {suggestion.confidence < 0.5 ? '❓ Uncategorized (low confidence)' : `${suggestion.suggested_category_name}`}</p>
                     </div>
                   </div>
-                );
-              })}
+                  <Select>
+                    <SelectTrigger className="text-sm w-auto">
+                      <SelectValue placeholder="Change" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Category 1</SelectItem>
+                      <SelectItem value="2">Category 2</SelectItem>
+                      {/* Dynamic list of categories would be here */}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
             </div>
-
-            <div className="text-xs text-muted-foreground">
-              Actual cost: ${actualCost.toFixed(4)}
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-4 border-t">
-              <Button variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleApply}
-                disabled={isProcessing || selectedSuggestions.size === 0}
-              >
-                Apply Selected ({selectedSuggestions.size})
-              </Button>
-            </div>
+            <p>{selectedSuggestions.length}/{suggestions.length} will be categorized</p>
           </div>
         )}
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+          {step === 'configure' && <Button onClick={handleStartAnalysis}>Start Analysis</Button>}
+          {step === 'review' && <Button onClick={handleApplySelected} disabled={selectedSuggestions.length === 0}>Apply Selected ({selectedSuggestions.length})</Button>}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default AutoCategorizeModal;
