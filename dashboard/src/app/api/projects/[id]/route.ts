@@ -58,7 +58,7 @@ export async function PATCH(
     if (label) updatedFields.label = label
     if (description !== undefined) updatedFields.description = description
     if (icon) updatedFields.icon = icon
-    if (acronym !== undefined) (updatedFields as any).acronym = acronym
+    if (acronym !== undefined) updatedFields.acronym = acronym
     if (color) updatedFields.color = color
     if (active !== undefined) updatedFields.active = active
     if (owner !== undefined) (updatedFields as any).owner = owner

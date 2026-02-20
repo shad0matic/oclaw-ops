@@ -524,6 +524,7 @@ export const projectsInOps = ops.table("projects", {
 	id: text().primaryKey().notNull(),
 	label: text().notNull(),
 	icon: text().default('📦').notNull(),
+	acronym: text(),
 	description: text(),
 	color: text().default('border-l-zinc-500').notNull(),
 	active: boolean().default(true).notNull(),
