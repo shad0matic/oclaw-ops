@@ -22,7 +22,7 @@ export function GlobalStatusBar() {
       status={overviewData?.system.status || 'degraded'}
       uptime={overviewData?.system.uptime || 0}
       dashboardUptime={overviewData?.system.dashboardUptime}
-      activeCount={liveWork?.count ?? overviewData?.liveWork?.count ?? 0}
+      liveWork={liveWork ?? overviewData?.liveWork ?? { count: 0, tasks: [] }}
       dailyCost={overviewData?.dailyCost || 0}
     />
   )

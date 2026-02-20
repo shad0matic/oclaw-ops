@@ -5,6 +5,12 @@ import { AgentStatusDot } from "../shared/agent-status-dot"
 import { CostDisplay } from "../shared/cost-display"
 import { cn } from "@/lib/utils"
 import { MiniGauge } from "./mini-gauge"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import type { TaskTree } from "@/hooks/useOverviewData"
 
 // --- Merged from LiveMetricsBar ---
 
@@ -89,11 +95,16 @@ const MAX_DATA_POINTS = 150; // 5 minutes of data at 2s interval
 // --- End of Merged Code ---
 
 
+interface LiveWork {
+  count: number
+  tasks: TaskTree[]
+}
+
 export interface StatusBarProps {
   status: 'online' | 'offline' | 'degraded'
   uptime: number
   dashboardUptime?: number
-  activeCount: number
+  liveWork: LiveWork
   dailyCost: number
 }
 
@@ -125,9 +136,10 @@ export function StatusBar({
   status,
   uptime,
   dashboardUptime,
-  activeCount,
+  liveWork,
   dailyCost
 }: StatusBarProps) {
+  const activeCount = liveWork.count
   const statusText = status === 'online'
     ? `🖥 ${formatUptime(uptime)}${dashboardUptime != null ? ` · 🔲 ${formatUptime(dashboardUptime)}` : ''}`
     : status
@@ -240,11 +252,46 @@ export function StatusBar({
 
       <div className="h-4 w-px bg-border" />
 
-      {/* Active Count */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-foreground font-medium">{activeCount}</span>
-        <span className="text-sm text-muted-foreground">active</span>
-      </div>
+      {/* Active Count with Popover */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <button className="flex items-center gap-2 hover:bg-accent/50 px-2 py-1 -mx-2 rounded transition-colors">
+            <span className="text-sm text-foreground font-medium">{activeCount}</span>
+            <span className="text-sm text-muted-foreground">active</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-72 p-3" align="start">
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">Active Tasks</h4>
+            {liveWork.tasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No active tasks</p>
+            ) : (
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                {liveWork.tasks.map((task) => (
+                  <div key={task.id} className="text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground text-xs">#{task.id}</span>
+                      <span className="truncate flex-1">{task.task}</span>
+                      <span className="text-xs text-muted-foreground">{task.agentName}</span>
+                    </div>
+                    {task.children.length > 0 && (
+                      <div className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
+                        {task.children.map((child) => (
+                          <div key={child.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>#{child.id}</span>
+                            <span className="truncate flex-1">{child.task}</span>
+                            <span>{child.agentName}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
 
       <div className="h-4 w-px bg-border" />
 
