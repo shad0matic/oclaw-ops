@@ -8,7 +8,7 @@ import { BookmarkCard } from "../../../components/bookmarks/bookmark-card";
 import { CategoryChat } from "../../../components/bookmarks/category-chat";
 import { FolderContextBar } from "../../../components/bookmarks/folder-context-bar";
 import { BulkActionsToolbar } from "../../../components/bookmarks/bulk-actions-toolbar";
-import { AutoCategorizeModal } from "../../../components/bookmarks/auto-categorize-modal";
+import AutoCategorizeModal from "../../../components/bookmarks/auto-categorize-modal";
 
 interface Bookmark {
   id: string;
@@ -262,10 +262,11 @@ export default function BookmarksPage() {
 
       {/* Auto-Categorize Modal */}
       <AutoCategorizeModal
-        isOpen={showAutoCategorizeModal}
-        onClose={() => setShowAutoCategorizeModal(false)}
+        open={showAutoCategorizeModal}
+        onOpenChange={setShowAutoCategorizeModal}
         uncategorizedCount={uncategorizedCount}
-        onComplete={() => {
+        selectedBookmarkIds={[]}
+        onApply={() => {
           fetchBookmarks();
           fetchUncategorizedCount();
         }}

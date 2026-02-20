@@ -52,13 +52,14 @@ const UnassignedBookmarks = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Unassigned Bookmarks</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center space-x-2 mb-4">
-          <Select onValueChange={(value) => setSelectedFolder(BigInt(value))}>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Unassigned Bookmarks</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-2 mb-4">
+            <Select onValueChange={(value) => setSelectedFolder(BigInt(value))}>
             <SelectTrigger>
               <SelectValue placeholder="Select a folder" />
             </SelectTrigger>
@@ -94,15 +95,20 @@ const UnassignedBookmarks = () => {
             </li>
           ))}
         </ul>
-      </CardContent>
-    </Card>
-    <AutoCategorizeModal 
-      open={isModalOpen} 
-      onOpenChange={setIsModalOpen} 
-      uncategorizedCount={bookmarks.length} 
-      selectedBookmarkIds={[]} 
-      onApply={() => { /* Refresh bookmarks after apply */ fetch('/api/bookmarks').then(res => res.json()).then(data => setBookmarks(data.bookmarks || [])); }}
-    />
+        </CardContent>
+      </Card>
+      <AutoCategorizeModal 
+        open={isModalOpen} 
+        onOpenChange={setIsModalOpen} 
+        uncategorizedCount={bookmarks.length} 
+        selectedBookmarkIds={[]} 
+        onApply={() => {
+        fetch('/api/bookmarks')
+          .then(res => res.json())
+          .then(data => setBookmarks(data.bookmarks || []));
+      }}
+      />
+    </>
   );
 };
 
