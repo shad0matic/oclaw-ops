@@ -94,11 +94,12 @@ function SpecThisButton({ taskId }: { taskId: number }) {
 }
 
 // Main Sheet Component
-export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: {
+export function TaskDetailSheet({ item, projects, isOpen, onOpenChange, onNavigateToTask }: {
   item: QueueTask | FeatureRequest | null;
   projects: Project[];
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  onNavigateToTask?: (taskId: number) => void;
 }) {
   const qc = useQueryClient();
   const [title, setTitle] = useState(item?.title || "");
@@ -211,9 +212,7 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: {
           )}
 
           {taskId && <DependencyTree taskId={taskId} onTaskClick={(id) => {
-            // Open clicked task by updating URL (parent component handles)
-            window.history.pushState({}, '', `?task=${id}`);
-            window.dispatchEvent(new PopStateEvent('popstate'));
+            onNavigateToTask?.(id);
           }} />}
           {taskId && <TaskChecklist taskId={taskId} />}
           {taskId && <TaskComments taskId={taskId} />}

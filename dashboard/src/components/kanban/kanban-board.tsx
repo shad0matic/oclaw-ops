@@ -227,6 +227,17 @@ export function KanbanBoard() {
 
   const handleCardClick = (item: QueueTask | FeatureRequest) => setSelectedItem(item);
   const handleSheetOpenChange = (isOpen: boolean) => !isOpen && setSelectedItem(null);
+  
+  const handleNavigateToTask = useCallback((taskId: number) => {
+    // Find the task in queue data by ID
+    const task = queueData?.find(t => t.id === taskId);
+    if (task) {
+      setSelectedItem(task);
+    } else {
+      // Task not in current view - navigate to dedicated task page
+      window.location.href = `/tasks/${taskId}`;
+    }
+  }, [queueData]);
 
   const isLoading = isQueueLoading || isBacklogLoading;
   const error = queueError || backlogError;
@@ -440,6 +451,7 @@ export function KanbanBoard() {
         onOpenChange={handleSheetOpenChange}
         item={selectedItem}
         projects={projects}
+        onNavigateToTask={handleNavigateToTask}
       />
       <NewTaskSheet
         isOpen={isNewTaskSheetOpen}
