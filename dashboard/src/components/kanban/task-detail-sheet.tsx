@@ -61,6 +61,38 @@ const formatDate = (date: string | null | undefined) => {
   }
 };
 
+// Spec This Button Component
+function SpecThisButton({ taskId }: { taskId: number }) {
+  const qc = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "spec" }),
+      });
+      if (!res.ok) throw new Error("Failed to create spec");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["task-queue"] });
+    },
+  });
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => mutation.mutate()}
+      disabled={mutation.isPending}
+      className="flex items-center gap-2 text-sm"
+    >
+      <FileText className="h-4 w-4" />
+      {mutation.isPending ? "Creating spec..." : "Spec This"}
+    </Button>
+  );
+}
+
 // Main Sheet Component
 export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: {
   item: QueueTask | FeatureRequest | null;
@@ -140,19 +172,23 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange }: {
             />
           </div>
 
-          {/* Spec Link */}
-          {isDbTask && (item as QueueTask).spec_url && (
+          {/* Spec Section */}
+          {isDbTask && (
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Spec</label>
-              <a 
-                href={(item as QueueTask).spec_url!} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-blue-500 hover:text-blue-400 hover:underline"
-              >
-                <FileText className="h-4 w-4" />
-                View spec on GitHub
-              </a>
+              {(item as QueueTask).spec_url ? (
+                <a 
+                  href={(item as QueueTask).spec_url!} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-blue-500 hover:text-blue-400 hover:underline"
+                >
+                  <FileText className="h-4 w-4" />
+                  View spec on GitHub
+                </a>
+              ) : (
+                <SpecThisButton taskId={(item as QueueTask).id} />
+              )}
             </div>
           )}
 
@@ -302,9 +338,6 @@ function TaskDetailFooter({ task, taskMutation, updateField, onOpenChange }: {
         case 'queued':
         case 'backlog':
             buttons.push({ action: 'run', label: 'Run Now', icon: Play, tooltip: 'Start task immediately (assigns agent, moves to Running)', primary: true });
-            if (!task.speced) {
-                buttons.push({ action: 'spec', label: 'Spec This', icon: FileText, tooltip: 'Create a spec for this task' });
-            }
             buttons.push({ action: 'plan', label: 'Plan', icon: Milestone, tooltip: 'Move to Planned column for scheduling' });
             break;
         case 'planned':
