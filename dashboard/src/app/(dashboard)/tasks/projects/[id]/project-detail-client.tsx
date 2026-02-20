@@ -104,11 +104,23 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
 
   return (
     <>
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+        <Link href="/tasks" className="hover:text-foreground transition-colors">← Kanban</Link>
+        <span>/</span>
+        <Link href="/tasks/projects" className="hover:text-foreground transition-colors">Projects</Link>
+        <span>/</span>
+        <span className="text-foreground">{project.icon} {project.acronym || project.label}</span>
+      </nav>
+
       <div className="flex items-center justify-between">
-        <PageHeader 
-          title={`${project.icon} ${project.label}`}
-          subtitle={project.description || "No description."} 
-        />
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            {project.icon} {project.label}
+            {project.acronym && <Badge variant="secondary" className="text-xs">{project.acronym}</Badge>}
+          </h1>
+          <p className="text-muted-foreground">{project.description || "No description."}</p>
+        </div>
         <div>
             {isEditing ? (
                 <>
@@ -127,12 +139,12 @@ export function ProjectDetailClient({ projectId }: { projectId: string }) {
       </div>
       
       {isEditing && (
-        <Card>
+        <Card className="mt-4">
             <CardContent className="p-6 grid grid-cols-2 gap-4">
                 <Input name="label" value={formData.label || ''} onChange={handleInputChange} placeholder="Project Name" />
                 <div className="flex gap-2">
                   <Input name="icon" value={formData.icon || ''} onChange={handleInputChange} placeholder="Icon (emoji)" className="w-20" />
-                  <Input name="acronym" value={formData.acronym || ''} onChange={handleInputChange} placeholder="Acronym (e.g. TB)" className="flex-1" />
+                  <Input name="acronym" value={formData.acronym || ''} onChange={handleInputChange} placeholder="Acronym (e.g. MC)" className="flex-1" />
                 </div>
                 <Textarea name="description" value={formData.description || ''} onChange={handleInputChange} placeholder="Description" className="col-span-2" />
                 <Input name="owner" value={formData.owner || ''} onChange={handleInputChange} placeholder="Owner" />
