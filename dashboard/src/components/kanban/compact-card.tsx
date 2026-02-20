@@ -99,7 +99,7 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
         return null;
       }
 
-      // Chat was acked with thumbs up - show dimmed (light blue) icon
+      // Chat was acked with thumbs up (trigger clears this on new comments)
       if (task.chat_acked_at) {
         return 'read';  // text-blue-300 = light blue
       }

@@ -40,10 +40,7 @@ export async function POST(
     return NextResponse.json({ error: "Message required" }, { status: 400 })
   }
 
-  // Clear chat_acked_at when new comment added
-  await db.execute(sql`
-    UPDATE ops.task_queue SET chat_acked_at = NULL WHERE id = ${taskId}
-  `)
+  // chat_acked_at is cleared by database trigger on insert
 
   const result = await db.execute(sql`
     INSERT INTO ops.task_comments (task_id, author, message)

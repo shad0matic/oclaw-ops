@@ -105,6 +105,46 @@ const ProjectCard = ({ project }: { project: Project }) => {
   )
 }
 
+function Legend() {
+  return (
+    <div className="mt-8 p-4 border border-border rounded-lg bg-card/30">
+      <h3 className="text-sm font-medium mb-3">Legend</h3>
+      <div className="flex flex-wrap gap-6 text-xs text-muted-foreground">
+        <div className="space-y-2">
+          <p className="font-medium text-foreground">Task Status</p>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-yellow-500"/>
+            <span>Open — Queued, planned, assigned, or backlog</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-blue-500"/>
+            <span>Running — Currently being worked on</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-green-500"/>
+            <span>Done — Completed or in review</span>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <p className="font-medium text-foreground">Project Status</p>
+          <div className="flex items-center gap-2">
+            <Badge variant="default" className="bg-green-500/10 text-green-500 text-[10px] px-1.5 py-0">active</Badge>
+            <span>Project is actively being worked on</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="bg-muted text-muted-foreground text-[10px] px-1.5 py-0">paused</Badge>
+            <span>Project is on hold</span>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <p className="font-medium text-foreground">Progress Bar</p>
+          <span>Shows percentage of tasks completed (done / total)</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ProjectsClient() {
   const { data: projects, isLoading, isError } = useQuery<Project[]>({
     queryKey: ["projects"],
@@ -116,10 +156,13 @@ export function ProjectsClient() {
   if (!projects || projects.length === 0) return <div>No projects found.</div>
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {projects.map(project => (
-        <ProjectCard key={project.id} project={project} />
-      ))}
-    </div>
+    <>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {projects.map(project => (
+          <ProjectCard key={project.id} project={project} />
+        ))}
+      </div>
+      <Legend />
+    </>
   )
 }

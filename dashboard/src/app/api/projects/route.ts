@@ -9,12 +9,12 @@ export async function GET(request: NextRequest) {
     const rows = await db.execute(sql`
       SELECT
         p.*,
-        COALESCE(SUM(CASE WHEN t.status IN ('queued','planned','assigned') THEN 1 ELSE 0 END), 0)::int AS "tasksOpen",
+        COALESCE(SUM(CASE WHEN t.status IN ('queued','planned','assigned','backlog') THEN 1 ELSE 0 END), 0)::int AS "tasksOpen",
         COALESCE(SUM(CASE WHEN t.status = 'running' THEN 1 ELSE 0 END), 0)::int AS "tasksRunning",
-        COALESCE(SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END), 0)::int AS "tasksDone",
+        COALESCE(SUM(CASE WHEN t.status IN ('done','review') THEN 1 ELSE 0 END), 0)::int AS "tasksDone",
         MAX(GREATEST(t.started_at, t.completed_at)) AS "lastActivity"
       FROM ops.projects p
-      LEFT JOIN ops.task_queue t ON t.epic = p.id
+      LEFT JOIN ops.task_queue t ON t.project = p.id
       GROUP BY p.id
       ORDER BY p.label
     `)
