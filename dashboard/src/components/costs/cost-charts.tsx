@@ -51,7 +51,7 @@ export function CostByModelChart({ data }: CostByModelProps) {
             return (
                 <div className="bg-popover border border-border rounded-md p-2 shadow-lg">
                     <p className="font-medium text-sm">{data.name}</p>
-                    <p className="text-sm text-muted-foreground">${data.value.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">${(Number(data.value) || 0).toFixed(2)}</p>
                     <p className="text-xs text-muted-foreground">{data.runs} runs</p>
                 </div>
             )
@@ -132,7 +132,7 @@ export function CostByAgentChart({ data }: CostByAgentProps) {
             <CardContent className="h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                        <XAxis type="number" tickFormatter={(v) => `$${v.toFixed(0)}`} fontSize={10} />
+                        <XAxis type="number" tickFormatter={(v) => `$${(Number(v) || 0).toFixed(0)}`} fontSize={10} />
                         <YAxis type="category" dataKey="name" width={60} fontSize={10} />
                         <Tooltip
                             formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Cost']}
@@ -200,7 +200,7 @@ export function DailyCostTrendChart({ data }: DailyCostTrendProps) {
                             axisLine={false}
                         />
                         <YAxis 
-                            tickFormatter={(v) => `$${v.toFixed(0)}`} 
+                            tickFormatter={(v) => `$${(Number(v) || 0).toFixed(0)}`} 
                             fontSize={10}
                             tickLine={false}
                             axisLine={false}

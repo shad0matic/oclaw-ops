@@ -272,7 +272,7 @@ export function DaveBudgetManager() {
                         <span className="text-muted-foreground">Daily</span>
                         <span className={budget.dailyPercentUsed && budget.dailyPercentUsed >= 100 ? "text-red-400" : "text-foreground"}>
                           ${budget.currentDailySpendUsd} / ${budget.dailyLimitUsd}
-                          {percentUsed !== null && ` (${percentUsed.toFixed(0)}%)`}
+                          {percentUsed !== null && ` (${(Number(percentUsed) || 0).toFixed(0)}%)`}
                         </span>
                       </div>
                       {percentUsed !== null && (

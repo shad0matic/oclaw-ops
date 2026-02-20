@@ -235,10 +235,10 @@ export function BudgetManager() {
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">
-                                        ${budget.current_spend_usd.toFixed(2)} / ${budget.amount_usd.toFixed(2)}
+                                        ${(Number(budget.current_spend_usd) || 0).toFixed(2)} / ${(Number(budget.amount_usd) || 0).toFixed(2)}
                                     </span>
                                     <span className={budget.alert_triggered ? "text-yellow-500" : "text-muted-foreground"}>
-                                        {budget.percent_used.toFixed(1)}%
+                                        {(Number(budget.percent_used) || 0).toFixed(1)}%
                                     </span>
                                 </div>
                                 <Progress 
@@ -248,7 +248,7 @@ export function BudgetManager() {
                                 <div className="flex justify-between text-xs text-muted-foreground">
                                     <span className="flex items-center gap-1">
                                         <TrendingUp className="h-3 w-3" />
-                                        Remaining: ${budget.remaining_usd.toFixed(2)}
+                                        Remaining: ${(Number(budget.remaining_usd) || 0).toFixed(2)}
                                     </span>
                                     <span>Alert at {budget.alert_threshold_percent}%</span>
                                 </div>

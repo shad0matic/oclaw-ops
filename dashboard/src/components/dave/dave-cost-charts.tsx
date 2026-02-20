@@ -24,13 +24,13 @@ export function DaveCostCharts() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Today</span>
               <span className="font-mono text-sm text-foreground">
-                ${todayData?.totalUsd?.toFixed(2) || '0.00'}
+                ${(Number(todayData?.totalUsd) || 0).toFixed(2)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">This Month</span>
               <span className="font-mono text-sm text-foreground">
-                ${monthData?.totalUsd?.toFixed(2) || '0.00'}
+                ${(Number(monthData?.totalUsd) || 0).toFixed(2)}
               </span>
             </div>
           </div>
@@ -48,7 +48,7 @@ export function DaveCostCharts() {
                 <div key={i} className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{agent.agentId}</span>
                   <span className="font-mono text-sm text-foreground">
-                    ${agent.costUsd?.toFixed(2) || '0.00'}
+                    ${(Number(agent.costUsd) || 0).toFixed(2)}
                   </span>
                 </div>
               ))}

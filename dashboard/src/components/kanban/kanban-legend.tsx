@@ -23,19 +23,23 @@ export function KanbanLegend() {
             <div className="font-medium text-foreground">Chat Status</div>
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-blue-500" />
-              <span>Unread by agent</span>
+              <span>Boss commented (unread)</span>
             </div>
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-blue-300" />
-              <span>Read, no reply</span>
+              <span>Agent read / Acked</span>
             </div>
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-amber-500 animate-pulse" />
-              <span>Agent replied</span>
+              <span>Agent replied (unread)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-amber-300" />
+              <span>Boss read reply</span>
             </div>
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-gray-400" />
-              <span>Closed</span>
+              <span>Done task</span>
             </div>
           </div>
 

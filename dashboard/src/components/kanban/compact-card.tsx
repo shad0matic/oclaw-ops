@@ -99,9 +99,9 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
         return null;
       }
 
-      // Chat was acked with thumbs up - hide icon until new comment
+      // Chat was acked with thumbs up - show dimmed (light blue) icon
       if (task.chat_acked_at) {
-        return null;
+        return 'read';  // text-blue-300 = light blue
       }
 
       // Gray only for truly closed tasks (done)

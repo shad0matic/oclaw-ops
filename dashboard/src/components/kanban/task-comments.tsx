@@ -96,8 +96,9 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
   });
 
   // Check if last comment is from agent (show thumbs up)
+  // Hide thumbs up when user is typing - they're clearly replying, not just acking
   const lastComment = comments.length > 0 ? comments[comments.length - 1] : null;
-  const showThumbsUp = lastComment && lastComment.author !== "boss";
+  const showThumbsUp = lastComment && lastComment.author !== "boss" && !message.trim();
 
   const addComment = useMutation({
     mutationFn: async (msg: string) => {
