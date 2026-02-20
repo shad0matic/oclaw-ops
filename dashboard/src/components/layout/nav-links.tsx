@@ -13,7 +13,7 @@ const navItems = [
     { href: "/tasks", label: "Kanban", icon: ListTodo },
     { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
     { href: "/knowledge", label: "Knowledge", icon: Brain },
-    { href: "/costs", label: "Costs", icon: DollarSign },
+    { href: "/dave", label: "Dave 💰", icon: DollarSign },
     { href: "/agents", label: "Agents", icon: Users },
     { href: "/events", label: "Events", icon: Activity },
     { href: "/settings", label: "Settings", icon: Settings },
