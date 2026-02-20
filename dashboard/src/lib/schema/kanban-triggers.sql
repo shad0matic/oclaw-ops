@@ -25,12 +25,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER kanban_status_update_trigger
-AFTER UPDATE ON tasks
+AFTER UPDATE ON ops.tasks
 FOR EACH ROW
 WHEN (
-    OLD.status != NEW.status OR
-    OLD.assignee != NEW.assignee OR
-    OLD.priority != NEW.priority
+    OLD.status IS DISTINCT FROM NEW.status OR
+    OLD.agent_id IS DISTINCT FROM NEW.agent_id OR
+    OLD.priority IS DISTINCT FROM NEW.priority
 )
 EXECUTE FUNCTION ops.notify_kanban_status_update();
 
@@ -44,6 +44,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER new_task_comment_trigger
-AFTER INSERT ON task_comments
+AFTER INSERT ON ops.task_comments
 FOR EACH ROW
 EXECUTE FUNCTION ops.notify_new_task_comment();
