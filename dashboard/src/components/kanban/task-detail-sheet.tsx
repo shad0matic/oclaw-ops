@@ -359,9 +359,9 @@ function TaskDetailFooter({ task, taskMutation, updateField, onOpenChange }: {
             buttons.push({ action: 'requeue', label: 'Back to Backlog', icon: ArrowRight, tooltip: 'Move back to Backlog for later' });
             break;
         case 'running':
-            buttons.push({ action: 'review', label: 'Finish for Review', icon: Check, tooltip: 'Mark as complete, move to Review for validation', primary: true });
+            buttons.push({ action: 'complete', label: 'Done', icon: Check, tooltip: 'Mark as Done (skip review)', primary: true });
+            buttons.push({ action: 'review', label: 'To Review', icon: ArrowRight, tooltip: 'Move to Review for validation' });
             buttons.push({ action: 'pause', label: 'Pause', icon: Pause, tooltip: 'Pause task, move back to Planned' });
-            buttons.push({ action: 'human', label: 'Flag for Human', icon: User, tooltip: 'Needs human attention before continuing' });
             buttons.push({ action: 'cancel', label: 'Cancel', icon: Square, tooltip: 'Cancel this task' });
             break;
         case 'review':
