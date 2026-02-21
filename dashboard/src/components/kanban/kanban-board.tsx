@@ -16,6 +16,8 @@ import { Project, QueueTask, FeatureRequest } from "@/components/kanban/types";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useTaskStream } from "@/hooks/use-task-stream";
 import { MelStatusIndicator } from "./mel-status-indicator";
+import { useKanban } from "@/contexts/KanbanContext";
+import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData";
 
 const REFRESH_INTERVAL = 10_000; // 10s
 

@@ -36,7 +36,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronsUpDown, Trash2, Edit3, MoreVertical, Play, ArrowRight, Check, X, Bot, User, Milestone, Pause, Square, FileText } from "lucide-react";
+import { ChevronsUpDown, Trash2, Edit3, MoreVertical, Play, ArrowRight, Check, X, Bot, User, Milestone, Pause, Square, FileText, Copy } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   DropdownMenu,
