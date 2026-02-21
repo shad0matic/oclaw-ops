@@ -1,9 +1,13 @@
 
+"use client"
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface TaskHeaderProps {
   task: {
+    id: string;
     title: string;
     status: string;
     assignedAgent: { name: string };
@@ -14,6 +18,11 @@ interface TaskHeaderProps {
 }
 
 export function TaskHeader({ task }: TaskHeaderProps) {
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(task.id);
+    toast.success("Task ID copied to clipboard");
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -21,6 +30,12 @@ export function TaskHeader({ task }: TaskHeaderProps) {
           <span>{task.title}</span>
           <Badge>{task.status}</Badge>
         </CardTitle>
+        <div 
+          className="text-xs text-gray-500 mt-1 cursor-pointer"
+          onClick={copyToClipboard}
+        >
+          ID: {task.id}
+        </div>
       </CardHeader>
       <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
