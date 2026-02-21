@@ -103,7 +103,7 @@ export async function autoDispatchNextTask(): Promise<void> {
     
     // Log the auto-dispatch event
     await pool.query(`
-      INSERT INTO ops.agent_learnings (agent_type, task_id, learning_text, category)
+      INSERT INTO ops.agent_learnings (agent_type, task_id, learning, context)
       VALUES ($1, $2, $3, $4)
     `, [
       'backend',
