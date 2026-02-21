@@ -97,13 +97,13 @@ const COLUMNS: Array<{ title: string; status: string | string[] }> = [
     { title: "✅ Done", status: "done" },
 ];
 
-
-import { useKanban } from "@/contexts/KanbanContext";
-
 export function KanbanBoard() {
   const { totalRunningTasks, setTotalRunningTasks, filteredRunningTasks, setFilteredRunningTasks } = useKanban();
-  // Pulse filter button when filters hide running tasks
-  const hasHiddenRunning = filteredRunningTasks < totalRunningTasks;
+  const { data: overviewData } = useOverviewData(30000);
+  const { liveWork } = useLiveWork(10000);
+  const activeTasks = liveWork?.count ?? overviewData?.liveWork?.count ?? 0;
+  // Pulse when Running count doesn't match Active count
+  const hasHiddenRunning = filteredRunningTasks !== activeTasks;
   const queryClient = useQueryClient();
   useTaskStream(); // Real-time SSE updates
   
@@ -293,7 +293,7 @@ export function KanbanBoard() {
                   ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                   : "text-muted-foreground hover:text-foreground bg-muted"
               }`}
-              title={hasHiddenRunning ? `⚠️ ${totalRunningTasks - filteredRunningTasks} running task(s) hidden by filters` : undefined}
+              title={hasHiddenRunning ? `⚠️ Running (${filteredRunningTasks}) doesn't match Active (${activeTasks})` : undefined}
             >
               <Filter className={`w-3.5 h-3.5 ${hasHiddenRunning ? "text-orange-400" : ""}`} />
               {hasHiddenRunning ? `Filter ⚠️` : `Filter${(projectFilter.length > 0 || agentFilter.length > 0) ? ` (${projectFilter.length + agentFilter.length})` : ""}`}

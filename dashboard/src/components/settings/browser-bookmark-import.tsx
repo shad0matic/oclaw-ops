@@ -167,7 +167,7 @@ export function BrowserBookmarkImport() {
             Browser Bookmark Import
           </CardTitle>
           <CardDescription>
-            Import bookmarks from Chrome or Firefox. Exported bookmarks will be validated, scraped, and summarized.
+            Import bookmarks from Chrome, Brave, or Firefox. Exported bookmarks will be validated, scraped, and summarized.
           </CardDescription>
         </CardHeader>
       <CardContent className="space-y-4">
@@ -210,7 +210,7 @@ export function BrowserBookmarkImport() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".json,application/json"
+              accept=".json,.html,application/json,text/html"
               onChange={handleFileSelect}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               disabled={state === 'parsing'}
@@ -226,9 +226,9 @@ export function BrowserBookmarkImport() {
               ) : (
                 <>
                   <Upload className="h-8 w-8 text-muted-foreground" />
-                  <p className="text-sm font-medium">Drop bookmark JSON here or click to select</p>
+                  <p className="text-sm font-medium">Drop bookmark file here or click to select</p>
                   <p className="text-xs text-muted-foreground">
-                    Supports Chrome (<code>Bookmarks</code>) and Firefox (<code>bookmarks.json</code>) exports
+                    Supports Chrome/Firefox JSON and Brave/Chrome HTML bookmark exports
                   </p>
                 </>
               )}
@@ -241,6 +241,7 @@ export function BrowserBookmarkImport() {
           <div className="text-xs text-muted-foreground space-y-1 mt-2">
             <p className="font-medium">How to export bookmarks:</p>
             <p>• <strong>Chrome:</strong> Navigate to <code className="bg-muted px-1 rounded">chrome://bookmarks</code> → ⋮ menu → Export bookmarks</p>
+            <p>• <strong>Brave:</strong> Navigate to <code className="bg-muted px-1 rounded">brave://bookmarks</code> → ⋮ menu → Export bookmarks (saves as HTML file)</p>
             <p>• <strong>Firefox:</strong> Bookmarks → Manage Bookmarks → Import and Backup → Backup</p>
           </div>
         )}

@@ -239,6 +239,13 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange, onNaviga
 function TaskDetailHeader({ item, projects, title, setTitle, updateField, project, setProject }: any) {
   const proj = projects.find((p: Project) => p.id === (project || "other"));
   const projectIcon = proj?.icon || "📦";
+  const [copied, setCopied] = useState(false);
+
+  const copyTaskId = () => {
+    navigator.clipboard.writeText(String(item.id));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="shrink-0 border-b border-border/50 px-4 py-3 sm:px-6 sm:py-3">
@@ -247,7 +254,14 @@ function TaskDetailHeader({ item, projects, title, setTitle, updateField, projec
         <SheetDescription id="task-detail-desc" className="sr-only">View and edit task details</SheetDescription>
         
         <div className="flex items-center gap-2">
-          <span className="text-sm font-mono text-muted-foreground/60">#{item.id}</span>
+          <button
+            onClick={copyTaskId}
+            className="flex items-center gap-1 text-sm font-mono text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-pointer group"
+            title={copied ? "Copied!" : "Copy task ID"}
+          >
+            <span>#{item.id}</span>
+            <Copy className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity cursor-pointer" />
+          </button>
           <Input 
             value={title} 
             onChange={(e) => setTitle(e.target.value)} 
