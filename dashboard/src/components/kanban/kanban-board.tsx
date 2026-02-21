@@ -97,14 +97,11 @@ const COLUMNS: Array<{ title: string; status: string | string[] }> = [
 
 
 import { useKanban } from "@/contexts/KanbanContext";
-import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData";
 
 export function KanbanBoard() {
   const { totalRunningTasks, setTotalRunningTasks, filteredRunningTasks, setFilteredRunningTasks } = useKanban();
-  const { data: overviewData } = useOverviewData(30000);
-  const { liveWork } = useLiveWork(10000);
-  const activeTasks = liveWork?.count ?? overviewData?.liveWork?.count ?? 0;
-  const hasHiddenRunning = totalRunningTasks > 0 && totalRunningTasks !== activeTasks;
+  // Pulse filter button when filters hide running tasks
+  const hasHiddenRunning = filteredRunningTasks < totalRunningTasks;
   const queryClient = useQueryClient();
   useTaskStream(); // Real-time SSE updates
   
