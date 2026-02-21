@@ -249,6 +249,15 @@ export function StatusBar({
           <span className="text-sm text-foreground font-medium">{activeCount}</span>
           <span className="text-sm text-muted-foreground">active</span>
         </div>
+        {latestData && (
+          <MiniGauge
+            value={latestData.load[0]}
+            label=""
+            type="raw"
+            max={latestData.cores}
+            size={40}
+          />
+        )}
       </div>
       
       {/* Desktop view */}
