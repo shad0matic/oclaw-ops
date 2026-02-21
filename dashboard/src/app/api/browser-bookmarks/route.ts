@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
+import { JSDOM } from "jsdom";
 
 // Type definitions for browser bookmark exports
 interface ChromeBookmark {
@@ -88,8 +89,95 @@ function parseFirefoxBookmarks(
   return results;
 }
 
+// Parse HTML bookmarks (Netscape Bookmark File Format - Brave, Safari, Edge)
+function parseHTMLBookmarks(html: string): ParsedBookmark[] {
+  const results: ParsedBookmark[] = [];
+  
+  try {
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    
+    // Recursive function to traverse bookmark tree
+    function traverseDL(dlElement: Element, path: string[] = []) {
+      // Process all DT children in order
+      for (let i = 0; i < dlElement.children.length; i++) {
+        const dt = dlElement.children[i];
+        if (dt.tagName?.toLowerCase() !== 'dt') continue;
+        
+        // Check first child of DT
+        const firstChild = dt.firstElementChild;
+        if (!firstChild) continue;
+        
+        const childTag = firstChild.tagName?.toLowerCase();
+        
+        if (childTag === 'h3') {
+          // This is a folder heading
+          const folderName = firstChild.textContent?.trim() || 'Unnamed Folder';
+          
+          // Look for the next DL sibling (folder contents)
+          let nextElement = dt.nextElementSibling;
+          while (nextElement && nextElement.tagName?.toLowerCase() !== 'dl' && nextElement.tagName?.toLowerCase() !== 'dt') {
+            nextElement = nextElement.nextElementSibling;
+          }
+          
+          if (nextElement && nextElement.tagName?.toLowerCase() === 'dl') {
+            // Recursively process folder contents
+            const newPath = [...path, folderName];
+            traverseDL(nextElement, newPath);
+            // Skip the DL element we just processed
+            i++;
+          }
+        } else if (childTag === 'a') {
+          // This is a bookmark
+          const url = firstChild.getAttribute('href');
+          const title = firstChild.textContent?.trim() || null;
+          const addDate = firstChild.getAttribute('add_date');
+          
+          if (url) {
+            let addedAt: Date | null = null;
+            if (addDate) {
+              // Unix timestamp in seconds
+              addedAt = new Date(parseInt(addDate, 10) * 1000);
+            }
+            
+            results.push({
+              url,
+              title,
+              folderPath: path.join(' > '),
+              addedAt,
+            });
+          }
+        }
+      }
+    }
+    
+    // Find the root DL element and start processing
+    const rootDL = document.querySelector('dl');
+    if (rootDL) {
+      traverseDL(rootDL);
+    }
+  } catch (error) {
+    console.error('HTML parsing error:', error);
+    throw new Error('Failed to parse HTML bookmark file');
+  }
+  
+  return results;
+}
+
 // Detect format and parse bookmarks
 function parseBookmarkFile(data: unknown): ParsedBookmark[] {
+  // HTML format detection (Brave, Safari, Edge - Netscape Bookmark File Format)
+  if (typeof data === 'string') {
+    const trimmed = data.trim();
+    if (
+      trimmed.includes('<!DOCTYPE NETSCAPE-Bookmark-file-1>') ||
+      trimmed.includes('<DT><H3') ||
+      (trimmed.toLowerCase().includes('<html') && trimmed.toLowerCase().includes('<a href'))
+    ) {
+      return parseHTMLBookmarks(data);
+    }
+  }
+
   // Chrome format detection: has "roots" object with bookmark_bar, other, synced
   if (
     typeof data === 'object' &&
@@ -130,7 +218,7 @@ function parseBookmarkFile(data: unknown): ParsedBookmark[] {
       }));
   }
 
-  throw new Error('Unrecognized bookmark format');
+  throw new Error('Unrecognized bookmark format. Supported formats: HTML (Brave/Safari/Edge), Chrome JSON, Firefox JSON');
 }
 
 // GET /api/browser-bookmarks - Fetch imported bookmarks with stats

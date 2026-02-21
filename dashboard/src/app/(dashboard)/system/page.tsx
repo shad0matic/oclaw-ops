@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { SystemMonitor } from "@/components/dashboard/system-monitor"
+import { TelegramSessions } from "@/components/telegram/telegram-sessions"
 import { getCpuLoad, getMemStats, getUptime } from "@/lib/system-stats"
 import { PageHeader } from "@/components/layout/page-header"
 
@@ -25,6 +26,8 @@ export default async function SystemPage() {
             </div>
 
             <SystemMonitor initialData={initialData} />
+
+            <TelegramSessions />
         </div>
     )
 }
