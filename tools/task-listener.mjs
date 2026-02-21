@@ -95,6 +95,67 @@ function formatNotification(payload) {
   return null;
 }
 
+import fs from 'fs';
+import { exec } from 'child_process';
+
+const PENDING_COMMENTS_FILE = '/tmp/task-comments-pending.json';
+
+async function handleTaskComment(pool, payload) {
+  const { task_id, comment_id } = payload;
+  
+  // Fetch comment details
+  const { rows } = await pool.query(
+    `SELECT tc.*, tq.title as task_title 
+     FROM ops.task_comments tc 
+     JOIN ops.task_queue tq ON tc.task_id = tq.id
+     WHERE tc.id = $1`,
+    [comment_id]
+  );
+  
+  if (rows.length === 0) return;
+  
+  const comment = rows[0];
+  
+  // Only process Boss comments
+  if (comment.author !== 'boss') {
+    console.log('Skipping non-boss comment');
+    return;
+  }
+  
+  console.log(`🚨 Boss comment on #${task_id}: ${comment.message.slice(0, 50)}...`);
+  
+  // Write to pending file for Kevin
+  let pending = [];
+  try {
+    const existing = fs.readFileSync(PENDING_COMMENTS_FILE, 'utf8');
+    pending = JSON.parse(existing);
+  } catch (e) {
+    // File doesn't exist or is invalid
+  }
+  
+  pending.push({
+    task_id,
+    comment_id,
+    message: comment.message,
+    task_title: comment.task_title,
+    created_at: comment.created_at
+  });
+  
+  fs.writeFileSync(PENDING_COMMENTS_FILE, JSON.stringify(pending, null, 2));
+  console.log('Written to pending file');
+  
+  // Wake Kevin immediately via cron wake
+  exec('curl -s -X POST http://localhost:18787/api/cron/wake -H "Content-Type: application/json" -d \'{"text":"Boss commented on task - respond immediately","mode":"now"}\'', 
+    (err, stdout, stderr) => {
+      if (err) console.error('Wake failed:', err.message);
+      else console.log('Kevin woken:', stdout);
+    }
+  );
+  
+  // Send Telegram alert
+  await sendTelegramMessage(`💬 <b>Boss commented on #${task_id}</b>\n${comment.message.slice(0, 200)}`);
+}
+
 async function main() {
   if (!TELEGRAM_BOT_TOKEN) {
     console.error('Missing TELEGRAM_BOT_TOKEN environment variable');
@@ -124,12 +185,19 @@ async function main() {
   console.log('Connected to Postgres');
 
   await client.query('LISTEN task_changes');
-  console.log('Listening on task_changes channel...');
+  await client.query('LISTEN new_task_comment');
+  console.log('Listening on task_changes + new_task_comment channels...');
 
   client.on('notification', async (msg) => {
     try {
       const payload = JSON.parse(msg.payload);
-      console.log('Received:', payload);
+      console.log('Received:', msg.channel, payload);
+
+      // Handle new task comments - wake Kevin immediately
+      if (msg.channel === 'new_task_comment') {
+        await handleTaskComment(pool, payload);
+        return;
+      }
 
       // Dedup check
       const dedupKey = `${payload.task_id}-${payload.status}-${payload.event || 'change'}`;

@@ -99,7 +99,8 @@ const COLUMNS: Array<{ title: string; status: string | string[] }> = [
 import { useKanban } from "@/contexts/KanbanContext";
 
 export function KanbanBoard() {
-  const { setTotalRunningTasks, setFilteredRunningTasks } = useKanban();
+  const { totalRunningTasks, setTotalRunningTasks, filteredRunningTasks, setFilteredRunningTasks } = useKanban();
+  const hasHiddenRunning = totalRunningTasks !== filteredRunningTasks;
   const queryClient = useQueryClient();
   useTaskStream(); // Real-time SSE updates
   
@@ -283,10 +284,13 @@ export function KanbanBoard() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-1.5 text-xs rounded-lg px-3 py-1.5 transition-colors ${
-                projectFilter.length > 0 || agentFilter.length > 0
+                hasHiddenRunning
+                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/50 animate-pulse"
+                  : projectFilter.length > 0 || agentFilter.length > 0
                   ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                   : "text-muted-foreground hover:text-foreground bg-muted"
               }`}
+              title={hasHiddenRunning ? `${totalRunningTasks - filteredRunningTasks} running task(s) hidden by filters` : undefined}
             >
               <Filter className="w-3.5 h-3.5" />
               Filter{(projectFilter.length > 0 || agentFilter.length > 0) && ` (${projectFilter.length + agentFilter.length})`}

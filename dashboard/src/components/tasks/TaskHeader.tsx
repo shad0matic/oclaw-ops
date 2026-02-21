@@ -4,6 +4,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { ClipboardCopy } from "lucide-react";
 
 interface TaskHeaderProps {
   task: {
@@ -31,10 +32,11 @@ export function TaskHeader({ task }: TaskHeaderProps) {
           <Badge>{task.status}</Badge>
         </CardTitle>
         <div 
-          className="text-xs text-gray-500 mt-1 cursor-pointer"
+          className="flex items-center gap-2 text-xs text-gray-500 mt-1 cursor-pointer hover:text-gray-700"
           onClick={copyToClipboard}
         >
-          ID: {task.id}
+          <span>ID: {task.id}</span>
+          <ClipboardCopy size={14} />
         </div>
       </CardHeader>
       <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">

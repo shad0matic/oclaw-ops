@@ -53,7 +53,8 @@ export function BrowserBookmarkImport() {
   // Fetch current stats
   const fetchStats = useCallback(async () => {
     try {
-      const response = await fetch('/api/browser-bookmarks?limit=1');
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const response = await fetch(`${baseUrl}/api/browser-bookmarks?limit=1`);
       const data = await response.json();
       if (data.stats) {
         setStats(data.stats);
