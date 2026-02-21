@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 def get_db_connection():
     """Return psql command base."""
-    return ["psql", "-U", "shad", "openclaw_db", "-t"]
+    return ["psql", "-U", "openclaw", "openclaw_db", "-t"]
 
 def create_task():
     """Create a task in ops.task_queue and return the task id."""
@@ -31,7 +31,7 @@ RETURNING id;
     
     try:
         result = subprocess.run(
-            ["psql", "-U", "shad", "openclaw_db", "-t"],
+            ["psql", "-U", "openclaw", "openclaw_db", "-t"],
             input=sql,
             capture_output=True,
             text=True,
@@ -68,7 +68,7 @@ WHERE id = {task_id};
     
     try:
         result = subprocess.run(
-            ["psql", "-U", "shad", "openclaw_db"],
+            ["psql", "-U", "openclaw", "openclaw_db"],
             input=sql,
             capture_output=True,
             text=True,
@@ -98,7 +98,7 @@ WHERE id = {task_id};
     
     try:
         result = subprocess.run(
-            ["psql", "-U", "shad", "openclaw_db"],
+            ["psql", "-U", "openclaw", "openclaw_db"],
             input=sql,
             capture_output=True,
             text=True,
@@ -123,10 +123,10 @@ def save_total_count(total_in_db):
         print(f"⚠️  Failed to save total count: {e}", file=sys.stderr)
 
 def fetch_bookmarks(count=100):
-    """Fetch bookmarks using birdx with a count limit."""
+    """Fetch bookmarks using bird with a count limit."""
     print(f"📥 Fetching {count} bookmarks from X/Twitter...", file=sys.stderr)
     try:
-        cmd = ["birdx", "bookmarks", "-n", str(count), "--json"]
+        cmd = ["bird", "bookmarks", "-n", str(count), "--json"]
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -134,7 +134,7 @@ def fetch_bookmarks(count=100):
             timeout=120
         )
         if result.returncode != 0:
-            print(f"❌ birdx error: {result.stderr}", file=sys.stderr)
+            print(f"❌ bird error: {result.stderr}", file=sys.stderr)
             return None
         
         bookmarks = json.loads(result.stdout)
@@ -249,7 +249,7 @@ def main():
     # Execute SQL
     try:
         result = subprocess.run(
-            ["psql", "-U", "shad", "openclaw_db"],
+            ["psql", "-U", "openclaw", "openclaw_db"],
             input=sql,
             capture_output=True,
             text=True,

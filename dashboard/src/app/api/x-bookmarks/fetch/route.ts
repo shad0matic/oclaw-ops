@@ -1,47 +1,79 @@
 import { NextResponse } from "next/server"
-import { db } from "@/lib/drizzle"
-import { sql } from "drizzle-orm"
+import { exec } from "child_process"
+import { promisify } from "util"
+
+const execAsync = promisify(exec)
 
 export const dynamic = "force-dynamic"
+export const maxDuration = 120 // Allow up to 2 minutes for sync
 
-// POST: Trigger X bookmark fetch via cron wake event
-export async function POST() {
+// POST: Trigger X bookmark fetch directly via sync script
+export async function POST(request: Request) {
   try {
-    // Insert a wake event to trigger the bookmark sync
-    // This assumes there's a cron job listening for this, or we can call the OpenClaw API directly
-    
-    // For now, we'll make an HTTP request to the OpenClaw gateway to trigger a bookmark fetch
-    const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL || "http://127.0.0.1:18789"
-    const gatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN
-    
-    if (!gatewayToken) {
-      return NextResponse.json({ error: "Gateway token not configured" }, { status: 500 })
+    // Parse optional count from request body
+    let count = 200 // default
+    try {
+      const body = await request.json()
+      if (body.count && typeof body.count === "number") {
+        count = Math.min(Math.max(body.count, 10), 1000) // clamp 10-1000
+      }
+    } catch {
+      // No body or invalid JSON, use default
     }
 
-    // Send a wake event to trigger bookmark fetch
-    const response = await fetch(`${gatewayUrl}/api/cron/wake`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${gatewayToken}`
-      },
-      body: JSON.stringify({
-        text: "User requested manual X bookmark sync from MC dashboard. Please fetch latest bookmarks.",
-        mode: "now"
-      })
+    // Path to the sync script
+    const scriptPath = "/home/openclaw/projects/oclaw-ops/scripts/sync-x-bookmarks.py"
+    
+    // Source the X auth and run the sync script
+    const command = `
+      source /home/openclaw/.openclaw/workspace-phil/.pi/x_auth.sh && \
+      python3 ${scriptPath} ${count}
+    `
+
+    console.log(`[x-bookmarks/fetch] Running sync with count=${count}`)
+
+    const { stdout, stderr } = await execAsync(command, {
+      shell: "/bin/bash",
+      timeout: 110000, // 110 seconds (leave buffer for response)
+      env: {
+        ...process.env,
+        PATH: `/home/openclaw/.local/bin:/usr/local/bin:/usr/bin:/bin:${process.env.PATH}`,
+      }
     })
 
-    if (!response.ok) {
-      const error = await response.text()
-      return NextResponse.json({ error: `Gateway error: ${error}` }, { status: 500 })
+    // Parse results from stderr (script outputs to stderr for logging)
+    const output = stderr || stdout
+    
+    // Extract counts from output
+    const fetchedMatch = output.match(/Fetched:\s*(\d+)/i)
+    const totalMatch = output.match(/Total in DB:\s*(\d+)/i)
+    
+    const fetched = fetchedMatch ? parseInt(fetchedMatch[1], 10) : 0
+    const totalInDb = totalMatch ? parseInt(totalMatch[1], 10) : 0
+
+    console.log(`[x-bookmarks/fetch] Sync complete: fetched=${fetched}, total=${totalInDb}`)
+
+    return NextResponse.json({ 
+      success: true,
+      fetched,
+      totalInDb,
+      message: `Synced ${fetched} bookmarks. Total in DB: ${totalInDb}`
+    })
+
+  } catch (error: any) {
+    console.error("[x-bookmarks/fetch] Sync failed:", error)
+    
+    // Check for specific errors
+    if (error.message?.includes("timeout")) {
+      return NextResponse.json({ 
+        error: "Sync timed out. X may be slow or rate limiting.",
+        details: error.stderr || error.message 
+      }, { status: 504 })
     }
 
     return NextResponse.json({ 
-      success: true, 
-      message: "Bookmark fetch triggered. Check back in a moment for new bookmarks."
-    })
-  } catch (error: any) {
-    console.error("Failed to trigger bookmark fetch:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+      error: "Bookmark sync failed",
+      details: error.stderr || error.message 
+    }, { status: 500 })
   }
 }

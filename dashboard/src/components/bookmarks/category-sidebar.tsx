@@ -56,22 +56,29 @@ export function CategorySidebar({
 
   const handleFetchBookmarks = async () => {
     setFetching(true);
+    toast.info("Syncing bookmarks...", { description: "This takes 10-30 seconds" });
     try {
-      const res = await fetch("/api/x-bookmarks/fetch", { method: "POST" });
+      const res = await fetch("/api/x-bookmarks/fetch", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ count: 200 })
+      });
       const data = await res.json();
-      if (res.ok) {
-        toast.success(`Fetched ${data.fetched || 0} new bookmarks`, {
-          description: data.message || "Sync complete"
+      if (res.ok && data.success) {
+        toast.success(`Synced ${data.fetched || 0} bookmarks`, {
+          description: `Total in DB: ${data.totalInDb || 0}`
         });
         // Refresh folders list
         const xRes = await fetch("/api/x-folders");
         const xData = await xRes.json();
         setXFolders(Array.isArray(xData) ? xData : []);
       } else {
-        toast.error("Fetch failed", { description: data.error || "Unknown error" });
+        toast.error("Sync failed", { 
+          description: data.error || data.details || "Unknown error" 
+        });
       }
-    } catch (err) {
-      toast.error("Fetch failed", { description: "Network error" });
+    } catch (err: any) {
+      toast.error("Sync failed", { description: err.message || "Network error" });
     } finally {
       setFetching(false);
     }
@@ -191,14 +198,14 @@ export function CategorySidebar({
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Fetch X Bookmarks?</AlertDialogTitle>
+                  <AlertDialogTitle>Sync X Bookmarks?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will fetch new bookmarks from X/Twitter. It may take a moment and uses API credits.
+                    This will fetch your latest bookmarks from X using your session cookie. Takes 10-30 seconds.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleFetchBookmarks}>Fetch</AlertDialogAction>
+                  <AlertDialogAction onClick={handleFetchBookmarks}>Sync Now</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

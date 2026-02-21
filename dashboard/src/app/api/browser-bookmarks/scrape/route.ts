@@ -38,11 +38,38 @@ export async function POST(request: NextRequest) {
       failed: 0,
     };
 
+    // Track last access time per domain for rate limiting
+    const domainLastAccess = new Map<string, number>();
+    const MIN_DOMAIN_DELAY_MS = 5000; // 5 seconds between requests to same domain
+
     // Launch browser once for all scrapes
     const browser = await chromium.launch({ headless: true });
 
     try {
       for (const bookmark of bookmarksToScrape) {
+        // Extract domain for rate limiting
+        let domain = "";
+        try {
+          const urlObj = new URL(bookmark.url);
+          domain = urlObj.hostname;
+        } catch {
+          domain = bookmark.url;
+        }
+
+        // Rate limit: wait if we accessed this domain recently
+        const lastAccess = domainLastAccess.get(domain);
+        if (lastAccess) {
+          const timeSinceLastAccess = Date.now() - lastAccess;
+          if (timeSinceLastAccess < MIN_DOMAIN_DELAY_MS) {
+            const waitTime = MIN_DOMAIN_DELAY_MS - timeSinceLastAccess;
+            console.log(`Rate limiting: waiting ${waitTime}ms before scraping ${domain}`);
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+          }
+        }
+
+        // Update last access time for this domain
+        domainLastAccess.set(domain, Date.now());
+
         try {
           const page = await browser.newPage();
           

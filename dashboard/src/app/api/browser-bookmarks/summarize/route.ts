@@ -3,8 +3,13 @@ import { pool } from "@/lib/db";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini (L1 model - Flash)
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const L1_MODEL = "gemini-2.0-flash-exp"; // L1 = cheap, fast model
+
+function isValidGeminiKey(key: string | undefined): boolean {
+  if (!key || key === "" || key === "placeholder") return false;
+  // Real Gemini keys start with "AIza" and are 39 chars long
+  return key.startsWith("AIza") && key.length === 39;
+}
 
 /**
  * POST /api/browser-bookmarks/summarize
@@ -15,6 +20,17 @@ export async function POST(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const batchSize = parseInt(searchParams.get("batch") || "10", 10);
+
+    // Check if we have a valid API key - if not, create basic summaries from og_description
+    const apiKey = process.env.GEMINI_API_KEY;
+    const useAI = isValidGeminiKey(apiKey);
+    const genAI = useAI ? new GoogleGenerativeAI(apiKey!) : null;
+    
+    if (!useAI) {
+      console.warn(`GEMINI_API_KEY not configured or invalid (key: ${apiKey ? apiKey.substring(0, 10) + "..." : "none"}). Using fallback: og_description or content preview`);
+    } else {
+      console.log("Using Gemini AI for summarization");
+    }
 
     // Fetch scraped bookmarks without summaries
     const { rows: bookmarksToSummarize } = await pool.query(
@@ -42,14 +58,18 @@ export async function POST(request: NextRequest) {
       failed: 0,
     };
 
-    const model = genAI.getGenerativeModel({ model: L1_MODEL });
+    const model = useAI ? genAI!.getGenerativeModel({ model: L1_MODEL }) : null;
 
     for (const bookmark of bookmarksToSummarize) {
       try {
-        // Truncate content to ~4000 chars to save tokens
-        const truncatedContent = bookmark.content.slice(0, 4000);
+        let summary = "";
+        let summaryModel = "fallback";
+        
+        if (useAI && model) {
+          // AI-powered summarization
+          const truncatedContent = bookmark.content.slice(0, 4000);
 
-        const prompt = `You are a content summarizer. Create a concise, informative summary of this webpage content.
+          const prompt = `You are a content summarizer. Create a concise, informative summary of this webpage content.
 
 Title: ${bookmark.title || "Untitled"}
 URL: ${bookmark.url}
@@ -73,8 +93,19 @@ Format:
 
 **Tags:** [tag1, tag2, tag3]`;
 
-        const result = await model.generateContent(prompt);
-        const summary = result.response.text();
+          const result = await model.generateContent(prompt);
+          summary = result.response.text();
+          summaryModel = L1_MODEL;
+        } else {
+          // Fallback: use og_description or content preview
+          if (bookmark.og_description && bookmark.og_description.length > 20) {
+            summary = `**Summary:** ${bookmark.og_description}\n\n**Note:** AI summarization not available (GEMINI_API_KEY not configured)`;
+          } else {
+            const preview = bookmark.content.slice(0, 300).trim();
+            summary = `**Preview:** ${preview}...\n\n**Note:** AI summarization not available (GEMINI_API_KEY not configured)`;
+          }
+          summaryModel = "fallback-preview";
+        }
 
         // Extract tags from the summary
         const tagsMatch = summary.match(/\*\*Tags:\*\*\s*(.+?)(?:\n|$)/i);
@@ -94,14 +125,16 @@ Format:
                summary_model = $2,
                tags = $3
            WHERE id = $4`,
-          [summary, L1_MODEL, tags.length > 0 ? tags : null, bookmark.id]
+          [summary, summaryModel, tags.length > 0 ? tags : null, bookmark.id]
         );
 
         results.summarized++;
         results.processed++;
 
-        // Small delay to avoid rate limiting
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        // Small delay to avoid rate limiting (only for AI calls)
+        if (useAI) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+        }
       } catch (error) {
         console.error(`Failed to summarize bookmark ${bookmark.id}:`, error);
         results.failed++;

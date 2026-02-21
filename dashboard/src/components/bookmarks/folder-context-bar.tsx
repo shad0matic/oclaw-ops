@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FolderOpen, Link2, Settings, Sparkles, Check, X } from "lucide-react";
+import { FolderOpen, Link2, Settings, Sparkles, Check, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -15,8 +15,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface FolderContextBarProps {
   folderName: string;
@@ -37,6 +47,9 @@ export function FolderContextBar({ folderName, bookmarkCount, onClear }: FolderC
   const [analysisPrompt, setAnalysisPrompt] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [analyzeOpen, setAnalyzeOpen] = useState(false);
+  const [analyzeContext, setAnalyzeContext] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
 
   // Fetch available projects and current mapping
   useEffect(() => {
@@ -107,6 +120,40 @@ export function FolderContextBar({ folderName, bookmarkCount, onClear }: FolderC
     }
   };
 
+  const handleAnalyze = async () => {
+    setAnalyzing(true);
+    try {
+      const res = await fetch("/api/x-bookmarks/analyze-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          x_folder: folderName,
+          context: analyzeContext,
+          analysis_prompt: analysisPrompt || null
+        })
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        toast.success(`Analysis started`, {
+          description: `Task #${data.taskId} created for ${data.bookmarkCount} bookmarks`
+        });
+        setAnalyzeOpen(false);
+        setAnalyzeContext("");
+      } else {
+        toast.error("Failed to start analysis", {
+          description: data.error || "Unknown error"
+        });
+      }
+    } catch (error: any) {
+      toast.error("Failed to start analysis", {
+        description: error.message || "Network error"
+      });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-muted/50 border-b border-border">
       <div className="flex items-center gap-3">
@@ -172,11 +219,66 @@ export function FolderContextBar({ folderName, bookmarkCount, onClear }: FolderC
           </PopoverContent>
         </Popover>
 
-        {/* Future: Analyze folder button */}
-        <Button variant="outline" size="sm" className="h-8" disabled>
-          <Sparkles className="h-4 w-4 mr-1" />
-          Analyze
-        </Button>
+        {/* Analyze folder dialog */}
+        <Dialog open={analyzeOpen} onOpenChange={setAnalyzeOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8">
+              <Sparkles className="h-4 w-4 mr-1" />
+              Analyze
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Analyze Folder: {folderName}</DialogTitle>
+              <DialogDescription>
+                Phil will process {bookmarkCount} bookmarks in this folder, extracting transcripts from videos and analyzing content.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="context">What does this folder contain?</Label>
+                <Textarea
+                  id="context"
+                  placeholder="e.g., Trading strategies, AI tools, Marketing courses..."
+                  value={analyzeContext}
+                  onChange={(e) => setAnalyzeContext(e.target.value)}
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="prompt">What should be analyzed?</Label>
+                <Textarea
+                  id="prompt"
+                  placeholder="e.g., Extract key tools mentioned, summarize main techniques..."
+                  value={analysisPrompt}
+                  onChange={(e) => setAnalysisPrompt(e.target.value)}
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  This prompt guides how Phil analyzes each bookmark
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAnalyzeOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAnalyze} disabled={analyzing}>
+                {analyzing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Start Analysis
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
