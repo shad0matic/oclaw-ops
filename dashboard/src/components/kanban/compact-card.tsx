@@ -170,10 +170,24 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
             </div>
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
-            <span className={`flex items-center gap-1 text-[10px] font-mono ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
-              <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />
-              P{task.priority}
-            </span>
+            <div className="flex items-center gap-2">
+              {task.complexity && (
+                <span 
+                  className={`text-xs px-1.5 py-0.5 rounded ${
+                    task.complexity <= 2 
+                      ? 'bg-green-500/20 text-green-400' 
+                      : 'bg-amber-500/20 text-amber-400'
+                  }`}
+                  title={`Complexity: ${task.complexity}`}
+                >
+                  {task.complexity <= 2 ? '✓' : '⚡'}
+                </span>
+              )}
+              <span className={`flex items-center gap-1 text-[10px] font-mono ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
+                <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />
+                P{task.priority}
+              </span>
+            </div>
             <div className="flex items-center gap-1">
                 {task.status === 'running' && <ChecklistProgressBadge taskId={task.id} />}
                 {task.progress?.total && task.progress.total > 0 && (

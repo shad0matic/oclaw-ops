@@ -1,116 +1,43 @@
-# AGENTS.md — Mission Control Dashboard
+# AGENTS.md - Agent Context for Oclaw-Ops Project
 
-## Project overview
-Mobile-first dark dashboard for monitoring Kevin (OpenClaw AI agent system). Shows KPIs, token/cost tracking, agent status, workflows, and server health.
+## Overview
 
-## Stack
-- **Next.js 16** (App Router) + TypeScript + Tailwind
-- **Prisma 7** with multi-schema support (`memory` + `ops`)
-- **shadcn/ui** for components + **Framer Motion** for animations
-- **Recharts** for charts
-- Hosted behind Nginx, accessible **only via Tailscale** (no auth needed)
+**Oclaw-Ops** serves as the operational hub for OpenClaw, managing agent workflows, system operations, and critical scripts for memory and task management. This file documents the roles and context for agents operating within or interacting with this project.
 
-## Database: `openclaw_db` (Postgres 18 + pgvector 0.8.1)
+## Agent Roles and Responsibilities
 
-**`memory` schema** (private brain):
-- `memories` — long-term memories with vector(1536) embeddings
-- `daily_notes` — daily log entries with embeddings
-- `agent_profiles` — agent identity, level (1–4), trust score, task counters
-- `performance_reviews` — level change history, ratings, feedback
+- **Kevin 🍌 (Lead Minion/Conductor):** 
+  - **Role:** Oversees system stability and coordinates agent tasks within Oclaw-Ops. Focuses on protecting Tier 1 active context through operational scripts like the two-track Kanban system.
+  - **Tasks:** Manages sub-agents for script development (e.g., Kanban batch processor, memory integration), ensures cron jobs and services run smoothly, and resolves operational failures.
 
-**`ops` schema** (shared operations):
-- `workflows` — YAML-defined workflow templates (versioned)
-- `runs` — workflow execution instances
-- `steps` — individual steps within a run (per-agent, with retries)
-- `tasks` — generic task queue with atomic claiming
-- `agent_events` — activity log (actions, tokens, costs)
-- `subscriptions` — monthly service costs (fixed)
-- `cost_snapshots` — hourly cost aggregation
-- `fx_rates` — daily USD→EUR exchange rates (ECB)
+- **Bob (Worker Agent):** 
+  - **Role:** Implements and tests operational scripts and tools as directed by Kevin.
+  - **Tasks:** Develops and maintains scripts like `run-kanban-batch.sh` and `kanban-comment-watcher.mjs` for the two-track notification system, fixes dependency or connection issues, and drafts memory-related tools.
 
-### Connection
-- Postgres on localhost only (unix socket `/var/run/postgresql`, peer auth)
-- Dashboard connects via Prisma (`DATABASE_URL` in `.env`)
-- Vector columns are `Unsupported` in Prisma — use raw SQL for similarity search
+- **Phil 🐊 (X/Twitter Specialist):** 
+  - **Role:** Handles Twitter/X data extraction tasks if integrated with Oclaw-Ops workflows.
+  - **Tasks:** Uses tools for fetching tweets or media, potentially feeding data into knowledge bases managed by Oclaw-Ops.
 
-## Coding conventions
-- TypeScript, Prettier defaults, 2-space indent
-- App Router (no pages/ dir)
-- Server Components by default, `"use client"` only when needed
-- API routes in `src/app/api/`
-- Prisma client in `src/lib/db.ts`
-- WCAG 2.1 AA accessibility (contrast, focus, aria, keyboard nav)
-- No markdown tables in output destined for Telegram
+- **Other Agents (e.g., Dr. Nefario, Echo):** 
+  - **Role:** Support specialized tasks if routed through Oclaw-Ops operational systems.
+  - **Tasks:** Research, media analysis, or other delegated tasks that interact with operational data or scripts.
 
-## Design system
-- Dark mode default (slate/zinc), light mode toggle
-- Accent: amber/yellow (🍌 minion vibes)
-- Status colors: green (success), red (error), amber (warning), blue (running), gray (idle)
-- Mobile-first, responsive at 768px
-- Animations under 300ms, respect `prefers-reduced-motion`
+## Memory System Relevance
 
-## Key files
-- `dashboard/prisma/schema.prisma` — Prisma schema (introspected from DB)
-- `dashboard/.env` — database URL (not committed)
-- `dashboard/.env.example` — template
-- `SPEC.md` — full dashboard specification
-- `docs/README.md` — feature documentation
-- `docs/API.md` — API reference
+- **Tier 1 (Active Context):** Oclaw-Ops hosts the two-track Kanban system (`run-kanban-batch.sh`, `kanban-comment-watcher.mjs`) critical for protecting my active context from bloat. Ensuring these scripts run without errors is key to maintaining a lean ~30k token average.
+- **Tier 2 (Compaction & Memory Flush):** While not directly related, operational stability in Oclaw-Ops ensures I can focus on memory flush discipline without interruptions from system failures.
+- **Tier 3 (Long-Term Memory):** Oclaw-Ops may host future tools or scripts for memory integration with `pg_vector` and the 'memory' schema, as seen with recent memory flush script development.
 
-## Implementation Status
+## Key Resources
 
-### ✅ Completed Features
+- **Scripts & Tools:** `/home/openclaw/projects/oclaw-ops/tools/` - Contains operational scripts for Kanban processing, watchers, and potentially memory integration tools.
+- **Documentation:** `/home/openclaw/projects/oclaw-ops/docs/` - May include operational guidelines or schemas relevant to system workflows.
+- **AGENTS.md (Existing):** Provides operational protocols for agent behavior, reinforcing memory discipline.
 
-**Core Pages**:
-- Overview (/) — KPI cards, agent strip, activity feed
-- Agents (/agents, /agents/[id]) — List, detail with promote/demote/review
-- Workflows (/workflows) — List with run trigger modal
-- Runs (/runs, /runs/[id]) — History with filters, detail with retry
-- Memory (/memory) — Search, browse (memories/notes), stats tab
-- Events (/events) — Feed with filters (agent, type, date)
-- System (/system) — CPU, RAM, disk, DB, OpenClaw status
+## Notes for Future Indexing
 
-**Phase 7 Intelligence**:
-- Priorities (/priorities) — Priority stack with severity
-- Knowledge (/knowledge) — Entity list with types/aliases
-- Mistakes (/mistakes) — Mistake log with resolution tracking
-- Reactions (/reactions) — Trigger-responder reaction matrix
-- Costs (/costs) — Subscription tracking + cost snapshots
-- Compounds (/compounds) — Periodic memory summaries
+- This project is central to system operations and Tier 1 protection through the two-track notification system.
+- Agents should prioritize stability of operational scripts and tools to support memory system effectiveness.
 
-**Design & UX**:
-- Theme: Dark/light toggle (dark default)
-- Mobile: Bottom nav with top 5 + hamburger
-- Accessibility: WCAG 2.1 AA compliant (contrast, focus, aria, keyboard)
-- Motion: Framer Motion utilities with prefers-reduced-motion support
-- Components: 19 shadcn/ui components + custom dashboard components
-
-**APIs**: All 30+ endpoints implemented
-- Agents: list, detail, review, promote, demote
-- Workflows: list, trigger run
-- Runs: list with filters, detail
-- Memory: search, stats
-- Events: list with filters
-- System: health metrics
-- Priorities, Mistakes, Reactions, Knowledge, Costs, Compounds: full CRUD
-
-### 📝 Known Limitations
-- Memory search: Text-based only (no vector embeddings in UI)
-- Workflow cancel: Backend stub (needs engine integration)
-- CSV export: Not implemented (events page)
-- File Drop: Not implemented (future enhancement)
-- Knowledge graph: List view only (no graph visualization)
-
-### 🏗️ Architecture Notes
-- Next.js 16 App Router with React Server Components
-- Prisma 7 with multi-schema (memory + ops)
-- NextAuth 5 for authentication (session-based)
-- All API params must be awaited (Next.js 16 requirement)
-- Framer Motion for animations (respects reduced motion)
-- Tailwind 4 + shadcn/ui for styling
-
-### 🚀 Build Status
-✅ Production build passes (verified Feb 2026)
-- TypeScript: No errors
-- Build: Successful (31 routes)
-- All dynamic routes properly configured
+---
+*Generated by Kevin on 2026-02-20 for faster project indexing and agent context.*
