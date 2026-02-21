@@ -9,6 +9,7 @@ import { ChecklistProgressBadge } from "./checklist-progress-badge";
 import { ChatStatusIcon } from "@/components/ui/chat-status-icon";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AgentEntity } from "@/entities/agent";
 
 type CommentStatus = 'unread' | 'read' | 'attention' | 'boss_read' | 'gray';
@@ -172,16 +173,26 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
           <div className="flex flex-col items-end gap-1 shrink-0">
             <div className="flex items-center gap-2">
               {task.complexity && (
-                <span 
-                  className={`text-xs px-1.5 py-0.5 rounded ${
-                    task.complexity === 'easy' 
-                      ? 'bg-green-500/20 text-green-400' 
-                      : 'bg-amber-500/20 text-amber-400'
-                  }`}
-                  title={`Complexity: ${task.complexity}`}
-                >
-                  {task.complexity === 'easy' ? '✓' : '⚡'}
-                </span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span 
+                        className={`text-xs px-1.5 py-0.5 rounded cursor-help ${
+                          task.complexity === 'easy' 
+                            ? 'bg-green-500/20 text-green-400' 
+                            : 'bg-amber-500/20 text-amber-400'
+                        }`}
+                      >
+                        {task.complexity === 'easy' ? '✓' : '⚡'}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {task.complexity === 'easy' 
+                        ? 'Easy task → Bob 🎨' 
+                        : 'Complex task → Stuart 🔒'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               <span className={`flex items-center gap-1 text-[10px] font-mono ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
                 <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.dot}`} />

@@ -392,6 +392,24 @@ function TaskDetailFooter({ task, taskMutation, updateField, onOpenChange }: {
           </SelectContent>
         </Select>
 
+        {/* Complexity Selector */}
+        <Select value={task.complexity || 'easy'} onValueChange={(c) => updateField('complexity', c)}>
+          <SelectTrigger className="w-auto h-11 min-h-11">
+            <SelectValue>
+              <div className="flex items-center gap-1.5">
+                <span className={task.complexity === 'complex' ? 'text-amber-400' : 'text-green-400'}>
+                  {task.complexity === 'complex' ? '⚡' : '✓'}
+                </span>
+                <span className="text-xs capitalize">{task.complexity || 'easy'}</span>
+              </div>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="easy"><span className="text-green-400">✓ Easy</span> <span className="text-muted-foreground text-xs ml-1">→ Bob</span></SelectItem>
+            <SelectItem value="complex"><span className="text-amber-400">⚡ Complex</span> <span className="text-muted-foreground text-xs ml-1">→ Stuart</span></SelectItem>
+          </SelectContent>
+        </Select>
+
         {/* Agent Picker */}
         <Select value={selectedAgent} onValueChange={(agentId) => {
             setSelectedAgent(agentId);

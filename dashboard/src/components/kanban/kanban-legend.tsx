@@ -17,7 +17,7 @@ export function KanbanLegend() {
       </button>
       
       {expanded && (
-        <div className="px-4 pb-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+        <div className="px-4 pb-4 grid grid-cols-2 md:grid-cols-5 gap-4 text-xs">
           {/* Chat Status */}
           <div className="space-y-2">
             <div className="font-medium text-foreground">Chat Status</div>
@@ -76,6 +76,19 @@ export function KanbanLegend() {
             <div className="flex items-center gap-2">⚡ Running</div>
             <div className="flex items-center gap-2">🔄 Review</div>
             <div className="flex items-center gap-2">✅ Done</div>
+          </div>
+
+          {/* Complexity */}
+          <div className="space-y-2">
+            <div className="font-medium text-foreground">Complexity</div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">✓</span>
+              <span>Easy → Bob 🎨</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">⚡</span>
+              <span>Complex → Stuart 🔒</span>
+            </div>
           </div>
 
           {/* Other Indicators */}
