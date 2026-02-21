@@ -18,7 +18,7 @@ export interface QueueTask {
   agent_name?: string | null;
   priority: number;
   status: QueueStatus | string;
-  complexity?: number;
+  complexity?: 'easy' | 'complex';
   created_at?: string;
   started_at?: string | null;
   completed_at?: string | null;

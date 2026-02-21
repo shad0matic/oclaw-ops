@@ -174,13 +174,13 @@ export function CompactTaskCard({ task, projects, onClick }: TaskCardProps) {
               {task.complexity && (
                 <span 
                   className={`text-xs px-1.5 py-0.5 rounded ${
-                    task.complexity <= 2 
+                    task.complexity === 'easy' 
                       ? 'bg-green-500/20 text-green-400' 
                       : 'bg-amber-500/20 text-amber-400'
                   }`}
                   title={`Complexity: ${task.complexity}`}
                 >
-                  {task.complexity <= 2 ? '✓' : '⚡'}
+                  {task.complexity === 'easy' ? '✓' : '⚡'}
                 </span>
               )}
               <span className={`flex items-center gap-1 text-[10px] font-mono ${pc.text} ${pc.bg} rounded px-1.5 py-0.5`}>
