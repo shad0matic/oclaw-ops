@@ -59,9 +59,38 @@ def get_db_connection():
     """Return psql command base."""
     return ["psql", "-U", "openclaw", "openclaw_db", "-t"]
 
+def get_running_task():
+    """Check if there's already a running Smaug sync task."""
+    sql = """
+SELECT id FROM ops.task_queue 
+WHERE agent_id = 'smaug' 
+  AND status = 'running'
+  AND started_at > NOW() - INTERVAL '10 minutes'
+ORDER BY started_at DESC
+LIMIT 1;
+"""
+    try:
+        result = subprocess.run(
+            ["psql", "-U", "openclaw", "openclaw_db", "-t"],
+            input=sql,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return int(result.stdout.strip())
+    except:
+        pass
+    return None
+
 def create_task():
-    """Create a task in ops.task_queue and return the task id."""
-    now = datetime.now(timezone.utc).isoformat()
+    """Create a task in ops.task_queue and return the task id. Reuses running task if exists."""
+    # Check for existing running task first
+    existing = get_running_task()
+    if existing:
+        print(f"✓ Reusing existing task #{existing}", file=sys.stderr)
+        return existing
+    
     date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     
     sql = f"""
