@@ -54,23 +54,33 @@ async function logStart() {
 
   const detail = { task, model, spawned_by: spawnedBy, source };
 
+  
+  // 0. Check concurrent task count
+  const runningTasksResult = await pool.query(
+    `SELECT COUNT(*) FROM ops.task_queue WHERE status = 'running'`
+  );
+  const runningTasksCount = parseInt(runningTasksResult.rows[0].count, 10);
+
+  const finalStatus = runningTasksCount >= 3 ? 'planned' : 'running';
+
   // 1. Insert into task_queue (Kanban)
   const kanbanResult = await pool.query(
     `INSERT INTO ops.task_queue (title, project, agent_id, status, created_by, started_at) 
-     VALUES ($1, $2, $3, 'running', $4, NOW()) 
+     VALUES ($1, $2, $3, $4, $5, CASE WHEN $4 = 'running' THEN NOW() ELSE NULL END) 
      RETURNING id`,
-    [task, project, agent, spawnedBy]
+    [task, project, agent, finalStatus, spawnedBy]
   );
   const taskId = kanbanResult.rows[0].id;
-
+  
   // 2. Insert into agent_events (activity log) with task_id reference
   await pool.query(
     `INSERT INTO ops.agent_events (agent_id, event_type, detail, task_id) VALUES ($1, 'task_start', $2, $3)`,
     [agent, JSON.stringify(detail), taskId]
   );
 
-  console.log(`✅ Task #${taskId} created in Kanban (running) + logged task_start for ${agent}: ${task}`);
+  console.log(`✅ Task #${taskId} created in Kanban (${finalStatus}) + logged task_start for ${agent}: ${task}`);
 }
+
 
 async function logComplete() {
   const agent = getArg('agent');
