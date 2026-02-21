@@ -216,7 +216,6 @@ async function main() {
         // Mark as chat-acked so sweep doesn't duplicate
         try {
           await pool.query(
-            'UPDATE ops.task_queue SET chat_acked_at = NOW() WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM ops.task_comments WHERE task_id = $1 AND author = ''boss'' AND read_at IS NULL)',
             [payload.task_id]
           );
         } catch (ackErr) {
