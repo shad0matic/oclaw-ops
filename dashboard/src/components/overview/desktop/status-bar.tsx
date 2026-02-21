@@ -236,88 +236,76 @@ export function StatusBar({
     <div
       role="status"
       aria-live="polite"
-      className="sticky top-0 z-50 flex h-10 items-center gap-2 border-b border-border bg-card/80 px-2 text-sm backdrop-blur-sm flex-wrap md:flex-nowrap md:h-12 md:gap-4 md:px-4"
+      className="sticky top-0 z-50 flex h-10 items-center gap-2 border-b border-border bg-card/80 px-2 text-sm backdrop-blur-sm md:h-12 md:gap-4 md:px-4"
     >
       {/* WS Connection Status */}
       <div className="flex h-full w-28 items-center justify-center border-r border-border pr-4">
         {statusDot()}
       </div>
 
-      {/* System Status */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-foreground">
-          {statusText}
-        </span>
+      {/* Mobile view */}
+      <div className="flex items-center gap-4 md:hidden">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-foreground font-medium">{activeCount}</span>
+          <span className="text-sm text-muted-foreground">active</span>
+        </div>
       </div>
+      
+      {/* Desktop view */}
+      <div className="hidden md:flex items-center gap-4">
+        {/* System Status */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-foreground">
+            {statusText}
+          </span>
+        </div>
 
-      <div className="h-4 w-px bg-border" />
+        <div className="h-4 w-px bg-border" />
 
-      {/* Active Count with Popover */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <button className="flex items-center gap-2 hover:bg-accent/50 px-2 py-1 -mx-2 rounded transition-colors">
-            <span className="text-sm text-foreground font-medium">{activeCount}</span>
-            <span className="text-sm text-muted-foreground">active</span>
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-72 p-3" align="start">
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm">Active Tasks</h4>
-            {liveWork.tasks.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active tasks</p>
-            ) : (
-              <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                {liveWork.tasks.map((task) => (
-                  <div key={task.id} className="text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground text-xs">#{task.id}</span>
-                      <span className="truncate flex-1">{task.task}</span>
-                      <span className="text-xs text-muted-foreground">{task.agentName}</span>
-                    </div>
-                    {task.children.length > 0 && (
-                      <div className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
-                        {task.children.map((child) => (
-                          <div key={child.id} className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>#{child.id}</span>
-                            <span className="truncate flex-1">{child.task}</span>
-                            <span>{child.agentName}</span>
-                          </div>
-                        ))}
+        {/* Active Count with Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="flex items-center gap-2 hover:bg-accent/50 px-2 py-1 -mx-2 rounded transition-colors">
+              <span className="text-sm text-foreground font-medium">{activeCount}</span>
+              <span className="text-sm text-muted-foreground">active</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-3" align="start">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Active Tasks</h4>
+              {liveWork.tasks.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No active tasks</p>
+              ) : (
+                <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                  {liveWork.tasks.map((task) => (
+                    <div key={task.id} className="text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground text-xs">#{task.id}</span>
+                        <span className="truncate flex-1">{task.task}</span>
+                        <span className="text-xs text-muted-foreground">{task.agentName}</span>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      <div className="h-4 w-px bg-border" />
-
-      {/* Daily Cost */}
-      <div className="flex items-center gap-2">
-        <CostDisplay cost={dailyCost} className="text-sm" />
-        <span className="text-sm text-muted-foreground">today</span>
+                      {task.children.length > 0 && (
+                        <div className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
+                          {task.children.map((child) => (
+                            <div key={child.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>#{child.id}</span>
+                              <span className="truncate flex-1">{child.task}</span>
+                              <span>{child.agentName}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Spacer to push metrics and toggle to the right */}
       <div className="flex-grow" />
-
-      {/* System Resources — Gauges + Sparklines */}
-      {latestData && (
-        <div className="flex items-end gap-3 text-xs text-muted-foreground pb-0.5">
-            <div className="flex items-center gap-2">
-              <MiniGauge value={latestData.load[0]} label="Load" type="raw" max={latestData.cores} />
-              <Sparkline data={loadHistory} lastValue={(latestData.load[0] / latestData.cores) * 100} width={80} height={16}/>
-            </div>
-            <div className="flex items-center gap-2">
-              <MiniGauge value={latestData.memPercent} label="RAM" />
-              <Sparkline data={memHistory} lastValue={latestData.memPercent} width={80} height={16}/>
-            </div>
-        </div>
-      )}
-
     </div>
   )
 }

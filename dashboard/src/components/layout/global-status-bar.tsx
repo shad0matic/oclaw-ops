@@ -1,10 +1,15 @@
 "use client"
 import { StatusBar } from "@/components/overview/desktop/status-bar"
 import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData"
+import { useKanban } from "@/contexts/KanbanContext"
 
 export function GlobalStatusBar() {
   const { data: overviewData, isLoading } = useOverviewData(30000)
   const { liveWork } = useLiveWork(10000)
+  const { totalRunningTasks, filteredRunningTasks } = useKanban()
+
+  const activeTasks = liveWork?.count ?? overviewData?.liveWork?.count ?? 0;
+  const countsMismatch = totalRunningTasks > 0 && activeTasks !== filteredRunningTasks;
 
   if (isLoading) {
     return (

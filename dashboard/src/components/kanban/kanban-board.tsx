@@ -96,7 +96,10 @@ const COLUMNS: Array<{ title: string; status: string | string[] }> = [
 ];
 
 
+import { useKanban } from "@/contexts/KanbanContext";
+
 export function KanbanBoard() {
+  const { setTotalRunningTasks, setFilteredRunningTasks } = useKanban();
   const queryClient = useQueryClient();
   useTaskStream(); // Real-time SSE updates
   
@@ -181,6 +184,13 @@ export function KanbanBoard() {
     }
     return tasksToFilter;
   }, [tasks, projectFilter, agentFilter, debouncedSearchQuery]);
+
+  useEffect(() => {
+    const totalRunning = tasks.filter(t => t.status === 'running').length;
+    const filteredRunning = filteredTasks.filter(t => t.status === 'running').length;
+    setTotalRunningTasks(totalRunning);
+    setFilteredRunningTasks(filteredRunning);
+  }, [tasks, filteredTasks, setTotalRunningTasks, setFilteredRunningTasks]);
 
   const filteredBacklog = useMemo(() => {
     let projectFiltered = projectFilter.length === 0 ? backlogData : backlogData?.filter(fr => projectFilter.includes(fr.project || 'other'));
