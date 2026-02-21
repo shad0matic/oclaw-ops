@@ -47,6 +47,8 @@ export async function GET(request: NextRequest) {
     ...task,
     id: Number(task.id),
     priority: Number(task.priority),
+    complexity: task.complexity,
+    task_type: task.taskType,
     agent_name: agentName,
     spec_url: task.specUrl,
     agent_id: task.agentId,

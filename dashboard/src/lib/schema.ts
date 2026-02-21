@@ -589,6 +589,8 @@ export const taskQueueInOps = ops.table("task_queue", {
 	agentId: text("agent_id"),
 	priority: smallint().default(5),
 	status: text().default('queued'),
+	complexity: text().default('easy'),
+	taskType: text("task_type").default('general'),
 	createdBy: text("created_by").default('boss'),
 	result: text(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
