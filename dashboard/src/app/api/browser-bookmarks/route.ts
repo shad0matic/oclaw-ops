@@ -99,53 +99,58 @@ function parseHTMLBookmarks(html: string): ParsedBookmark[] {
     
     // Recursive function to traverse bookmark tree
     function traverseDL(dlElement: Element, path: string[] = []) {
-      // Process all DT children in order
-      for (let i = 0; i < dlElement.children.length; i++) {
-        const dt = dlElement.children[i];
-        if (dt.tagName?.toLowerCase() !== 'dt') continue;
+      // Process all children of the DL element
+      for (const child of Array.from(dlElement.children)) {
+        const tagName = child.tagName?.toLowerCase();
         
-        // Check first child of DT
-        const firstChild = dt.firstElementChild;
-        if (!firstChild) continue;
+        if (tagName !== 'dt') continue; // Skip non-DT elements (like <p>)
         
-        const childTag = firstChild.tagName?.toLowerCase();
+        // A DT can contain:
+        // 1. <A> - a bookmark link
+        // 2. <H3> + <DL> - a folder with its contents
         
-        if (childTag === 'h3') {
-          // This is a folder heading
-          const folderName = firstChild.textContent?.trim() || 'Unnamed Folder';
+        // Look for H3 (folder) or A (bookmark) in this DT
+        for (const dtChild of Array.from(child.children)) {
+          const dtChildTag = dtChild.tagName?.toLowerCase();
           
-          // Look for the next DL sibling (folder contents)
-          let nextElement = dt.nextElementSibling;
-          while (nextElement && nextElement.tagName?.toLowerCase() !== 'dl' && nextElement.tagName?.toLowerCase() !== 'dt') {
-            nextElement = nextElement.nextElementSibling;
-          }
-          
-          if (nextElement && nextElement.tagName?.toLowerCase() === 'dl') {
-            // Recursively process folder contents
-            const newPath = [...path, folderName];
-            traverseDL(nextElement, newPath);
-            // Skip the DL element we just processed
-            i++;
-          }
-        } else if (childTag === 'a') {
-          // This is a bookmark
-          const url = firstChild.getAttribute('href');
-          const title = firstChild.textContent?.trim() || null;
-          const addDate = firstChild.getAttribute('add_date');
-          
-          if (url) {
-            let addedAt: Date | null = null;
-            if (addDate) {
-              // Unix timestamp in seconds
-              addedAt = new Date(parseInt(addDate, 10) * 1000);
+          if (dtChildTag === 'h3') {
+            // This is a folder - find the DL sibling or child
+            const folderName = dtChild.textContent?.trim() || 'Unnamed Folder';
+            
+            // Look for DL in siblings (next to H3 within the same DT)
+            let dlElement: Element | null = null;
+            for (const sibling of Array.from(child.children)) {
+              if (sibling.tagName?.toLowerCase() === 'dl') {
+                dlElement = sibling;
+                break;
+              }
             }
             
-            results.push({
-              url,
-              title,
-              folderPath: path.join(' > '),
-              addedAt,
-            });
+            if (dlElement) {
+              // Recursively process folder contents
+              const newPath = [...path, folderName];
+              traverseDL(dlElement, newPath);
+            }
+          } else if (dtChildTag === 'a') {
+            // This is a bookmark
+            const url = dtChild.getAttribute('href');
+            const title = dtChild.textContent?.trim() || null;
+            const addDate = dtChild.getAttribute('add_date');
+            
+            if (url) {
+              let addedAt: Date | null = null;
+              if (addDate) {
+                // Unix timestamp in seconds
+                addedAt = new Date(parseInt(addDate, 10) * 1000);
+              }
+              
+              results.push({
+                url,
+                title,
+                folderPath: path.join(' > '),
+                addedAt,
+              });
+            }
           }
         }
       }

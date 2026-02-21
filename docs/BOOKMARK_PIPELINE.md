@@ -2,7 +2,7 @@
 
 ## Overview
 
-A complete pipeline for importing browser bookmarks (Chrome/Firefox), validating URLs, scraping content, generating summaries, and interactively categorizing them via Telegram for Knowledge Base enrichment.
+A complete pipeline for importing browser bookmarks (Chrome/Firefox/Brave/Safari/Edge), validating URLs, scraping content, generating summaries, and interactively categorizing them via Telegram for Knowledge Base enrichment.
 
 ## Architecture
 
@@ -57,9 +57,12 @@ Key fields:
 
 1. Go to Settings page
 2. Export bookmarks from your browser:
-   - **Chrome:** `chrome://bookmarks` → ⋮ → Export bookmarks
-   - **Firefox:** Bookmarks → Manage → Import & Backup → Backup
-3. Upload the JSON file
+   - **Chrome:** `chrome://bookmarks` → ⋮ → Export bookmarks (JSON)
+   - **Firefox:** Bookmarks → Manage → Import & Backup → Backup (JSON)
+   - **Brave:** `brave://bookmarks` → ⋮ → Export bookmarks (HTML)
+   - **Safari:** File → Export Bookmarks (HTML)
+   - **Edge:** `edge://favorites` → ⋮ → Export favorites (HTML)
+3. Upload the file (JSON or HTML)
 4. Review preview and click "Import"
 
 ### 2. Run Background Processing
@@ -92,6 +95,7 @@ See [BOOKMARK_CATEGORIZATION.md](./BOOKMARK_CATEGORIZATION.md) for interactive T
 
 ### Phase 1: Upload UI ✅
 - Parse Chrome/Firefox JSON exports
+- Parse Brave/Safari/Edge HTML exports (Netscape Bookmark File Format)
 - Detect format automatically
 - Preview folder distribution
 - Bulk import with duplicate detection

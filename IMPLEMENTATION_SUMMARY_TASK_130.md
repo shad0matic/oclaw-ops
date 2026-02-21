@@ -7,7 +7,9 @@
 
 ## Overview
 
-Implemented a complete 5-phase pipeline for importing, validating, scraping, summarizing, and categorizing browser bookmarks (Chrome/Firefox) for Knowledge Base enrichment.
+Implemented a complete 5-phase pipeline for importing, validating, scraping, summarizing, and categorizing browser bookmarks (Chrome/Firefox/Brave/Safari/Edge) for Knowledge Base enrichment.
+
+**Update (2026-02-21):** Added HTML bookmark parsing support for Brave, Safari, and Edge browsers (Netscape Bookmark File Format).
 
 ## Deliverables
 
@@ -19,6 +21,7 @@ Implemented a complete 5-phase pipeline for importing, validating, scraping, sum
 
 **Existing Features:**
 - Chrome/Firefox JSON parser
+- Brave/Safari/Edge HTML parser (Netscape Bookmark File Format)
 - Upload with preview
 - Duplicate detection
 - Batch import
