@@ -39,6 +39,14 @@ export async function POST(request: Request) {
         ...process.env,
         PATH: `/home/openclaw/.local/bin:/usr/local/bin:/usr/bin:/bin:${process.env.PATH}`,
       }
+    }).catch(err => {
+      // Check for lock conflict (exit code 2)
+      if (err.code === 2 || err.stderr?.includes("already running")) {
+        const lockErr = new Error("Another sync is already running") as any
+        lockErr.code = 409
+        throw lockErr
+      }
+      throw err
     })
 
     // Parse results from stderr (script outputs to stderr for logging)
@@ -69,6 +77,14 @@ export async function POST(request: Request) {
         error: "Sync timed out. X may be slow or rate limiting.",
         details: error.stderr || error.message 
       }, { status: 504 })
+    }
+
+    // Check for lock conflict (exit code 2 or our custom 409)
+    if (error.code === 2 || error.code === 409 || error.stderr?.includes("already running") || error.stderr?.includes("Could not acquire lock")) {
+      return NextResponse.json({ 
+        error: "Another sync is already running. Please wait.",
+        details: "Try again in a minute." 
+      }, { status: 409 })
     }
 
     return NextResponse.json({ 

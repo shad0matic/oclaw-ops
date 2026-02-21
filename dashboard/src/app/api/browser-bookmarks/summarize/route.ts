@@ -14,12 +14,11 @@ function isValidGeminiKey(key: string | undefined): boolean {
 /**
  * POST /api/browser-bookmarks/summarize
  * L1 Summarizer: Generates concise summaries of scraped content
- * Processes bookmarks with content but no summary
+ * Processes ALL bookmarks with content but no summary
  */
 export async function POST(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const batchSize = parseInt(searchParams.get("batch") || "10", 10);
 
     // Check if we have a valid API key - if not, create basic summaries from og_description
     const apiKey = process.env.GEMINI_API_KEY;
@@ -32,23 +31,23 @@ export async function POST(request: NextRequest) {
       console.log("Using Gemini AI for summarization");
     }
 
-    // Fetch scraped bookmarks without summaries
-    const { rows: bookmarksToSummarize } = await pool.query(
-      `SELECT id, url, title, content, og_description FROM ops.browser_bookmarks 
+    // Get total count of bookmarks to summarize
+    const { rows: [{ total }] } = await pool.query(
+      `SELECT COUNT(*) as total FROM ops.browser_bookmarks 
        WHERE content IS NOT NULL 
          AND content != '' 
          AND content_type != 'error'
-         AND summary IS NULL 
-       ORDER BY scraped_at ASC 
-       LIMIT $1`,
-      [batchSize]
+         AND summary IS NULL`
     );
 
-    if (bookmarksToSummarize.length === 0) {
+    const totalToSummarize = parseInt(total, 10);
+
+    if (totalToSummarize === 0) {
       return NextResponse.json({
         success: true,
         message: "No bookmarks to summarize",
         processed: 0,
+        remaining: 0,
       });
     }
 
@@ -56,20 +55,43 @@ export async function POST(request: NextRequest) {
       processed: 0,
       summarized: 0,
       failed: 0,
+      totalToSummarize,
     };
 
     const model = useAI ? genAI!.getGenerativeModel({ model: L1_MODEL }) : null;
 
-    for (const bookmark of bookmarksToSummarize) {
-      try {
-        let summary = "";
-        let summaryModel = "fallback";
-        
-        if (useAI && model) {
-          // AI-powered summarization
-          const truncatedContent = bookmark.content.slice(0, 4000);
+    // Process ALL scraped/unsummarized bookmarks
+    const batchSize = 50; // Internal batch size for fetching
+    let hasMore = true;
 
-          const prompt = `You are a content summarizer. Create a concise, informative summary of this webpage content.
+    while (hasMore) {
+      // Fetch next batch of bookmarks to summarize
+      const { rows: bookmarksToSummarize } = await pool.query(
+        `SELECT id, url, title, content, og_description FROM ops.browser_bookmarks 
+         WHERE content IS NOT NULL 
+           AND content != '' 
+           AND content_type != 'error'
+           AND summary IS NULL 
+         ORDER BY scraped_at ASC 
+         LIMIT $1`,
+        [batchSize]
+      );
+
+      if (bookmarksToSummarize.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      for (const bookmark of bookmarksToSummarize) {
+        try {
+          let summary = "";
+          let summaryModel = "fallback";
+          
+          if (useAI && model) {
+            // AI-powered summarization
+            const truncatedContent = bookmark.content.slice(0, 4000);
+
+            const prompt = `You are a content summarizer. Create a concise, informative summary of this webpage content.
 
 Title: ${bookmark.title || "Untitled"}
 URL: ${bookmark.url}
@@ -93,58 +115,68 @@ Format:
 
 **Tags:** [tag1, tag2, tag3]`;
 
-          const result = await model.generateContent(prompt);
-          summary = result.response.text();
-          summaryModel = L1_MODEL;
-        } else {
-          // Fallback: use og_description or content preview
-          if (bookmark.og_description && bookmark.og_description.length > 20) {
-            summary = `**Summary:** ${bookmark.og_description}\n\n**Note:** AI summarization not available (GEMINI_API_KEY not configured)`;
+            const result = await model.generateContent(prompt);
+            summary = result.response.text();
+            summaryModel = L1_MODEL;
           } else {
-            const preview = bookmark.content.slice(0, 300).trim();
-            summary = `**Preview:** ${preview}...\n\n**Note:** AI summarization not available (GEMINI_API_KEY not configured)`;
+            // Fallback: use og_description or content preview
+            if (bookmark.og_description && bookmark.og_description.length > 20) {
+              summary = `**Summary:** ${bookmark.og_description}\n\n**Note:** AI summarization not available (GEMINI_API_KEY not configured)`;
+            } else {
+              const preview = bookmark.content.slice(0, 300).trim();
+              summary = `**Preview:** ${preview}...\n\n**Note:** AI summarization not available (GEMINI_API_KEY not configured)`;
+            }
+            summaryModel = "fallback-preview";
           }
-          summaryModel = "fallback-preview";
+
+          // Extract tags from the summary
+          const tagsMatch = summary.match(/\*\*Tags:\*\*\s*(.+?)(?:\n|$)/i);
+          let tags: string[] = [];
+          if (tagsMatch) {
+            tags = tagsMatch[1]
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag.length > 0);
+          }
+
+          // Store summary
+          await pool.query(
+            `UPDATE ops.browser_bookmarks 
+             SET summary = $1, 
+                 summarized_at = NOW(),
+                 summary_model = $2,
+                 tags = $3
+             WHERE id = $4`,
+            [summary, summaryModel, tags.length > 0 ? tags : null, bookmark.id]
+          );
+
+          results.summarized++;
+          results.processed++;
+
+          // Small delay to avoid rate limiting (only for AI calls)
+          if (useAI) {
+            await new Promise((resolve) => setTimeout(resolve, 200));
+          }
+        } catch (error) {
+          console.error(`Failed to summarize bookmark ${bookmark.id}:`, error);
+          results.failed++;
+          results.processed++;
         }
-
-        // Extract tags from the summary
-        const tagsMatch = summary.match(/\*\*Tags:\*\*\s*(.+?)(?:\n|$)/i);
-        let tags: string[] = [];
-        if (tagsMatch) {
-          tags = tagsMatch[1]
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter((tag) => tag.length > 0);
-        }
-
-        // Store summary
-        await pool.query(
-          `UPDATE ops.browser_bookmarks 
-           SET summary = $1, 
-               summarized_at = NOW(),
-               summary_model = $2,
-               tags = $3
-           WHERE id = $4`,
-          [summary, summaryModel, tags.length > 0 ? tags : null, bookmark.id]
-        );
-
-        results.summarized++;
-        results.processed++;
-
-        // Small delay to avoid rate limiting (only for AI calls)
-        if (useAI) {
-          await new Promise((resolve) => setTimeout(resolve, 200));
-        }
-      } catch (error) {
-        console.error(`Failed to summarize bookmark ${bookmark.id}:`, error);
-        results.failed++;
-        results.processed++;
       }
+
+      // Log progress
+      console.log(`Summarized ${results.processed}/${totalToSummarize} bookmarks (${results.summarized} successful, ${results.failed} failed)...`);
     }
+
+    const remaining = Math.max(0, totalToSummarize - results.processed);
 
     return NextResponse.json({
       success: true,
       ...results,
+      remaining,
+      message: remaining > 0 
+        ? `Processed ${results.processed} bookmarks. ${remaining} still need summarization.`
+        : `All ${results.processed} bookmarks summarized! (${results.summarized} successful, ${results.failed} failed)`,
     });
   } catch (error) {
     console.error("Error summarizing bookmarks:", error);

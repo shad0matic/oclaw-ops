@@ -10,7 +10,50 @@ import json
 import subprocess
 import sys
 import os
+import fcntl
+import atexit
 from datetime import datetime, timezone
+
+LOCK_FILE = "/tmp/smaug-sync.lock"
+lock_fd = None
+
+def acquire_lock():
+    """Acquire exclusive lock. Returns False if another sync is running."""
+    global lock_fd
+    try:
+        lock_fd = open(LOCK_FILE, 'w')
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        lock_fd.write(str(os.getpid()))
+        lock_fd.flush()
+        atexit.register(release_lock)
+        return True
+    except (IOError, OSError):
+        return False
+
+def release_lock():
+    """Release the lock."""
+    global lock_fd
+    if lock_fd:
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            lock_fd.close()
+            os.unlink(LOCK_FILE)
+        except:
+            pass
+        lock_fd = None
+
+def get_running_pid():
+    """Check if another sync is running and return its PID."""
+    try:
+        if os.path.exists(LOCK_FILE):
+            with open(LOCK_FILE, 'r') as f:
+                pid = int(f.read().strip())
+                # Check if process is still running
+                os.kill(pid, 0)
+                return pid
+    except (ValueError, OSError, ProcessLookupError):
+        pass
+    return None
 
 def get_db_connection():
     """Return psql command base."""
@@ -206,6 +249,19 @@ COMMIT;
 def main():
     """Main sync function."""
     print(f"\n🔄 Starting X Bookmarks Sync at {datetime.now(timezone.utc).isoformat()}", file=sys.stderr)
+    
+    # Check for concurrent run
+    running_pid = get_running_pid()
+    if running_pid:
+        print(f"⚠️  Another sync is already running (PID {running_pid}). Exiting.", file=sys.stderr)
+        sys.exit(2)
+    
+    # Acquire lock
+    if not acquire_lock():
+        print("⚠️  Could not acquire lock. Another sync may be starting. Exiting.", file=sys.stderr)
+        sys.exit(2)
+    
+    print("🔒 Lock acquired", file=sys.stderr)
     
     # Create task in queue
     task_id = create_task()
