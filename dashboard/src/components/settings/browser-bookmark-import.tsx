@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Upload, FileJson, CheckCircle2, AlertCircle, Loader2, FolderTree, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
+import { BookmarkPipelineStatus } from "@/components/bookmarks/bookmark-pipeline-status"
 
 interface ParsedBookmark {
   url: string;
@@ -156,16 +157,18 @@ export function BrowserBookmarkImport() {
   }, []);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileJson className="h-5 w-5" />
-          Browser Bookmark Import
-        </CardTitle>
-        <CardDescription>
-          Import bookmarks from Chrome or Firefox. Exported bookmarks will be validated, scraped, and summarized.
-        </CardDescription>
-      </CardHeader>
+    <div className="space-y-4">
+      <BookmarkPipelineStatus />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileJson className="h-5 w-5" />
+            Browser Bookmark Import
+          </CardTitle>
+          <CardDescription>
+            Import bookmarks from Chrome or Firefox. Exported bookmarks will be validated, scraped, and summarized.
+          </CardDescription>
+        </CardHeader>
       <CardContent className="space-y-4">
         {/* Current Stats */}
         {stats && stats.total > 0 && (
@@ -336,5 +339,6 @@ export function BrowserBookmarkImport() {
         )}
       </CardFooter>
     </Card>
+    </div>
   );
 }
