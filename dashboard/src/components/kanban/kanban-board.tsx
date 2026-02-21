@@ -97,10 +97,14 @@ const COLUMNS: Array<{ title: string; status: string | string[] }> = [
 
 
 import { useKanban } from "@/contexts/KanbanContext";
+import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData";
 
 export function KanbanBoard() {
   const { totalRunningTasks, setTotalRunningTasks, filteredRunningTasks, setFilteredRunningTasks } = useKanban();
-  const hasHiddenRunning = totalRunningTasks !== filteredRunningTasks;
+  const { data: overviewData } = useOverviewData(30000);
+  const { liveWork } = useLiveWork(10000);
+  const activeTasks = liveWork?.count ?? overviewData?.liveWork?.count ?? 0;
+  const hasHiddenRunning = totalRunningTasks > 0 && totalRunningTasks !== activeTasks;
   const queryClient = useQueryClient();
   useTaskStream(); // Real-time SSE updates
   
@@ -285,15 +289,15 @@ export function KanbanBoard() {
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-1.5 text-xs rounded-lg px-3 py-1.5 transition-colors ${
                 hasHiddenRunning
-                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/50 animate-pulse"
+                  ? "bg-orange-500/30 text-orange-300 border border-orange-500/60 animate-attention-pulse"
                   : projectFilter.length > 0 || agentFilter.length > 0
                   ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                   : "text-muted-foreground hover:text-foreground bg-muted"
               }`}
-              title={hasHiddenRunning ? `${totalRunningTasks - filteredRunningTasks} running task(s) hidden by filters` : undefined}
+              title={hasHiddenRunning ? `⚠️ ${totalRunningTasks - filteredRunningTasks} running task(s) hidden by filters` : undefined}
             >
-              <Filter className="w-3.5 h-3.5" />
-              Filter{(projectFilter.length > 0 || agentFilter.length > 0) && ` (${projectFilter.length + agentFilter.length})`}
+              <Filter className={`w-3.5 h-3.5 ${hasHiddenRunning ? "text-orange-400" : ""}`} />
+              {hasHiddenRunning ? `Filter ⚠️` : `Filter${(projectFilter.length > 0 || agentFilter.length > 0) ? ` (${projectFilter.length + agentFilter.length})` : ""}`}
             </button>
             <RefreshCountdown
               isFetching={isQueueFetching}
