@@ -3,6 +3,7 @@ import { db } from "@/lib/drizzle"
 import { taskQueueInOps } from "@/lib/schema"
 import { eq, sql } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
+import { autoDispatchNextTask } from "@/lib/task-queue"
 
 async function notifyKevin(task: any, action: string) {
   const gwToken = process.env.OPENCLAW_GW_TOKEN
@@ -52,12 +53,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         status: 'done', completedAt: sql`now()`,
         result: body.result || {},
       }).where(where)
+      // Auto-dispatch next queued task
+      autoDispatchNextTask().catch(err => console.error('[auto-dispatch] Error:', err))
       break
     case "fail":
       await db.update(taskQueueInOps).set({
         status: 'failed', completedAt: sql`now()`,
         result: sql`${JSON.stringify({ error: body.result || 'unknown' })}::jsonb`,
       }).where(where)
+      // Auto-dispatch next queued task
+      autoDispatchNextTask().catch(err => console.error('[auto-dispatch] Error:', err))
       break
     case "cancel":
       await db.update(taskQueueInOps).set({ status: 'cancelled', completedAt: sql`now()` }).where(where)
@@ -67,6 +72,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       break
     case "pause":
       await db.update(taskQueueInOps).set({ status: 'planned', startedAt: null }).where(where)
+      // Auto-dispatch next queued task
+      autoDispatchNextTask().catch(err => console.error('[auto-dispatch] Error:', err))
       break
     case "spec":
       // Mark task as needing spec, assign to agent for spec creation
@@ -83,6 +90,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         reviewerId: body.reviewerId,
         reviewFeedback: body.reviewFeedback,
       }).where(where)
+      // Auto-dispatch next queued task
+      autoDispatchNextTask().catch(err => console.error('[auto-dispatch] Error:', err))
       break
     case "human":
       await db.update(taskQueueInOps).set({ status: 'human_todo' }).where(where)
