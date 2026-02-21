@@ -83,12 +83,23 @@ export function BrowserBookmarkImport() {
       const text = await file.text();
       let data: unknown;
       
-      try {
-        data = JSON.parse(text);
-      } catch {
-        setError('Invalid JSON file. Please upload a valid bookmark export.');
-        setState('idle');
-        return;
+      // Detect HTML format (Brave, Safari, Edge)
+      const isHTML = text.trim().toLowerCase().includes('<!doctype netscape-bookmark') ||
+                     text.trim().toLowerCase().includes('<dt><h3') ||
+                     (text.trim().toLowerCase().includes('<html') && text.trim().toLowerCase().includes('<a href'));
+      
+      if (isHTML) {
+        // Send raw HTML string for HTML bookmark files
+        data = text;
+      } else {
+        // Try to parse as JSON (Chrome, Firefox)
+        try {
+          data = JSON.parse(text);
+        } catch {
+          setError('Invalid bookmark file. Please upload a valid Chrome/Firefox JSON or Brave/Safari HTML bookmark export.');
+          setState('idle');
+          return;
+        }
       }
 
       // Send to API for parsing
