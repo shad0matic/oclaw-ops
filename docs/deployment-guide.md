@@ -165,14 +165,66 @@ Tool: `tools/agent-levels.mjs`
 
 ---
 
-## Phase 6 — Mission Control Dashboard 🚧
-*In progress*
+## Phase 6 — Mission Control Dashboard ✅
+*Completed 22/02/2026*
 
 - **Repo:** `github.com/shad0matic/oclaw-ops`
-- **Local path:** `/home/shad/projects/oclaw-ops/`
-- **Stack:** Next.js + Prisma + Tailwind + shadcn/ui
+- **Local path:** `/home/openclaw/projects/oclaw-ops/`
+- **Stack:** Next.js 15 + Drizzle ORM + Tailwind + shadcn/ui
 - **Spec:** `SPEC.md` in repo root
-- **Access:** Tailscale only, no auth
+- **Access:** Tailscale only (port 3000), no auth
+
+### Install
+```bash
+cd ~/projects
+git clone https://github.com/shad0matic/oclaw-ops.git
+cd oclaw-ops/dashboard
+cp .env.example .env   # Configure DATABASE_URL
+npm install
+npm run build
+```
+
+### Process Management (PM2)
+```bash
+# Install PM2 globally
+npm install -g pm2
+
+# Start dashboard
+cd ~/projects/oclaw-ops/dashboard
+pm2 start npm --name "dashboard" -- start -- -H 127.0.0.1
+
+# Save PM2 process list (survives reboot)
+pm2 save
+
+# Enable PM2 auto-start on reboot (requires sudo)
+pm2 startup
+# Then run the sudo command it outputs
+```
+
+### Common Commands
+```bash
+pm2 restart dashboard      # Graceful restart
+pm2 logs dashboard         # View logs
+pm2 list                   # Show status
+~/scripts/dashboard-restart.sh  # Build + restart
+```
+
+### Restart Script
+File: `~/scripts/dashboard-restart.sh`
+```bash
+#!/bin/bash
+PM2=~/.npm-global/bin/pm2
+cd ~/projects/oclaw-ops/dashboard
+npm run build && $PM2 restart dashboard
+```
+
+### Tailscale Serve
+```bash
+# Expose dashboard via Tailscale (HTTPS on port 3000)
+tailscale serve --https=3000 http://127.0.0.1:3000
+```
+
+Access: `https://vps-ovh.tail404904.ts.net/`
 
 ---
 
@@ -288,7 +340,7 @@ Tool: `tools/cost-tracker.mjs`
 - [ ] Google Drive testing
 - [ ] `webhook.glubi.com` DNS (alternative to Tailscale Funnel)
 - [ ] `drop.glubi.com` DNS + Nginx file drop
-- [ ] Phase 6 — Mission Control Dashboard
+- [x] Phase 6 — Mission Control Dashboard ✅
 - [ ] Phase 7 — Cross-Agent Intelligence (post ski holiday)
 
 ---
@@ -300,6 +352,17 @@ Tool: `tools/cost-tracker.mjs`
 openclaw gateway status
 journalctl --user -u openclaw-gateway -n 50
 systemctl --user restart openclaw-gateway
+```
+
+### Dashboard not responding
+```bash
+pm2 list                    # Check status
+pm2 logs dashboard          # View logs
+pm2 restart dashboard       # Restart
+
+# If PM2 not running:
+cd ~/projects/oclaw-ops/dashboard
+pm2 start npm --name "dashboard" -- start -- -H 127.0.0.1
 ```
 
 ### Gmail watch not working
