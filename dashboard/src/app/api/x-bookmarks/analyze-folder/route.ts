@@ -14,25 +14,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "x_folder is required" }, { status: 400 })
     }
 
-    // Get folder info and bookmark count
+    // Get folder info and bookmark count from ops.x_bookmarks (where x_folder column lives)
     const folderResult = await db.execute(sql`
       SELECT 
         fm.x_folder,
         fm.description as project,
-        fm.analysis_prompt as saved_prompt,
-        COUNT(xb.id) as bookmark_count
-      FROM kb.x_folder_mappings fm
-      LEFT JOIN kb.x_bookmarks xb ON xb.full_json->>'folder_id' = fm.x_folder
-        OR xb.full_json->'folder'->>'name' = fm.x_folder
+        fm.analysis_prompt as saved_prompt
+      FROM ops.x_folder_mappings fm
       WHERE fm.x_folder = ${x_folder}
-      GROUP BY fm.id
     `)
 
-    // Fallback: count bookmarks directly if no mapping
+    // Count bookmarks from ops.x_bookmarks using x_folder column
     const bookmarkCountResult = await db.execute(sql`
-      SELECT COUNT(*) as count FROM kb.x_bookmarks 
-      WHERE full_json->>'folder_id' = ${x_folder}
-        OR full_json->'folder'->>'name' = ${x_folder}
+      SELECT COUNT(*) as count FROM ops.x_bookmarks 
+      WHERE x_folder = ${x_folder}
     `)
 
     const bookmarkCount = Number(bookmarkCountResult.rows[0]?.count || 0)
@@ -66,7 +61,7 @@ Steps:
 3. Analyze content according to the prompt
 4. Extract insights, tools, resources, actionable items
 5. Store findings in knowledge base`},
-        'backlog',
+        'queued',
         'phil',
         'smaug',
         'easy'

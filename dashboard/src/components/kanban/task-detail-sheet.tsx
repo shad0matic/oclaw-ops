@@ -66,7 +66,7 @@ function SpecThisButton({ taskId }: { taskId: number }) {
   const qc = useQueryClient();
   const mutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/tasks/${taskId}`, {
+      const res = await fetch(`/api/tasks/queue/${taskId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "spec" }),

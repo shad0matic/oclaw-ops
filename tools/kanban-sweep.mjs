@@ -4,6 +4,7 @@
  * 
  * Runs every 2 minutes via cron. Checks for:
  * - Tasks that changed status in last 3 minutes but weren't acked
+ * - Uses notification log to prevent duplicate notifications
  * - Marks them as acked after notifying
  * 
  * This is a safety net — LISTEN/NOTIFY should handle most cases in real-time.
@@ -66,12 +67,12 @@ function sendTelegramMessage(text) {
 function formatNotification(task, prevStatus) {
   const { id, title, status, project, agent_id } = task;
   const projectTag = project ? ` [${project}]` : '';
-  const agentTag = agent_id ? ` by <b>${agent_id}</b>` : '';
+  const agentTag = agent_id ? `\n${agent_id}` : '';
   
   // Map status to emoji and message
   const statusMap = {
     'assigned': { emoji: '📌', msg: 'assigned' },
-    'planned': { emoji: '📝', msg: '→ Planned' },
+    'planned': { emoji: '📝', msg: 'planned' },
     'running': { emoji: '🚀', msg: 'started' },
     'review': { emoji: '👀', msg: 'ready for review' },
     'done': { emoji: '✅', msg: 'completed' },
@@ -81,25 +82,29 @@ function formatNotification(task, prevStatus) {
   const config = statusMap[status];
   if (!config) return null;
   
-  return `${config.emoji} <b>#${id}</b>${projectTag} ${config.msg}${agentTag}\n${title}\n<i>(via sweep)</i>`;
+  return `${config.emoji} <b>#${id}</b>${projectTag} ${config.msg}${agentTag}\n${title}`;
 }
 
 async function sweep() {
   const client = await pool.connect();
   
   try {
-    // Find task_events in the last 3 minutes that indicate status changes
-    // where the task hasn't been chat_acked recently
+    // Find tasks with recent status changes that:
+    // 1. Haven't been chat_acked since the change
+    // 2. Haven't been notified via this sweep before (check notification log)
     const result = await client.query(`
       SELECT DISTINCT ON (t.id)
         t.id, t.title, t.status, t.project, t.agent_id,
         e.from_status, e.created_at as event_at
       FROM ops.task_queue t
       JOIN ops.task_events e ON e.task_id = t.id
+      LEFT JOIN ops.task_notification_log nl 
+        ON nl.task_id = t.id AND nl.event_type = 'status_' || t.status
       WHERE e.event_type = 'status_change'
-        AND e.created_at > NOW() - INTERVAL '3 minutes'
+        AND e.created_at > NOW() - INTERVAL '5 minutes'
         AND (t.chat_acked_at IS NULL OR t.chat_acked_at < e.created_at)
         AND t.status IN ('assigned', 'planned', 'running', 'review', 'done', 'failed')
+        AND nl.id IS NULL  -- Not already notified for this status
       ORDER BY t.id, e.created_at DESC
     `);
     
@@ -117,10 +122,20 @@ async function sweep() {
           await sendTelegramMessage(message);
           console.log(`  → Notified #${task.id} (${task.from_status} → ${task.status})`);
           
-          // Mark as chat-acked
-          await client.query(
-            [task.id]
-          );
+          // Log this notification to prevent duplicates
+          await client.query(`
+            INSERT INTO ops.task_notification_log (task_id, event_type)
+            VALUES ($1, $2)
+            ON CONFLICT (task_id, event_type) DO UPDATE SET notified_at = NOW()
+          `, [task.id, `status_${task.status}`]);
+          
+          // Mark task as chat-acked
+          await client.query(`
+            UPDATE ops.task_queue 
+            SET chat_acked_at = NOW(), acked = true
+            WHERE id = $1
+          `, [task.id]);
+          
         } catch (err) {
           console.error(`  ✗ Failed to notify #${task.id}:`, err.message);
         }

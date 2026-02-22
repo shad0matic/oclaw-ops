@@ -199,12 +199,35 @@ async function main() {
         return;
       }
 
-      // Dedup check
+      // Dedup check (memory)
       const dedupKey = `${payload.task_id}-${payload.status}-${payload.event || 'change'}`;
       if (recentlyNotified.has(dedupKey)) {
-        console.log('Skipping duplicate:', dedupKey);
+        console.log('Skipping duplicate (memory):', dedupKey);
         return;
       }
+      
+      // DB dedup check - skip if already acked for completed tasks
+      if (['done', 'failed', 'cancelled'].includes(payload.status)) {
+        const { rows } = await pool.query(
+          'SELECT acked, chat_acked_at FROM ops.task_queue WHERE id = $1',
+          [payload.task_id]
+        );
+        if (rows[0]?.acked || rows[0]?.chat_acked_at) {
+          console.log('Skipping already acked task:', payload.task_id);
+          return;
+        }
+      }
+      
+      // Check notification log (persistent dedup)
+      const { rows: logRows } = await pool.query(
+        'SELECT id FROM ops.task_notification_log WHERE task_id = $1 AND event_type = $2',
+        [payload.task_id, `status_${payload.status}`]
+      );
+      if (logRows.length > 0) {
+        console.log('Skipping already notified (DB):', payload.task_id, payload.status);
+        return;
+      }
+      
       recentlyNotified.add(dedupKey);
       setTimeout(() => recentlyNotified.delete(dedupKey), DEDUP_WINDOW_MS);
 
@@ -213,9 +236,16 @@ async function main() {
         await sendTelegramMessage(message);
         console.log('Sent notification for task', payload.task_id);
         
+        // Log to prevent future duplicates
+        await pool.query(
+          'INSERT INTO ops.task_notification_log (task_id, event_type) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          [payload.task_id, `status_${payload.status}`]
+        );
+        
         // Mark as chat-acked so sweep doesn't duplicate
         try {
           await pool.query(
+            'UPDATE ops.task_queue SET chat_acked_at = NOW(), acked = true WHERE id = $1',
             [payload.task_id]
           );
         } catch (ackErr) {
