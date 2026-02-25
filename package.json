@@ -4,6 +4,7 @@
     "@mozilla/readability": "^0.6.0",
     "chokidar": "^4.0.3",
     "dayjs": "^1.11.19",
+    "firecrawl": "^1.0.0",
     "framer-motion": "^12.34.0",
     "jsdom": "^28.1.0",
     "pg": "^8.18.0",
