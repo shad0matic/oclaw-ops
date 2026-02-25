@@ -333,19 +333,13 @@ export async function POST(request: Request) {
 
       for (const bookmark of bookmarks) {
         try {
-          await pool.query(
+          const result = await pool.query(
             `INSERT INTO ops.browser_bookmarks (url, title, folder_path, added_at)
              VALUES ($1, $2, $3, $4)
              ON CONFLICT (url) DO NOTHING`,
             [bookmark.url, bookmark.title, bookmark.folderPath, bookmark.addedAt]
           );
-          const result = await pool.query('SELECT lastval() IS NOT NULL as inserted');
-          // Check if row was actually inserted
-          const checkResult = await pool.query(
-            'SELECT 1 FROM ops.browser_bookmarks WHERE url = $1 AND imported_at > NOW() - INTERVAL \'5 seconds\'',
-            [bookmark.url]
-          );
-          if (checkResult.rows.length > 0) {
+          if (result.rowCount && result.rowCount > 0) {
             imported++;
           } else {
             skipped++; // URL already existed

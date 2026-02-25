@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
  import { Button } from '@/components/ui/button';
- import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
  import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
  import { Label } from '@/components/ui/label';
  import { Input } from '@/components/ui/input';
@@ -113,7 +113,7 @@ const AutoCategorizeModal = ({ open, onOpenChange, uncategorizedCount, selectedB
             <p>Found {uncategorizedCount} uncategorized bookmarks</p>
             <div>
               <Label>Process:</Label>
-              <RadioGroup value={processOption} onValueChange={(value) => setProcessOption(value as 'all' | 'selected' | 'firstN')} className="space-y-2 mt-2">
+              <RadioGroup value={processOption} onValueChange={(value: string) => setProcessOption(value as 'all' | 'selected' | 'firstN')} className="space-y-2 mt-2">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="all" id="all" />
                   <Label htmlFor="all">All uncategorized ({uncategorizedCount})</Label>
