@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { pool } from "@/lib/drizzle"
@@ -70,7 +71,9 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
                 <PageHeader title="Event Log" subtitle="Full activity timeline — every task, error, commit, and heartbeat across all agents." />
             </div>
 
-            <EventFilters agents={agents} />
+            <Suspense fallback={<div className="text-zinc-500">Loading filters...</div>}>
+                <EventFilters agents={agents} />
+            </Suspense>
 
             <ActivityFeed events={serializedEvents} />
         </div>

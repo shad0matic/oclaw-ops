@@ -51,7 +51,7 @@ export function HealthPulse({ status, activeCount, dailyCost, cpu, memory, load,
         <div className="flex flex-col items-center justify-center gap-2 px-4 pb-1.5 text-[11px] text-muted-foreground">
           <div className="flex w-full items-center gap-2">
             <span className="w-12">⚡ Load</span>
-            <ServerLoadGauge load={load[0]} />
+            <ServerLoadGauge load={load?.[0] ?? 0} />
           </div>
           {cpu !== undefined && (
             <span className={cn(cpuPct > 80 ? "text-red-400" : cpuPct > 50 ? "text-amber-400" : "")}>

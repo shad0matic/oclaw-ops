@@ -253,11 +253,40 @@ function TaskDetailHeader({ item, projects, title, setTitle, updateField, projec
   const proj = projects.find((p: Project) => p.id === (project || "other"));
   const projectIcon = proj?.icon || "📦";
   const [copied, setCopied] = useState(false);
+  const [copiedAll, setCopiedAll] = useState(false);
 
   const copyTaskId = () => {
     navigator.clipboard.writeText(String(item.id));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyAllTaskInfo = () => {
+    if (!item) return;
+    
+    let text = `#${item.id}: ${item.title}\n`;
+    text += `Status: ${item.status || 'N/A'}\n`;
+    text += `Project: ${proj?.label || item.project || 'N/A'}\n`;
+    
+    if ('priority' in item) text += `Priority: P${item.priority}\n`;
+    if ('complexity' in item) text += `Complexity: ${item.complexity || 'easy'}\n`;
+    if (item.agent_id) text += `Agent: ${item.agent_id}\n`;
+    if (item.spec_url) text += `Spec: ${item.spec_url}\n`;
+    
+    if (item.description) {
+      text += `\n--- Description ---\n${item.description}\n`;
+    }
+    if (item.notes) {
+      text += `\n--- Notes ---\n${item.notes}\n`;
+    }
+    
+    if (item.created_at) text += `\nCreated: ${formatDate(item.created_at)}\n`;
+    if (item.started_at) text += `Started: ${formatDate(item.started_at)}\n`;
+    if (item.completed_at) text += `Completed: ${formatDate(item.completed_at)}\n`;
+    
+    navigator.clipboard.writeText(text);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 2000);
   };
 
   return (
@@ -288,6 +317,22 @@ function TaskDetailHeader({ item, projects, title, setTitle, updateField, projec
               </TooltipTrigger>
               <TooltipContent>
                 <p>Copy title</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={copyAllTaskInfo}
+                  className="flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-pointer"
+                  title={copiedAll ? "Copied!" : "Copy all task info"}
+                >
+                  {copiedAll ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{copiedAll ? "Copied!" : "Copy all task info"}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

@@ -4,11 +4,11 @@ import React from 'react';
 import { cn } from "@/lib/utils"
 
 interface ServerLoadGaugeProps {
-  load: number;
+  load?: number;
 }
 
 const ServerLoadGauge: React.FC<ServerLoadGaugeProps> = ({ load }) => {
-  const percentage = Math.min(load * 10, 100); // Assuming load average * 10 for percentage
+  const percentage = Math.min((load ?? 0) * 10, 100); // Assuming load average * 10 for percentage
   const colorClass = percentage > 80 ? 'bg-red-500' : percentage > 50 ? 'bg-yellow-500' : 'bg-green-500';
 
   return (
