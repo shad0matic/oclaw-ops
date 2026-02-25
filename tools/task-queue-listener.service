@@ -1,0 +1,17 @@
+[Unit]
+Description=Task Queue LISTEN/NOTIFY Listener
+After=postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=openclaw
+Group=openclaw
+WorkingDirectory=/home/openclaw/projects/oclaw-ops/tools
+ExecStart=/usr/bin/node /home/openclaw/projects/oclaw-ops/tools/task-queue-listener.mjs
+Restart=always
+RestartSec=5
+Environment=TELEGRAM_BOT_TOKEN=8475020231:AAEv6SZo2l4OX5b47dVCBbKwHMguoCiGarw
+
+[Install]
+WantedBy=multi-user.target
