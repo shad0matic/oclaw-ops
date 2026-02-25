@@ -155,7 +155,37 @@ For screen capture, automation, and node features:
 
 ---
 
-## Step 7: Voice/TTS (Optional)
+## Step 7: Pair Your Mac as a Node (Optional)
+
+Your Mac can act as an OpenClaw "node" to provide additional capabilities:
+
+### What Nodes Do
+
+- **Screen Capture** — Agent can take screenshots of your Mac
+- **Camera Access** — Agent can capture photos (with permission)
+- **Location Services** — Agent can get your location (with permission)
+- **File System Access** — Agent can read/write files in designated folders
+
+### How to Pair
+
+1. Install the OpenClaw CLI (Step 2 above)
+2. Run the node pairing command:
+   ```bash
+   openclaw node pair
+   ```
+3. Follow the on-screen instructions to authorize your Mac
+
+### Verify Node Connection
+
+```bash
+openclaw node status
+```
+
+You should see your Mac listed as a connected node with available capabilities.
+
+---
+
+## Step 8: Voice/TTS (Optional)
 
 OpenClaw supports text-to-speech via ElevenLabs.
 
@@ -170,6 +200,44 @@ Ask Kevin to enable TTS and set your preferred voice. Common voices:
 - **The Elf** — Friendly, slightly magical
 - **Rachel** — Clear, professional
 - **Adam** — Deep, authoritative
+
+---
+
+## Step 9: Local Dashboard Development (Optional)
+
+If you want to contribute to the OpenClaw dashboard or run it locally:
+
+### Clone the Repository
+
+```bash
+cd ~/projects
+git clone https://github.com/your-org/oclaw-ops.git
+cd oclaw-ops
+```
+
+### Install Dependencies
+
+```bash
+cd dashboard
+npm install
+```
+
+### Configure Environment
+
+```bash
+cp ../.env.task-listener .env.local
+# Edit .env.local with your database credentials
+```
+
+### Run Development Server
+
+```bash
+npm run dev
+```
+
+The dashboard will be available at `http://localhost:3000`. Note that you'll need:
+- A Tailscale connection to access the database
+- Valid API keys in your environment
 
 ---
 
@@ -229,6 +297,28 @@ echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.zshrc
 source ~/.zshrc
 ```
 
+### Gateway connection issues
+
+If you're having trouble connecting to the Gateway:
+
+1. **Verify Tailscale is connected:**
+   ```bash
+   tailscale status
+   ```
+
+2. **Check the WebSocket URL:**
+   ```
+   ws://vps-ovh.tail404904.ts.net:19001
+   ```
+
+3. **Firewall issues:** Make sure your Mac's firewall allows outgoing connections on port 19001
+
+### Dashboard not loading
+
+1. Check you're using HTTPS (required for Tailscale)
+2. Try clearing your browser cache
+3. Check the dashboard is running: `openclaw health`
+
 ---
 
 ## Quick Reference
@@ -242,6 +332,8 @@ source ~/.zshrc
 | `openclaw dashboard` | Open dashboard in browser |
 | `openclaw docs` | Search OpenClaw documentation |
 | `openclaw doctor` | Run health checks |
+| `openclaw node pair` | Pair your Mac as a node |
+| `openclaw node status` | Check node connection status |
 
 ### Access Points
 
