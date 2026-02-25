@@ -10,6 +10,7 @@ import { ProjectManager } from "@/components/settings/project-manager";
 import { XTwitterSettings } from "@/components/settings/x-twitter-settings";
 import { BrowserBookmarkImport } from "@/components/settings/browser-bookmark-import";
 import { MemoryKpisCard } from "@/components/settings/memory-kpis-card";
+import { PhoneSettings } from "@/components/settings/phone-settings";
 import { CollapsibleSection } from "@/components/settings/collapsible-section";
 import { PageHeader } from "@/components/layout/page-header"
 
@@ -29,6 +30,11 @@ export default function SettingsPage() {
             <CollapsibleSection title="Browser Bookmarks" icon="🔖" defaultOpen={true}>
                 <div className="p-4">
                     <BrowserBookmarkImport />
+                </div>
+            </CollapsibleSection>
+            <CollapsibleSection title="☎️ ClawdTalk Phone" icon="☎️" defaultOpen={true}>
+                <div className="p-4">
+                    <PhoneSettings />
                 </div>
             </CollapsibleSection>
             <CollapsibleSection title="Memory KPIs" icon="🧠" defaultOpen={false}>
