@@ -6,6 +6,7 @@ import { signOut } from "@/auth"
 import { NavLinks } from "./nav-links"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ResearchToggle } from "@/components/overview/desktop/research-toggle"
+import { Suspense } from "react"
 
 export function Sidebar({ className }: { className?: string }) {
     return (
@@ -16,7 +17,9 @@ export function Sidebar({ className }: { className?: string }) {
             </div>
             <div className="flex-1 overflow-auto py-4">
                 <nav className="grid gap-1 px-2">
-                    <NavLinks />
+                    <Suspense fallback={<div className="p-2 text-sm text-muted-foreground">Loading...</div>}>
+                        <NavLinks />
+                    </Suspense>
                 </nav>
             </div>
             <div className="border-t px-3 py-2">
