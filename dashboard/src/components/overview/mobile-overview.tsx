@@ -81,6 +81,7 @@ export function MobileOverview() {
         cpu={overviewData.system.cpu}
         memory={overviewData.system.memory}
         load={overviewData.system.load}
+        cores={overviewData.system.cores}
       />
 
       {/* Alert Banner */}

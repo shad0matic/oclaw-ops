@@ -13,10 +13,11 @@ export interface HealthPulseProps {
   cpu?: number
   memory?: number
   load?: number[]
+  cores?: number
   onClick?: () => void
 }
 
-export function HealthPulse({ status, activeCount, dailyCost, cpu, memory, load, onClick }: HealthPulseProps) {
+export function HealthPulse({ status, activeCount, dailyCost, cpu, memory, load, cores, onClick }: HealthPulseProps) {
   const loadStr = load?.[0]?.toFixed(1)
   const memPct = memory ?? 0
   const cpuPct = cpu ?? 0
@@ -48,21 +49,23 @@ export function HealthPulse({ status, activeCount, dailyCost, cpu, memory, load,
       </div>
       {/* Row 2: system metrics bar */}
       {(load || cpu !== undefined || memory !== undefined) && (
-        <div className="flex flex-col items-center justify-center gap-2 px-4 pb-1.5 text-[11px] text-muted-foreground">
+        <div className="flex flex-col items-center justify-center gap-1.5 px-4 pb-2 text-[11px] text-muted-foreground">
           <div className="flex w-full items-center gap-2">
-            <span className="w-12">⚡ Load</span>
-            <ServerLoadGauge load={load?.[0] ?? 0} />
+            <span className="w-10 shrink-0">⚡ Load</span>
+            <ServerLoadGauge load={load?.[0] ?? 0} cores={cores ?? 1} />
           </div>
-          {cpu !== undefined && (
-            <span className={cn(cpuPct > 80 ? "text-red-400" : cpuPct > 50 ? "text-amber-400" : "")}>
-              CPU {cpuPct}%
-            </span>
-          )}
-          {memory !== undefined && (
-            <span className={cn(memPct > 80 ? "text-red-400" : memPct > 60 ? "text-amber-400" : "")}>
-              RAM {memPct}%
-            </span>
-          )}
+          <div className="flex w-full justify-between gap-4">
+            {cpu !== undefined && (
+              <span className={cn(cpuPct > 80 ? "text-red-400" : cpuPct > 50 ? "text-amber-400" : "")}>
+                CPU {cpuPct}%
+              </span>
+            )}
+            {memory !== undefined && (
+              <span className={cn(memPct > 80 ? "text-red-400" : memPct > 60 ? "text-amber-400" : "")}>
+                RAM {memPct}%
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>
