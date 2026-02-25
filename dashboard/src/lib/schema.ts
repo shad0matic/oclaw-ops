@@ -752,3 +752,40 @@ export const browserBookmarksInOps = ops.table("browser_bookmarks", {
 	index("idx_browser_bookmarks_folder").using("btree", table.kbFolderId.asc().nullsLast().op("int4_ops")).where(sql`(kb_folder_id IS NOT NULL)`),
 	unique("browser_bookmarks_url_key").on(table.url),
 ]);
+
+// Phone calls table - stores phone call history
+export const phoneCallsInOps = ops.table("phone_calls", {
+	id: serial().primaryKey().notNull(),
+	fromNumber: text("from_number").notNull(),          // Caller's phone number
+	toNumber: text("to_number").notNull(),              // Recipient's phone number
+	direction: text("notNull").notNull(),               // 'inbound' or 'outbound'
+	status: text().default('pending'),                 // pending, in-progress, completed, failed, no-answer
+	duration: integer(),                                 // Duration in seconds
+	recordingUrl: text("recording_url"),                // URL to call recording
+	transcription: text(),                              // Speech-to-text transcription
+	agentId: text("agent_id").default('main'),          // Agent handling the call
+	sessionKey: text("session_key"),                    // Associated session key
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	endedAt: timestamp("ended_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("idx_phone_calls_from").using("btree", table.fromNumber.asc().nullsLast().op("text_ops")),
+	index("idx_phone_calls_to").using("btree", table.toNumber.asc().nullsLast().op("text_ops")),
+	index("idx_phone_calls_status").using("btree", table.status.asc().nullsLast().op("text_ops")),
+	index("idx_phone_calls_created").using("btree", table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+]);
+
+// Phone settings table - stores Twilio configuration and phone number
+export const phoneSettingsInOps = ops.table("phone_settings", {
+	id: serial().primaryKey().notNull(),
+	phoneNumber: text("phone_number"),                   // Our dedicated Twilio phone number
+	twilioAccountSid: text("twilio_account_sid"),        // Twilio Account SID
+	twilioAuthToken: text("twilio_auth_token"),          // Twilio Auth Token (encrypted in production)
+	twilioApiKey: text("twilio_api_key"),                // Twilio API Key SID
+	twilioApiSecret: text("twilio_api_secret"),          // Twilio API Key Secret
+	bossPhoneNumber: text("boss_phone_number"),          // Boss's phone number for urgent calls
+	voicemailGreeting: text("voicemail_greeting"),       // Voicemail greeting text
+	enabled: boolean().default(false),                   // Whether phone calls are enabled
+	voiceEnabled: boolean().default(true),              // Whether voice interaction is enabled
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+});

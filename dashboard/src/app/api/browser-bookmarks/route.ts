@@ -145,10 +145,11 @@ function parseBookmarkFile(data: unknown): ParsedBookmark[] {
   // HTML format detection (Brave, Safari, Edge - Netscape Bookmark File Format)
   if (typeof data === 'string') {
     const trimmed = data.trim();
+    const lowerTrimmed = trimmed.toLowerCase();
     if (
-      trimmed.includes('<!DOCTYPE NETSCAPE-Bookmark-file-1>') ||
-      trimmed.includes('<DT><H3') ||
-      (trimmed.toLowerCase().includes('<html') && trimmed.toLowerCase().includes('<a href'))
+      lowerTrimmed.includes('<!doctype netscape-bookmark-file-1') ||
+      lowerTrimmed.includes('<dt><h3') ||
+      (lowerTrimmed.includes('<html') && lowerTrimmed.includes('<a href'))
     ) {
       return parseHTMLBookmarks(data);
     }
