@@ -789,3 +789,30 @@ export const phoneSettingsInOps = ops.table("phone_settings", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 });
+
+// Security configuration table - stores security settings
+export const securityConfig = ops.table("security_config", {
+	id: serial().primaryKey().notNull(),
+	tailscaleEnabled: boolean().default(true),
+	fileAllowlist: text("file_allowlist").array().default([]),
+	networkEgressEnabled: boolean("network_egress_enabled").default(true),
+	allowedDomains: text("allowed_domains").array().default([]),
+	auditLoggingEnabled: boolean("audit_logging_enabled").default(true),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+});
+
+// Audit logs table - tracks sensitive operations
+export const auditLogs = ops.table("audit_logs", {
+	id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+	eventType: text("event_type").notNull(),
+	detail: jsonb().default({}),
+	ipAddress: text("ip_address"),
+	userAgent: text("user_agent"),
+	agentId: text("agent_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("idx_audit_logs_type").using("btree", table.eventType.asc().nullsLast().op("text_ops")),
+	index("idx_audit_logs_created").using("btree", table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	index("idx_audit_logs_agent").using("btree", table.agentId.asc().nullsLast().op("text_ops")),
+]);

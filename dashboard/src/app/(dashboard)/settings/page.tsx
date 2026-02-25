@@ -13,6 +13,7 @@ import { MemoryKpisCard } from "@/components/settings/memory-kpis-card";
 import { PhoneSettings } from "@/components/settings/phone-settings";
 import { CollapsibleSection } from "@/components/settings/collapsible-section";
 import { PageHeader } from "@/components/layout/page-header"
+import { SecuritySettings } from "@/components/settings/security-settings";
 
 export default function SettingsPage() {
     const [refreshKey, setRefreshKey] = useState(0);
@@ -21,6 +22,11 @@ export default function SettingsPage() {
     return (
         <div className="space-y-3">
             <PageHeader title="Settings" subtitle="Manage agent avatars, default configurations, and dashboard preferences." />
+            <CollapsibleSection title="Security Hardening" icon="🛡️" defaultOpen={true}>
+                <div className="p-4">
+                    <SecuritySettings />
+                </div>
+            </CollapsibleSection>
             <CollapsibleSection title="Projects" icon="📁">
                 <ProjectManager />
             </CollapsibleSection>

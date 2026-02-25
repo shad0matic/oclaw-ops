@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { securityConfig } from '@/lib/db/schema';
+import { db } from '@/lib/drizzle';
+import { securityConfig } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
 // GET - Fetch security config
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
           networkEgressEnabled: body.networkEgressEnabled,
           allowedDomains: body.allowedDomains,
           auditLoggingEnabled: body.auditLoggingEnabled,
-          updatedAt: new Date()
+          updatedAt: new Date().toISOString()
         })
         .where(eq(securityConfig.id, existing[0].id));
     } else {
