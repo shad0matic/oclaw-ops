@@ -1,0 +1,19 @@
+{
+  "api_keys": {
+    "polymarket": "YOUR_POLYMARKET_API_KEY"
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "openclaw",
+    "password": "YOUR_DATABASE_PASSWORD",
+    "database": "openclaw_db",
+    "schema": "app_polymarket"
+  },
+  "strategy": {
+    "name": "simple_mm",
+    "params": {
+      "spread": 0.01
+    }
+  }
+}

@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 import { pool } from "@/lib/drizzle"
+import { getLoadAvg } from "@/lib/system-stats"
 import { NextRequest, NextResponse } from "next/server"
 
 // GET /api/system/metrics?hours=1
@@ -15,6 +16,8 @@ export async function GET(request: NextRequest) {
         [hours]
     )
 
+    const [load1] = getLoadAvg()
+
     const data = rows.map((r: any) => ({
         time: new Date(r.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         ts: new Date(r.ts).getTime(),
@@ -22,6 +25,7 @@ export async function GET(request: NextRequest) {
         mem: (Number(r.mem_used_bytes) / Number(r.mem_total_bytes)) * 100,
         memUsed: Number(r.mem_used_bytes),
         memTotal: Number(r.mem_total_bytes),
+        load: load1,
     }))
 
     return NextResponse.json(data)

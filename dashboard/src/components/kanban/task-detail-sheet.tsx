@@ -160,8 +160,21 @@ export function TaskDetailSheet({ item, projects, isOpen, onOpenChange, onNaviga
         />
         
         <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 space-y-4">
-          <div className="space-y-1">
+          <div className="space-y-1 relative">
             <label htmlFor="description" className="text-xs font-medium text-muted-foreground">Description</label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Copy 
+                    className="absolute top-8 right-2 w-4 h-4 text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-pointer" 
+                    onClick={() => navigator.clipboard.writeText(description || "")}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Copy description</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <Textarea 
               id="description"
               value={description || ""} 
@@ -268,6 +281,18 @@ function TaskDetailHeader({ item, projects, title, setTitle, updateField, projec
             onBlur={() => updateField('title', title)}
             className="h-9 flex-1 text-lg font-semibold text-foreground truncate bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
           />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Copy className="w-4 h-4 text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-pointer" onClick={() => navigator.clipboard.writeText(item.title)} />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Copy title</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+
         </div>
         
         <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1">

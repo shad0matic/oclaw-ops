@@ -92,80 +92,52 @@ function parseFirefoxBookmarks(
 // Parse HTML bookmarks (Netscape Bookmark File Format - Brave, Safari, Edge)
 function parseHTMLBookmarks(html: string): ParsedBookmark[] {
   const results: ParsedBookmark[] = [];
-  
   try {
     const dom = new JSDOM(html);
     const document = dom.window.document;
-    
-    // Recursive function to traverse bookmark tree
-    function traverseDL(dlElement: Element, path: string[] = []) {
-      // Process all children of the DL element
-      for (const child of Array.from(dlElement.children)) {
-        const tagName = child.tagName?.toLowerCase();
-        
-        if (tagName !== 'dt') continue; // Skip non-DT elements (like <p>)
-        
-        // A DT can contain:
-        // 1. <A> - a bookmark link
-        // 2. <H3> + <DL> - a folder with its contents
-        
-        // Look for H3 (folder) or A (bookmark) in this DT
-        for (const dtChild of Array.from(child.children)) {
-          const dtChildTag = dtChild.tagName?.toLowerCase();
-          
-          if (dtChildTag === 'h3') {
-            // This is a folder - find the DL sibling or child
-            const folderName = dtChild.textContent?.trim() || 'Unnamed Folder';
-            
-            // Look for DL in siblings (next to H3 within the same DT)
-            let dlElement: Element | null = null;
-            for (const sibling of Array.from(child.children)) {
-              if (sibling.tagName?.toLowerCase() === 'dl') {
-                dlElement = sibling;
-                break;
-              }
+
+    function traverse(element: Element, path: string[]): void {
+      const children = Array.from(element.children);
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        if (child.tagName !== 'DT') continue;
+
+        const anchor = child.querySelector('a');
+        if (anchor) {
+          const url = anchor.getAttribute('href');
+          if (url && (url.startsWith('http') || url.startsWith('https'))) {
+            const title = anchor.textContent?.trim() || null;
+            const addDate = anchor.getAttribute('add_date');
+            let addedAt: Date | null = null;
+            if (addDate) {
+              addedAt = new Date(parseInt(addDate, 10) * 1000);
             }
-            
-            if (dlElement) {
-              // Recursively process folder contents
-              const newPath = [...path, folderName];
-              traverseDL(dlElement, newPath);
-            }
-          } else if (dtChildTag === 'a') {
-            // This is a bookmark
-            const url = dtChild.getAttribute('href');
-            const title = dtChild.textContent?.trim() || null;
-            const addDate = dtChild.getAttribute('add_date');
-            
-            if (url) {
-              let addedAt: Date | null = null;
-              if (addDate) {
-                // Unix timestamp in seconds
-                addedAt = new Date(parseInt(addDate, 10) * 1000);
-              }
-              
-              results.push({
-                url,
-                title,
-                folderPath: path.join(' > '),
-                addedAt,
-              });
+            results.push({ url, title, folderPath: path.join(' > '), addedAt });
+          }
+        }
+
+        const header = child.querySelector('h3');
+        if (header) {
+          const folderName = header.textContent?.trim();
+          if (folderName) {
+            const newPath = [...path, folderName];
+            const nextElement = children[i + 1];
+            if (nextElement && nextElement.tagName === 'DL') {
+              traverse(nextElement, newPath);
             }
           }
         }
       }
     }
-    
-    // Find the root DL element and start processing
+
     const rootDL = document.querySelector('dl');
     if (rootDL) {
-      traverseDL(rootDL);
+      traverse(rootDL, []);
     }
   } catch (error) {
     console.error('HTML parsing error:', error);
     throw new Error('Failed to parse HTML bookmark file');
   }
-  
   return results;
 }
 

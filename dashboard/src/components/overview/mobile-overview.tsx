@@ -98,6 +98,7 @@ export function MobileOverview() {
       <TodaySummary
         pipeline={overviewData.pipeline}
         dailyCost={overviewData.dailyCost}
+        systemLoad={overviewData.system.load}
       />
 
       {/* Agent Bottom Sheet */}

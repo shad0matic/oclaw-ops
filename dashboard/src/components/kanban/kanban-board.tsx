@@ -16,6 +16,7 @@ import { Project, QueueTask, FeatureRequest } from "@/components/kanban/types";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useTaskStream } from "@/hooks/use-task-stream";
 import { MelStatusIndicator } from "./mel-status-indicator";
+import { QueueStatusIndicator } from "./queue-status-indicator";
 import { useKanban } from "@/contexts/KanbanContext";
 import { useOverviewData, useLiveWork } from "@/hooks/useOverviewData";
 
@@ -273,8 +274,10 @@ export function KanbanBoard() {
                 className="pl-8 pr-3 py-1.5 text-xs bg-muted rounded-lg w-48 focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
           </div>
-          <div className="hidden md:flex">
+          <div className="hidden md:flex items-center gap-3">
             <MelStatusIndicator />
+            <div className="border-l h-5 border-border mx-1"></div>
+            <QueueStatusIndicator />
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -290,7 +293,7 @@ export function KanbanBoard() {
                 hasHiddenRunning
                   ? "bg-orange-500/30 text-orange-300 border border-orange-500/60 animate-attention-pulse"
                   : projectFilter.length > 0 || agentFilter.length > 0
-                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/20"
                   : "text-muted-foreground hover:text-foreground bg-muted"
               }`}
               title={hasHiddenRunning ? `⚠️ Running (${filteredRunningTasks}) doesn't match Active (${activeTasks})` : undefined}

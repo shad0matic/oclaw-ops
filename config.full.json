@@ -1,0 +1,49 @@
+{
+  "api_keys": {
+    "polymarket": "YOUR_POLYMARKET_API_KEY",
+    "telegram": "YOUR_TELEGRAM_BOT_TOKEN"
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "openclaw",
+    "password": "YOUR_DATABASE_PASSWORD",
+    "database": "openclaw_db",
+    "schema": "app_polymarket",
+    "pool_size": 10
+  },
+  "strategy": {
+    "name": "multi_market_mm",
+    "params": {
+      "markets": [
+        "market1_id",
+        "market2_id"
+      ],
+      "spread": {
+        "min": 0.01,
+        "max": 0.05
+      },
+      "inventory_risk": {
+        "max_exposure": 1000,
+        "rebalance_threshold": 0.1
+      }
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "port": 9090,
+    "health_endpoint": "/health"
+  },
+  "alerts": {
+    "telegram": {
+      "enabled": true,
+      "chat_id": "YOUR_TELEGRAM_CHAT_ID",
+      "topic_id": "7757",
+      "log_level": "INFO"
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "/var/log/openclaw-apps/polymarket/app.log"
+  }
+}

@@ -4,13 +4,17 @@ import Link from "next/link"
 import { CostDisplay } from "../shared/cost-display"
 import { cn } from "@/lib/utils"
 import type { PipelineData } from "@/hooks/useOverviewData"
+import { MiniGauge } from "../desktop/mini-gauge"
 
 export interface TodaySummaryProps {
   pipeline: PipelineData
   dailyCost: number
+  systemLoad?: number[]
 }
 
-export function TodaySummary({ pipeline, dailyCost }: TodaySummaryProps) {
+export function TodaySummary({ pipeline, dailyCost, systemLoad = [0, 0, 0] }: TodaySummaryProps) {
+  const load1m = systemLoad[0] || 0
+
   return (
     <Link
       href="/runs?date=today"
@@ -52,7 +56,10 @@ export function TodaySummary({ pipeline, dailyCost }: TodaySummaryProps) {
           <span aria-hidden="true">·</span>
           <CostDisplay cost={dailyCost} className="text-xs" />
         </div>
-        <span className="text-muted-foreground font-medium">{pipeline.successRate}%</span>
+        <div className="flex items-center gap-2">
+            <MiniGauge value={load1m} label="Load" type="raw" max={8} size={40} />
+            <span className="text-muted-foreground font-medium">{pipeline.successRate}%</span>
+        </div>
       </div>
     </Link>
   )
