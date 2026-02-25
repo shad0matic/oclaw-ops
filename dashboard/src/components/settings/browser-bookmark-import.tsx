@@ -87,6 +87,7 @@ export function BrowserBookmarkImport() {
       const isHTML = text.trim().toLowerCase().includes('<!doctype netscape-bookmark') ||
                      text.trim().toLowerCase().includes('<dt><h3') ||
                      (text.trim().toLowerCase().includes('<html') && text.trim().toLowerCase().includes('<a href'));
+      console.log('isHTML:', isHTML);
       
       if (isHTML) {
         // Send raw HTML string for HTML bookmark files
