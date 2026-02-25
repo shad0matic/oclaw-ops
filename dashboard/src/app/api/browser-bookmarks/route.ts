@@ -94,8 +94,8 @@ function parseHTMLBookmarks(html: string): ParsedBookmark[] {
   const results: ParsedBookmark[] = [];
   try {
     const dom = new JSDOM(html);
-    const document = dom.window.document;
-
+    const { document } = dom.window;
+    
     function traverse(element: Element, path: string[]): void {
       const children = Array.from(element.children);
       for (const child of children) {
@@ -129,9 +129,9 @@ function parseHTMLBookmarks(html: string): ParsedBookmark[] {
       }
     }
 
-    const rootDL = document.querySelector('dl');
-    if (rootDL) {
-      traverse(rootDL, []);
+    const dls = document.querySelectorAll('dl');
+    for(const dl of dls) {
+      traverse(dl, []);
     }
   } catch (error) {
     console.error('HTML parsing error:', error);
