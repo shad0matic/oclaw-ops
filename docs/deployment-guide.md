@@ -385,4 +385,63 @@ systemctl --user show openclaw-gateway | grep Memory
 
 ---
 
+## Security Hardening
+
+### Access Control Layers
+
+The OpenClaw system implements multiple layers of security:
+
+1. **Tailscale VPN Only** — All services are accessible only via Tailscale VPN
+   - Dashboard: `https://vps-ovh.tail404904.ts.net` (port 3000)
+   - Gateway: `ws://vps-ovh.tail404904.ts.net:18789`
+   - No public internet exposure
+
+2. **Telegram Allowlist** — Only approved users can message the bot
+   - Configured in `~/.openclaw/openclaw.json`:
+   ```json
+   {
+     "channels": {
+       "telegram": {
+         "allowFrom": ["1868676790"],
+         "groupAllowFrom": ["1868676790"],
+         "dmPolicy": "allowlist",
+         "groupPolicy": "allowlist"
+       }
+     }
+   }
+   ```
+
+3. **Dashboard Authentication** — NextAuth with password protection
+   - Configured via `ADMIN_PASSWORD` in dashboard `.env`
+   - Users must enter password to access Mission Control
+   - Session lasts 30 days
+
+4. **Gateway Token Auth** — API calls require valid token
+   - Token configured in `openclaw.json`:
+   ```json
+   {
+     "gateway": {
+       "auth": {
+         "mode": "token",
+         "token": "c622d1fb7d2c09755d1635297339d17eaa95967f35ee9efc"
+       }
+     }
+   }
+   ```
+
+### Adding New Users
+
+1. **Telegram:** Get user ID from @userinfobot, add to `allowFrom` array
+2. **Tailscale:** Run `tailscale up` and approve device in Tailscale admin
+3. **Dashboard:** Share ADMIN_PASSWORD securely
+
+### Security Best Practices
+
+- Never commit passwords or tokens to git
+- Use `.env` files for sensitive config (already in `.gitignore`)
+- Rotate tokens periodically
+- Review Tailscale ACLs for least-privilege access
+
+---
+
 *This guide is updated as each phase is completed. Check git history for changes.*
