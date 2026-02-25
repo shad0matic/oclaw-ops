@@ -98,8 +98,7 @@ function parseHTMLBookmarks(html: string): ParsedBookmark[] {
 
     function traverse(element: Element, path: string[]): void {
       const children = Array.from(element.children);
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
+      for (const child of children) {
         if (child.tagName !== 'DT') continue;
 
         const anchor = child.querySelector('a');
@@ -121,9 +120,9 @@ function parseHTMLBookmarks(html: string): ParsedBookmark[] {
           const folderName = header.textContent?.trim();
           if (folderName) {
             const newPath = [...path, folderName];
-            const nextElement = children[i + 1];
-            if (nextElement && nextElement.tagName === 'DL') {
-              traverse(nextElement, newPath);
+            const nextSiblingDL = child.nextElementSibling;
+            if (nextSiblingDL && nextSiblingDL.tagName === 'DL') {
+              traverse(nextSiblingDL, newPath);
             }
           }
         }

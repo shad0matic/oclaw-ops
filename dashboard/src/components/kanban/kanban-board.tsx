@@ -293,7 +293,7 @@ export function KanbanBoard() {
                 hasHiddenRunning
                   ? "bg-orange-500/30 text-orange-300 border border-orange-500/60 animate-attention-pulse"
                   : projectFilter.length > 0 || agentFilter.length > 0
-                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/20"
+                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/20 filter-active-glow"
                   : "text-muted-foreground hover:text-foreground bg-muted"
               }`}
               title={hasHiddenRunning ? `⚠️ Running (${filteredRunningTasks}) doesn't match Active (${activeTasks})` : undefined}

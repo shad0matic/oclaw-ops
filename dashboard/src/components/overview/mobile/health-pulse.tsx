@@ -4,6 +4,8 @@ import { AgentStatusDot } from "../shared/agent-status-dot"
 import { CostDisplay } from "../shared/cost-display"
 import { cn } from "@/lib/utils"
 
+import ServerLoadGauge from "./server-load-gauge";
+
 export interface HealthPulseProps {
   status: 'online' | 'offline' | 'degraded'
   activeCount: number
@@ -46,12 +48,11 @@ export function HealthPulse({ status, activeCount, dailyCost, cpu, memory, load,
       </div>
       {/* Row 2: system metrics bar */}
       {(load || cpu !== undefined || memory !== undefined) && (
-        <div className="flex items-center justify-center gap-4 px-4 pb-1.5 text-[11px] text-muted-foreground">
-          {loadStr && (
-            <span className={cn(Number(loadStr) > 2 ? "text-amber-400" : "")}>
-              ⚡ Load {loadStr}
-            </span>
-          )}
+        <div className="flex flex-col items-center justify-center gap-2 px-4 pb-1.5 text-[11px] text-muted-foreground">
+          <div className="flex w-full items-center gap-2">
+            <span className="w-12">⚡ Load</span>
+            <ServerLoadGauge load={load[0]} />
+          </div>
           {cpu !== undefined && (
             <span className={cn(cpuPct > 80 ? "text-red-400" : cpuPct > 50 ? "text-amber-400" : "")}>
               CPU {cpuPct}%
