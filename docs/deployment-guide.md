@@ -341,6 +341,7 @@ Tool: `tools/cost-tracker.mjs`
 - [ ] `webhook.glubi.com` DNS (alternative to Tailscale Funnel)
 - [ ] `drop.glubi.com` DNS + Nginx file drop
 - [x] Phase 6 — Mission Control Dashboard ✅
+- [x] Security Hardening — Tailscale, allowlists, audit logging ✅
 - [ ] Phase 7 — Cross-Agent Intelligence (post ski holiday)
 
 ---
@@ -435,12 +436,35 @@ The OpenClaw system implements multiple layers of security:
 2. **Tailscale:** Run `tailscale up` and approve device in Tailscale admin
 3. **Dashboard:** Share ADMIN_PASSWORD securely
 
+### Security Hardening Features
+
+The dashboard includes a Security Settings page (`/settings`) with the following features:
+
+#### File Path Allowlist
+Restricts agent file access to specific directories only. This prevents agents from accessing sensitive system files.
+- Default allowed paths: `/home/openclaw/.openclaw/workspace`, `/home/openclaw/projects/oclaw-ops`
+- Configurable via the Settings UI
+
+#### Network Egress Controls
+Whitelists allowed outbound domains for agent API calls. This prevents data exfiltration and limits exposure.
+- Default allowed domains: `api.anthropic.com`, `api.openai.com`, `api.minimax.io`, `generativelanguage.googleapis.com`
+- Configurable via the Settings UI
+
+#### Audit Logging
+Tracks sensitive operations for security review and compliance:
+- File access events
+- API calls
+- Admin actions
+- Logged to `ops.audit_logs` table
+- Viewable in Settings UI
+
 ### Security Best Practices
 
 - Never commit passwords or tokens to git
 - Use `.env` files for sensitive config (already in `.gitignore`)
 - Rotate tokens periodically
 - Review Tailscale ACLs for least-privilege access
+- Regularly review audit logs for suspicious activity
 
 ---
 

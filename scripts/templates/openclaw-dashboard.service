@@ -1,0 +1,33 @@
+[Unit]
+Description=OpenClaw Ops Dashboard
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=openclaw
+WorkingDirectory=%h/projects/oclaw-ops/dashboard
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+Environment="DATABASE_URL=postgresql://shad:password@localhost:5432/openclaw_db"
+ExecStart=/usr/bin/pnpm start
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=%h/projects/oclaw-ops/dashboard
+
+# Resource limits
+MemoryMax=2G
+CPUQuota=200%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openclaw-dashboard
+
+[Install]
+WantedBy=multi-user.target
