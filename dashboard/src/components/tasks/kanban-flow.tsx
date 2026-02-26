@@ -43,8 +43,8 @@ const priorityDotColors: Record<string, string> = {
 const projectIcons: Record<string, string> = {
   'Minions Control': '👾',
   'OpenClaw/Kevin': '🔧',
-  'Teen Founder': '🌟',
-  'OpenPeople-CRM': '👥',
+  'Project A': '🌟',
+  'CRM App': '👥',
   'Other': '📦',
 };
 

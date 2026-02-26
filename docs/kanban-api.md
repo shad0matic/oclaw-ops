@@ -17,7 +17,7 @@ Retrieves a sorted list of all feature requests from the `planning/feature-reque
 #### Sorting Logic
 The backlog is sorted first by project priority, then by individual item priority.
 
--   **Project Priority (ascending):** `oclaw-ops` (1), `taskbee` (2), `openpeople` (3), `teen-founder` (4), `boris-extensions` (5).
+-   **Project Priority (ascending):** `project-a (1), project-b (2), project-c (3), project-d (4), project-e (5)` (5).
 -   **Item Priority (ascending):** `high` (1), `medium` (2), `low` (3).
 
 #### Example `curl`

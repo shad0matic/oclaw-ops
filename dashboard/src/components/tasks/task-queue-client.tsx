@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select"
 import { Play, Plus, Trash2, RotateCcw, CheckCircle2, XCircle, ListTodo } from "lucide-react"
 
-const PROJECTS = ["all", "infra", "kdp", "boris", "taskbee", "crm"] as const
+const PROJECTS = ["all", "infra", "project-a", "project-b", "project-c", "project-d"] as const
 const AGENTS = [
     { id: "main", name: "Kevin 🍌" },
     { id: "nefario", name: "Dr. Nefario 🔬" },

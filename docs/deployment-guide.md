@@ -238,7 +238,7 @@ Gmail → Google Pub/Sub → Tailscale Funnel → gog watch serve (:8788) → Op
 
 ### Components
 - **gog CLI** v0.9.0 — Google API CLI (Gmail, Calendar, Drive, etc.)
-- **Account:** kevin.ovilclaw@gmail.com
+- **Account:** your-agent@gmail.com
 - **GCP project:** `kevin-openclaw`
 - **OAuth:** Desktop app credentials, stored in `~/.config/gogcli/`
 - **Keyring:** File-based (`GOG_KEYRING_PASSWORD` env var in systemd unit)
@@ -253,7 +253,7 @@ After=network.target
 [Service]
 Environment=GOG_KEYRING_PASSWORD=<redacted>
 Environment=PATH=/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/usr/bin/openclaw webhooks gmail run --account kevin.ovilclaw@gmail.com
+ExecStart=/usr/bin/openclaw webhooks gmail run --account your-agent@gmail.com
 Restart=always
 RestartSec=10
 
@@ -264,7 +264,7 @@ WantedBy=default.target
 ### Sending email (from Kevin)
 ```bash
 GOG_KEYRING_PASSWORD=<password> gog gmail send \
-  --account kevin.ovilclaw@gmail.com \
+  --account your-agent@gmail.com \
   --to recipient@example.com \
   --subject "Subject" \
   --body "Body text" \

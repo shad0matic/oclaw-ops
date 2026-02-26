@@ -13,7 +13,7 @@ const getTitle = (content: string, fallback: string) => {
 
 // Priority mapping
 const priorityOrder: { [key: string]: number } = { high: 0, medium: 1, low: 2 };
-const projectOrder: { [key: string]: number } = { 'oclaw-ops': 0, 'taskbee': 1, 'openpeople': 2 };
+const projectOrder: { [key: string]: number } = { 'project-a': 0, 'project-b': 1, 'project-c': 2 };
 
 // PATCH /api/tasks/backlog — update a feature request file's frontmatter status
 export async function PATCH(request: NextRequest) {

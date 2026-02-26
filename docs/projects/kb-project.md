@@ -42,8 +42,8 @@ A "snowballing" knowledge base that:
                          ▼
 ┌─────────────────────────────────────────────────────────┐
 │  PRACTICAL LAYER                                        │
-│  • "This insight → applies to TaskBee"                  │
-│  • "This technique → actionable for Teen Founder"       │
+│  • "This insight → applies to ProjectX"                  │
+│  • "This technique → actionable for ProjectY"       │
 │  • Project-specific recommendations                     │
 └────────────────────────┬────────────────────────────────┘
                          ▼

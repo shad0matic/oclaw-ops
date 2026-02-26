@@ -266,7 +266,7 @@ On **your personal Google account**:
 
 ## Checklist
 
-- [x] Create Kevin's Gmail account (kevin.ovilclaw@gmail.com)
+- [x] Create Kevin's Gmail account (your-agent@gmail.com)
 - [x] Install gog CLI (v0.9.0 via Homebrew)
 - [x] Create Google Cloud project (`kevin-openclaw`)
 - [x] Enable Gmail + Calendar + Drive + Pub/Sub APIs
