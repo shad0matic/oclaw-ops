@@ -8,7 +8,7 @@ import { AlertTriangle, CheckCircle, AlertCircle, ExternalLink } from "lucide-re
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 const PROVIDER_URLS: Record<string, string> = {
-  anthropic: "https://console.anthropic.com/settings/limits",
+  anthropic: "https://claude.ai/settings/subscription",
   google: "https://aistudio.google.com/app/billing",
   minimax: "https://platform.minimax.chat/",
   xai: "https://console.x.ai/team"
