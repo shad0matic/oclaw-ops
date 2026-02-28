@@ -6,7 +6,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Filter, RefreshCw, Plus, Search, Archive } from "lucide-react";
+import { Filter, RefreshCw, Plus, Search, Archive, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { KanbanColumn } from "@/components/kanban/column";
 import { TaskDetailSheet } from "@/components/kanban/task-detail-sheet";
@@ -362,7 +362,11 @@ export function KanbanBoard() {
           </div>
         )}
 
-        {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> 
+        {isLoading ? (
+          <div className="flex items-center justify-center h-96">
+            <Loader2 className="w-12 h-12 text-amber-500 animate-spin" />
+          </div>
+        ) 
          : error ? <p className="text-sm text-red-400">Failed to load tasks.</p> 
          : (
           <>

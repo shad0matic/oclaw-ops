@@ -3,9 +3,16 @@
 import useSWR from "swr"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { AlertTriangle, CheckCircle, AlertCircle } from "lucide-react"
+import { AlertTriangle, CheckCircle, AlertCircle, ExternalLink } from "lucide-react"
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
+
+const PROVIDER_URLS: Record<string, string> = {
+  anthropic: "https://console.anthropic.com/settings/limits",
+  google: "https://aistudio.google.com/app/billing",
+  minimax: "https://platform.minimax.chat/",
+  xai: "https://console.x.ai/team"
+}
 
 interface Limit {
   type: string
@@ -53,7 +60,19 @@ export function DaveQuotas() {
       {quotas.map((quota) => (
         <Card key={quota.provider} className="bg-card/50 border-border">
           <CardHeader>
-            <CardTitle className="text-base">{quota.name}</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">{quota.name}</CardTitle>
+              {PROVIDER_URLS[quota.provider] && (
+                <a
+                  href={PROVIDER_URLS[quota.provider]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  View on provider <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
             {quota.limits.map((limit, idx) => (
