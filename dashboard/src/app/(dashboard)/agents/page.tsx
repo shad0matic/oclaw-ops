@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/layout/page-header"
 import { ZombieActions } from "@/components/agents/AgentActions"
 import { AgentModelHistory } from "@/components/agents/agent-model-history"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { getCurrentAgentModels } from "./actions"
 
 export default async function AgentsPage() {
     const session = await auth()
@@ -45,8 +46,11 @@ export default async function AgentsPage() {
         ORDER BY p.agent_id ASC
     `);
 
+    const configuredModels = await getCurrentAgentModels()
+    
     const agents = agentsResult.rows.map((agent: any) => ({
         ...agent,
+        model: configuredModels[agent.agent_id] || agent.model, // Prefer configured model
         status: agent.session_key ? "running" : "idle",
         last_active: agent.last_active || agent.updated_at,
         trust_percent: (Number(agent.trust_score) || 0) * 100
