@@ -14,19 +14,25 @@ const PROVIDER_LIMITS = {
     ]
   },
   google: {
-    name: "Google Gemini (free tier)",
+    name: "Google Gemini (AI Pro subscription)",
     limits: [
-      { type: "RPM (Flash)", value: 10, window: "1 minute" },
-      { type: "RPM (Pro)", value: 5, window: "1 minute" },
-      { type: "RPD (Flash)", value: 500, window: "1 day" },
-      { type: "RPD (Pro)", value: 100, window: "1 day" },
-      { type: "TPM (shared)", value: 250000, window: "1 minute" },
+      { type: "RPM (Flash)", value: 1000, window: "1 minute" },
+      { type: "RPM (Pro)", value: 1000, window: "1 minute" },
+      { type: "RPD", value: 50000, window: "1 day" },
+      { type: "TPM", value: 4000000, window: "1 minute" },
     ]
   },
   minimax: {
     name: "MiniMax (free portal)",
     limits: [
       { type: "RPM", value: 60, window: "1 minute", note: "Estimated" },
+    ]
+  },
+  xai: {
+    name: "xAI Grok",
+    limits: [
+      { type: "RPM", value: 60, window: "1 minute", note: "Via OAuth" },
+      { type: "TPM", value: 500000, window: "1 minute", note: "Estimated" },
     ]
   },
 }
@@ -55,6 +61,7 @@ export async function GET() {
           WHEN model LIKE 'claude%' THEN 'anthropic'
           WHEN model LIKE 'gemini%' THEN 'google'
           WHEN model LIKE 'MiniMax%' THEN 'minimax'
+          WHEN model LIKE 'grok%' OR model LIKE 'xai%' THEN 'xai'
           ELSE 'other'
         END as provider,
         COUNT(*) as calls,
@@ -72,6 +79,7 @@ export async function GET() {
           WHEN model LIKE 'claude%' THEN 'anthropic'
           WHEN model LIKE 'gemini%' THEN 'google'
           WHEN model LIKE 'MiniMax%' THEN 'minimax'
+          WHEN model LIKE 'grok%' OR model LIKE 'xai%' THEN 'xai'
           ELSE 'other'
         END as provider,
         COUNT(*) as calls

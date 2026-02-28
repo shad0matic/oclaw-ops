@@ -305,6 +305,7 @@ export async function getProviderTokens(period: 'day' | 'week' | 'month' = 'mont
         WHEN model LIKE 'claude%' THEN 'anthropic'
         WHEN model LIKE 'gemini%' THEN 'google'
         WHEN model LIKE 'MiniMax%' THEN 'minimax'
+        WHEN model LIKE 'grok%' OR model LIKE 'xai%' THEN 'xai'
         ELSE 'other'
       END as provider,
       SUM(input_tokens) as input_tokens,
