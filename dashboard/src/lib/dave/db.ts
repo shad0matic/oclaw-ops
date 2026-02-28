@@ -602,3 +602,58 @@ export async function checkBudgetStatus(agentId: string): Promise<BudgetStatus> 
     overBudget,
   }
 }
+
+// ============================================================================
+// Rate Limit Tracking
+// ============================================================================
+
+export interface RateLimitInfo {
+  provider: string
+  metricType: string  // 'rpm', 'itpm', 'otpm'
+  limitValue: number
+  remaining: number
+  resetAt: Date | null
+}
+
+/**
+ * Update rate limit info from API response headers
+ */
+export async function updateRateLimits(
+  provider: string,
+  limits: Array<{ metricType: string; limit: number; remaining: number; resetAt?: Date }>
+): Promise<void> {
+  for (const limit of limits) {
+    await pool.query(`
+      INSERT INTO ops.provider_rate_limits (provider, metric_type, limit_value, remaining, reset_at, captured_at)
+      VALUES ($1, $2, $3, $4, $5, NOW())
+      ON CONFLICT (provider, metric_type) DO UPDATE SET
+        limit_value = EXCLUDED.limit_value,
+        remaining = EXCLUDED.remaining,
+        reset_at = EXCLUDED.reset_at,
+        captured_at = NOW()
+    `, [provider, limit.metricType, limit.limit, limit.remaining, limit.resetAt ?? null])
+  }
+}
+
+/**
+ * Get current rate limits for a provider
+ * Returns null if no recent data (within 5 minutes)
+ */
+export async function getProviderRateLimits(provider: string): Promise<RateLimitInfo[] | null> {
+  const { rows } = await pool.query(`
+    SELECT provider, metric_type, limit_value, remaining, reset_at
+    FROM ops.provider_rate_limits
+    WHERE provider = $1
+      AND captured_at > NOW() - INTERVAL '5 minutes'
+  `, [provider])
+
+  if (rows.length === 0) return null
+
+  return rows.map(row => ({
+    provider: row.provider,
+    metricType: row.metric_type,
+    limitValue: row.limit_value,
+    remaining: row.remaining,
+    resetAt: row.reset_at,
+  }))
+}

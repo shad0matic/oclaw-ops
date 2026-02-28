@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { DaveBudgetManager } from "@/components/dave/dave-budget-manager"
 import { DaveCostCharts } from "@/components/dave/dave-cost-charts"
+import { DaveQuotas } from "@/components/dave/dave-quotas"
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 
@@ -222,6 +223,9 @@ export default function CostsClientPage() {
 
         {/* Cost Trend Charts */}
         <DaveCostCharts />
+
+        {/* Provider Rate Limits */}
+        <DaveQuotas />
 
         {/* Cost Tier Breakdown */}
         <div className="grid gap-4 md:grid-cols-3">

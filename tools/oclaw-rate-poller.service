@@ -1,0 +1,16 @@
+[Unit]
+Description=OpenClaw Anthropic Rate Limit Poller
+After=network-online.target
+
+[Service]
+Type=simple
+User=openclaw
+Group=openclaw
+WorkingDirectory=/home/openclaw/projects/oclaw-ops
+ExecStart=/usr/bin/node tools/rate-limit-poller.mjs
+Restart=always
+RestartSec=10
+EnvironmentFile=/home/openclaw/.openclaw/.env
+
+[Install]
+WantedBy=multi-user.target
