@@ -274,6 +274,56 @@ export interface PeriodSpendResult {
   }
 }
 
+export interface ProviderSpendResult {
+  period: 'day' | 'week' | 'month'
+  byProvider: Array<{
+    provider: string
+    inputTokens: number
+    outputTokens: number
+    cachedTokens: number
+  }>
+  totalInputTokens: number
+  totalOutputTokens: number
+  totalCachedTokens: number
+}
+
+/**
+ * Get tokens grouped by provider for a period
+ */
+export interface ProviderTokens {
+  provider: string
+  inputTokens: number
+  outputTokens: number
+  cachedTokens: number
+}
+
+export async function getProviderTokens(period: 'day' | 'week' | 'month' = 'month'): Promise<ProviderTokens[]> {
+  // Need to aggregate from agent_costs since daily_spend doesn't have provider breakdown
+  const { rows } = await pool.query(`
+    SELECT 
+      CASE 
+        WHEN model LIKE 'claude%' THEN 'anthropic'
+        WHEN model LIKE 'gemini%' THEN 'google'
+        WHEN model LIKE 'MiniMax%' THEN 'minimax'
+        ELSE 'other'
+      END as provider,
+      SUM(input_tokens) as input_tokens,
+      SUM(output_tokens) as output_tokens,
+      SUM(cached_tokens) as cached_tokens
+    FROM ops.agent_costs
+    WHERE created_at > NOW() - INTERVAL '30 days'
+    GROUP BY 1
+    ORDER BY provider
+  `)
+
+  return rows.map((r: any) => ({
+    provider: r.provider,
+    inputTokens: Number(r.input_tokens),
+    outputTokens: Number(r.output_tokens),
+    cachedTokens: Number(r.cached_tokens),
+  }))
+}
+
 /**
  * Get spend for a period (day, week, month)
  */

@@ -1,17 +1,34 @@
 [Unit]
-Description=OpenClaw Cost Logger — Dave Phase 2
-Documentation=https://github.com/shad0matic/oclaw-ops/blob/main/specs/SPEC-124-dave-accountant.md
+Description=OpenClaw Cost Logger (Dave)
+Documentation=https://github.com/shad0matic/oclaw-ops
 After=network.target postgresql.service
+Wants=postgresql.service
 
 [Service]
 Type=simple
 User=openclaw
+Group=openclaw
 WorkingDirectory=/home/openclaw/projects/oclaw-ops
 ExecStart=/usr/bin/node tools/cost-logger.mjs
 Restart=always
 RestartSec=10
+
+# Environment
 Environment=NODE_ENV=production
-EnvironmentFile=/home/openclaw/.openclaw/.env
+Environment=PGDATABASE=openclaw_db
+Environment=PGUSER=openclaw
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=oclaw-cost-logger
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/openclaw/.openclaw
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target

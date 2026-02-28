@@ -41,6 +41,7 @@ export {
   getTodaySpend,
   getAgentSpend,
   getPeriodSpend,
+  getProviderTokens,
   getAllBudgets,
   getAgentBudget,
   setAgentBudget,
@@ -51,6 +52,7 @@ export {
   type TodaySpendResult,
   type AgentSpendResult,
   type PeriodSpendResult,
+  type ProviderTokens,
   type AgentBudget,
   type BudgetStatus,
 } from './db'

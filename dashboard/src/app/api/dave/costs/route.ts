@@ -8,6 +8,7 @@ import {
   getTodaySpend,
   getAgentSpend,
   getPeriodSpend,
+  getProviderTokens,
   centsToUsd,
   centsToEur,
 } from "@/lib/dave"
@@ -100,15 +101,20 @@ export async function GET(request: NextRequest) {
         const result = await getPeriodSpend('month')
         return NextResponse.json({
           view: 'month',
-          totalCents: result.totalCents,
-          totalUsd: centsToUsd(result.totalCents),
-          totalEur: centsToEur(result.totalCents),
           byAgent: result.byAgent.map(a => ({
             ...a,
             costUsd: centsToUsd(a.costCents),
             costEur: centsToEur(a.costCents),
           })),
           byTier: result.byTier,
+        })
+      }
+
+      case 'byProvider': {
+        const providerTokens = await getProviderTokens('month')
+        return NextResponse.json({
+          view: 'byProvider',
+          byProvider: providerTokens,
         })
       }
 
