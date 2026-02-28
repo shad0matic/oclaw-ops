@@ -8,10 +8,11 @@ import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowRight, Trophy, Zap, Activity } from "lucide-react"
+import { ArrowRight, Trophy, Zap, Activity, Users } from "lucide-react"
 import { PageHeader } from "@/components/layout/page-header"
 
 import { ZombieActions } from "@/components/agents/AgentActions"
+import { AgentModelHistory } from "@/components/agents/agent-model-history"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export default async function AgentsPage() {
@@ -23,7 +24,8 @@ export default async function AgentsPage() {
             p.*, 
             r.session_key, 
             r.zombie_status,
-            e.last_active
+            e.last_active,
+            m.model
         FROM memory.agent_profiles p
         LEFT JOIN (
             SELECT agent_id, session_key, zombie_status 
@@ -35,6 +37,11 @@ export default async function AgentsPage() {
             FROM ops.agent_events 
             GROUP BY agent_id
         ) e ON p.agent_id = e.agent_id
+        LEFT JOIN (
+            SELECT DISTINCT ON (agent_id) agent_id, model
+            FROM ops.agent_costs
+            ORDER BY agent_id, created_at DESC
+        ) m ON p.agent_id = m.agent_id
         ORDER BY p.agent_id ASC
     `);
 
@@ -61,7 +68,7 @@ export default async function AgentsPage() {
                 <Card className="bg-card/50 border-border">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Total Agents</CardTitle>
-                        <UsersIcon className="h-4 w-4 text-muted-foreground" />
+                        <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-foreground">{agents.length}</div>
@@ -111,6 +118,7 @@ export default async function AgentsPage() {
                                                 </TooltipProvider>
                                             )}
                                             <span className="font-medium text-foreground truncate">{agent.name}</span>
+                                            {agent.model && <Badge variant="outline" className="shrink-0">{agent.model}</Badge>}
                                             <img src={`/assets/rank-icons/rank-${Math.min(agent.level, 10)}.webp`} alt={`L${agent.level}`} className="h-5 w-5 shrink-0" />
                                             <Badge variant={agent.status === 'running' ? 'default' : 'secondary'} className={`shrink-0 text-[10px] px-1.5 py-0 ${
                                                 agent.status === 'running' ? 'bg-blue-500/10 text-blue-500' : 'bg-muted text-muted-foreground'
@@ -138,10 +146,12 @@ export default async function AgentsPage() {
                     <TableHeader>
                         <TableRow className="border-border hover:bg-transparent">
                             <TableHead className="text-muted-foreground">Agent</TableHead>
+                            <TableHead className="text-muted-foreground">Model</TableHead>
                             <TableHead className="text-muted-foreground">Status</TableHead>
                             <TableHead className="text-muted-foreground">Trust Score</TableHead>
                             <TableHead className="text-muted-foreground">Tasks</TableHead>
                             <TableHead className="text-muted-foreground">Last Active</TableHead>
+                            <TableHead className="text-muted-foreground">History</TableHead>
                             <TableHead className="text-right text-muted-foreground">Action</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -176,6 +186,9 @@ export default async function AgentsPage() {
                                     </div>
                                 </TableCell>
                                 <TableCell>
+                                    {agent.model && <Badge variant="outline">{agent.model}</Badge>}
+                                </TableCell>
+                                <TableCell>
                                     <Badge variant={agent.status === 'running' ? 'default' : 'secondary'} className={
                                         agent.status === 'running' ? 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20' :
                                             'bg-muted text-muted-foreground hover:bg-zinc-700'
@@ -198,6 +211,9 @@ export default async function AgentsPage() {
                                 <TableCell className="text-muted-foreground text-sm">
                                     {agent.last_active ? new Date(agent.last_active).toLocaleString() : 'Never'}
                                 </TableCell>
+                                <TableCell>
+                                    <AgentModelHistory agentId={agent.agent_id} />
+                                </TableCell>
                                 <TableCell className="text-right">
                                     {agent.zombie_status === 'suspected' ? (
                                         <ZombieActions sessionId={agent.session_key} />
@@ -215,27 +231,5 @@ export default async function AgentsPage() {
                 </Table>
             </Card>
         </div>
-    )
-}
-
-function UsersIcon(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
     )
 }
