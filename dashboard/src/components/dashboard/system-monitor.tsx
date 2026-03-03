@@ -9,6 +9,7 @@ interface SystemData {
     cpu: { usage: number }
     memory: { total: number; used: number; free: number }
     disk?: { total: number; used: number; free: number }
+    context?: { used: number; total: number; percentage: number }
     db?: { size: number; connections: number }
     openclaw?: { version: string; status: string }
     backup?: { next_in_hours: number }
@@ -24,7 +25,7 @@ interface HistoryPoint {
 
 // 1h window at 30s intervals = 120 points max
 const MAX_HISTORY = 120
-const POLL_INTERVAL = 30_000
+const POLL_INTERVAL = 5_000 // 5 seconds, as per spec
 
 function formatTime(date: Date) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -32,6 +33,13 @@ function formatTime(date: Date) {
 
 function formatTimeShort(date: Date) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
+
+function getContextColor(percentage: number): string {
+    if (percentage > 90) return "bg-red-500"
+    if (percentage > 75) return "bg-orange-500"
+    if (percentage > 50) return "bg-yellow-500"
+    return "bg-green-500"
 }
 
 export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
@@ -92,6 +100,7 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
 
     const memPercent = (data.memory.used / data.memory.total) * 100
     const diskPercent = data.disk ? (data.disk.used / data.disk.total) * 100 : 0
+    const contextPercent = data.context ? data.context.percentage : 0
 
     // Compute 1h stats
     const cpuValues = history.map(p => p.cpu)
@@ -107,8 +116,8 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
 
     return (
         <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
-            <Card className="bg-zinc-900/50 border-zinc-800">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="bg-zinc-900/50 border-zinc-800 lg:col-span-2">
                 <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-zinc-400">CPU Usage</CardTitle>
@@ -152,7 +161,7 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
                 </CardContent>
             </Card>
 
-            <Card className="bg-zinc-900/50 border-zinc-800">
+            <Card className="bg-zinc-900/50 border-zinc-800 lg:col-span-2">
                 <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-zinc-400">Memory Usage</CardTitle>
@@ -199,6 +208,26 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
                     </div>
                 </CardContent>
             </Card>
+
+            {data.context && (
+                <Card className="bg-zinc-900/50 border-zinc-800">
+                    <CardHeader>
+                        <CardTitle className="text-zinc-400">Context Usage</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-bold text-white mb-2">
+                            {(data.context.used / 1000).toFixed(1)}k
+                            <span className="text-sm font-normal text-zinc-500 ml-2">
+                                / {(data.context.total / 1000).toFixed(0)}k tokens
+                            </span>
+                        </div>
+                        <Progress value={contextPercent} className="h-2 mb-2" indicatorClassName={getContextColor(contextPercent)} />
+                        <div className="text-xs text-zinc-500">
+                            {contextPercent.toFixed(1)}% used
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {data.disk && (
                 <Card className="bg-zinc-900/50 border-zinc-800">
@@ -277,7 +306,7 @@ export function SystemMonitor({ initialData }: { initialData?: SystemData }) {
                         </div>
                         <div className="p-4 rounded-lg bg-zinc-950/50 border border-zinc-800">
                             <div className="text-zinc-500 text-sm">Poll Rate</div>
-                            <div className="text-xl font-mono text-white">30s</div>
+                            <div className="text-xl font-mono text-white">5s</div>
                         </div>
                     </div>
                 </CardContent>

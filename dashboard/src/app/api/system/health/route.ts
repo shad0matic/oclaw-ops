@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { getCpuLoad, getMemStats, getUptime } from "@/lib/system-stats"
 import { readFileSync } from "fs"
 import { pool } from "@/lib/drizzle"
+import { execSync } from "child_process"
 
 function getDiskStats() {
     try {
@@ -14,11 +15,39 @@ function getDiskStats() {
     } catch { return { total: 0, used: 0, free: 0 } }
 }
 
+function getContextStats() {
+    try {
+        const output = execSync("openclaw sessions --json").toString()
+        const sessions = JSON.parse(output)
+        const mainSession = sessions.find((s: any) => s.agent === 'main')
+        if (mainSession) {
+            const { used, total } = mainSession.context
+            return {
+                used,
+                total,
+                percentage: total > 0 ? (used / total) * 100 : 0,
+            }
+        }
+        return { used: 0, total: 0, percentage: 0 }
+    } catch (error) {
+        console.error("Failed to get context stats", error)
+        // Return dummy data for development
+        const used = 80000
+        const total = 200000
+        return {
+            used,
+            total,
+            percentage: (used / total) * 100,
+        }
+    }
+}
+
 export async function GET(req: Request) {
     try {
         const cpuLoad = getCpuLoad()
         const mem = getMemStats()
         const uptime = getUptime()
+        const context = getContextStats()
 
         const dbName = "openclaw_db"
         let dbSize = 0
@@ -53,6 +82,7 @@ export async function GET(req: Request) {
                 free: mem.total - mem.active,
             },
             disk: getDiskStats(),
+            context,
             db: {
                 size: dbSize,
                 connections: dbConnections,

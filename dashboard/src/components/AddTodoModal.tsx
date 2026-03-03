@@ -30,8 +30,8 @@ export function AddTodoModal({ isOpen, onClose, onAdd }: AddTodoModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md shadow-lg">
         <h2 className="text-xl font-bold mb-4">Add a new todo</h2>
         
         <div className="space-y-4">
@@ -45,7 +45,7 @@ export function AddTodoModal({ isOpen, onClose, onAdd }: AddTodoModalProps) {
                 if (e.key === 'Enter') handleSubmit();
                 if (e.key === 'Escape') onClose();
               }}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-input bg-background rounded focus:outline-none focus:ring-2 focus:ring-ring"
               autoFocus
             />
           </div>
@@ -54,7 +54,7 @@ export function AddTodoModal({ isOpen, onClose, onAdd }: AddTodoModalProps) {
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-input bg-background rounded focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="low">Low Priority</option>
               <option value="medium">Medium Priority</option>
@@ -66,13 +66,13 @@ export function AddTodoModal({ isOpen, onClose, onAdd }: AddTodoModalProps) {
         <div className="flex justify-end space-x-2 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 border rounded hover:bg-gray-100"
+            className="px-4 py-2 border border-input rounded hover:bg-accent"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
             Add
           </button>

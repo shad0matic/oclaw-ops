@@ -50,10 +50,10 @@ export function ChecklistItems({ todoId, items, onUpdate }: ChecklistItemsProps)
   };
 
   return (
-    <div className="bg-white p-3 rounded border border-gray-200 mt-2">
+    <div className="bg-card p-3 rounded border border-border mt-2">
       <div className="space-y-2">
         {items.map((item) => (
-          <div key={item.id} className="flex items-center justify-between group hover:bg-gray-50 p-1 rounded">
+          <div key={item.id} className="flex items-center justify-between group hover:bg-accent p-1 rounded">
             <div className="flex items-center space-x-2 flex-1">
               <input
                 type="checkbox"
@@ -61,12 +61,12 @@ export function ChecklistItems({ todoId, items, onUpdate }: ChecklistItemsProps)
                 onChange={() => handleToggleItem(item.id, item.is_completed)}
                 className="w-4 h-4 cursor-pointer"
               />
-              <span className={`text-sm ${item.is_completed ? 'line-through text-gray-500' : ''}`}>
+              <span className={`text-sm ${item.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                 {item.title}
               </span>
             </div>
             <button
-              className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 px-2"
+              className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80 px-2"
               onClick={() => handleDeleteItem(item.id)}
             >
               ✕
@@ -88,12 +88,12 @@ export function ChecklistItems({ todoId, items, onUpdate }: ChecklistItemsProps)
                   setNewItemTitle('');
                 }
               }}
-              className="flex-1 px-2 py-1 text-sm border rounded"
+              className="flex-1 px-2 py-1 text-sm border border-input bg-background rounded"
               autoFocus
             />
             <button
               onClick={handleAddItem}
-              className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+              className="px-3 py-1 bg-primary text-primary-foreground text-sm rounded hover:bg-primary/90"
             >
               Add
             </button>
@@ -102,7 +102,7 @@ export function ChecklistItems({ todoId, items, onUpdate }: ChecklistItemsProps)
                 setIsAdding(false);
                 setNewItemTitle('');
               }}
-              className="px-3 py-1 text-sm border rounded hover:bg-gray-100"
+              className="px-3 py-1 text-sm border border-input rounded hover:bg-accent"
             >
               Cancel
             </button>
@@ -110,7 +110,7 @@ export function ChecklistItems({ todoId, items, onUpdate }: ChecklistItemsProps)
         ) : (
           <button
             onClick={() => setIsAdding(true)}
-            className="text-sm text-gray-600 hover:text-gray-900 mt-2 flex items-center space-x-1"
+            className="text-sm text-muted-foreground hover:text-foreground mt-2 flex items-center space-x-1"
           >
             <span>➕</span>
             <span>Add checklist item</span>

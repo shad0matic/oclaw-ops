@@ -61,12 +61,12 @@ export function TodoItem({ todo, onUpdate, isSubtask = false }: TodoItemProps) {
 
   return (
     <div className={`${isSubtask ? 'ml-8' : ''}`}>
-      <div className="flex items-start justify-between p-4 bg-gray-100 rounded-lg mb-2">
+      <div className="flex items-start justify-between p-4 bg-muted rounded-lg mb-2">
         <div className="flex items-start space-x-3 flex-1">
           {(hasSubtasks || hasChecklist) && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="mt-1 text-gray-500 hover:text-gray-700 text-lg"
+              className="mt-1 text-muted-foreground hover:text-foreground text-lg"
             >
               {isExpanded ? '▼' : '▶'}
             </button>
@@ -87,12 +87,12 @@ export function TodoItem({ todo, onUpdate, isSubtask = false }: TodoItemProps) {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="flex-1 px-2 py-1 border rounded"
+                  className="flex-1 px-2 py-1 border border-input bg-background rounded"
                   autoFocus
                 />
               ) : (
                 <span 
-                  className={`text-lg cursor-pointer ${todo.status === 'completed' ? 'line-through text-gray-500' : ''}`}
+                  className={`text-lg cursor-pointer ${todo.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}
                   onClick={() => setIsEditing(true)}
                 >
                   {todo.title}
@@ -102,7 +102,7 @@ export function TodoItem({ todo, onUpdate, isSubtask = false }: TodoItemProps) {
             
             {/* Progress indicators */}
             {(totalSubtasks > 0 || totalChecklistItems > 0) && (
-              <div className="mt-1 text-sm text-gray-600 space-x-3">
+              <div className="mt-1 text-sm text-muted-foreground space-x-3">
                 {totalSubtasks > 0 && (
                   <span>📋 {completedSubtasks}/{totalSubtasks} subtasks</span>
                 )}
@@ -118,7 +118,7 @@ export function TodoItem({ todo, onUpdate, isSubtask = false }: TodoItemProps) {
           {isEditing ? (
             <button 
               onClick={handleUpdate}
-              className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="px-3 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90"
             >
               Save
             </button>
@@ -127,7 +127,7 @@ export function TodoItem({ todo, onUpdate, isSubtask = false }: TodoItemProps) {
               {!isSubtask && (
                 <button 
                   onClick={() => setShowSubtaskModal(true)}
-                  className="px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded"
+                  className="px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded"
                   title="Add subtask"
                 >
                   ➕
@@ -135,13 +135,13 @@ export function TodoItem({ todo, onUpdate, isSubtask = false }: TodoItemProps) {
               )}
               <button 
                 onClick={() => setIsEditing(true)}
-                className="px-2 py-1 hover:bg-gray-200 rounded"
+                className="px-2 py-1 hover:bg-accent rounded"
               >
                 ✏️
               </button>
               <button 
                 onClick={handleDelete}
-                className="px-2 py-1 hover:bg-gray-200 rounded"
+                className="px-2 py-1 hover:bg-accent rounded"
               >
                 🗑️
               </button>
