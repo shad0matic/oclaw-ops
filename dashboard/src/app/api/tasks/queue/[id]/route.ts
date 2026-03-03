@@ -19,7 +19,7 @@ async function notifyKevin(task: any, action: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${gwToken}` },
     body: JSON.stringify({
-      sessionKey: 'agent:main:telegram:group:-1003396419207:topic:710',
+      sessionKey: 'agent:main:telegram:group:-1003396419207:topic:4706',
       message: msg,
     }),
   })
