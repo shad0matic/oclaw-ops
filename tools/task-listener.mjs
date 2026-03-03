@@ -185,6 +185,7 @@ async function main() {
   console.log('Connected to Postgres');
 
   await client.query('LISTEN task_changes');
+  await client.query('LISTEN task_events');    // Status change notifications
   await client.query('LISTEN new_task_comment');
   console.log('Listening on task_changes + new_task_comment channels...');
 
