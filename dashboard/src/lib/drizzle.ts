@@ -21,9 +21,9 @@ const getPool = (() => {
   return () => {
     if (!instance) {
       instance = new Pool({
-        user: 'openclaw',
-        database: 'openclaw_db',
-        host: '/var/run/postgresql',
+        user: 'hermes',
+        database: 'siftly_db',
+        host: '127.0.0.1',
         max: 20,
         idleTimeoutMillis: 0,
         connectionTimeoutMillis: 10000,

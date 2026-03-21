@@ -1,9 +1,9 @@
 import { Pool } from 'pg';
 
 const pool = new Pool({
-  database: 'openclaw_db',
-  user: 'openclaw',
-  host: '/var/run/postgresql'
+  database: 'siftly_db',
+  user: 'hermes',
+  host: '127.0.0.1'
 });
 
 export interface Todo {

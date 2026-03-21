@@ -49,7 +49,7 @@ export async function GET(req: Request) {
         const uptime = getUptime()
         const context = getContextStats()
 
-        const dbName = "openclaw_db"
+        const dbName = "siftly_db"
         let dbSize = 0
         let dbConnections = 0
         try {

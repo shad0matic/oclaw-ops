@@ -5,9 +5,9 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    host: '/var/run/postgresql',
-    user: 'shad',
-    database: 'openclaw_db',
+    host: '127.0.0.1',
+    user: 'hermes',
+    database: 'siftly_db',
     ssl: false,
   },
   schemaFilter: ['ops', 'memory'],
