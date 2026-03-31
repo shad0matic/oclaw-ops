@@ -48,11 +48,39 @@ const PROJECTS = [
     pm2: 'openator-api',
     ecosystem: 'openator',
   },
+  {
+    id: 'taskbee-frontend',
+    label: 'TaskBee App',
+    emoji: '🐝',
+    url: 'http://vps-ovh.tail404904.ts.net:4047/',
+    color: '#f59e0b',
+    pm2: 'taskbee-frontend',
+    ecosystem: 'taskbee',
+  },
+  {
+    id: 'taskbee-api',
+    label: 'TaskBee API',
+    emoji: '⚙️',
+    url: 'http://vps-ovh.tail404904.ts.net:4047/api/',
+    color: '#d97706',
+    pm2: 'taskbee-api',
+    ecosystem: 'taskbee',
+  },
+  {
+    id: 'taskbee-admin',
+    label: 'TaskBee Admin',
+    emoji: '🛡️',
+    url: 'http://vps-ovh.tail404904.ts.net:4048/',
+    color: '#b45309',
+    pm2: 'taskbee-admin',
+    ecosystem: 'taskbee',
+  },
 ];
 
 const ECOSYSTEMS = {
   openpeople: '/home/shad/projects/openpeople/ecosystem.config.js',
   openator: '/home/shad/projects/openator/ecosystem.config.js',
+  taskbee: '/home/shad/projects/taskbee/ecosystem.config.js',
 };
 
 function pm2Cmd(action, name, ecosystemKey) {
